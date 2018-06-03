@@ -67,6 +67,14 @@ MemPage::MemPage()
 	isModified = true;
 }
 
+MemPage::~MemPage()
+{
+	// 脏页需要写回
+	if (this->isModified)
+		this->Back2File();
+	delete Ptr2PageBegin;
+}
+
 void MemPage::Back2File() const
 {
 	int temp = 0;
@@ -89,12 +97,21 @@ Clock::Clock()
 	}
 }
 
+Clock::~Clock()
+{
+	for (int i = 0; i <= MEM_PAGEAMOUNT; i++)
+	{
+		if (memPage[i]!=nullptr)
+			delete memPage[i];
+	}
+}
+
 FileAddr Clock::GetMemFile(unsigned long fileId, unsigned long filePageID)
 {
 	// 先查找是否存在内存中
 	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
 	{
-		if (memPage[i]&&memPage[i]->fileId == fileId && memPage[i]->filePageID == filePageID)
+		if (memPage[i] && memPage[i]->fileId == fileId && memPage[i]->filePageID == filePageID)
 		{
 			return FileAddr(memPage[i]->filePageID, sizeof(PAGEHEAD));
 		}
@@ -110,7 +127,7 @@ FileAddr Clock::GetMemFile(unsigned long fileId, unsigned long filePageID)
 
 unsigned int Clock::GetSwapPage()
 {
-	// 先查找没有使用的页
+	// 查找没有分配的内存页
 	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
 	{
 		if (memPage[i] == nullptr)
@@ -132,6 +149,14 @@ unsigned int Clock::GetSwapPage()
 	unsigned int i = rand() % MEM_PAGEAMOUNT;
 	memPage[i]->Back2File();
 	return i;
+}
+
+BUFFER::~BUFFER()
+{
+	for (int i = 0; i < memFile.size(); i++)
+	{
+		delete memFile[i];
+	}
 }
 
 FileAddr BUFFER::ReadFile(const char *fileName, unsigned int file_page)

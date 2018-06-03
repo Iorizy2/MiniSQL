@@ -77,6 +77,7 @@ class MemPage
 {
 public:
 	MemPage();
+	~MemPage();
 
 	// 把内存中的页写回到文件中
 	void Back2File() const;
@@ -94,11 +95,12 @@ class Clock
 	friend class MemFile;
 public:
 	Clock();
+	~Clock();
 
 	// 返回磁盘文件内存地址
 	FileAddr GetMemFile(unsigned long fileId, unsigned long filePageID);
 private:
-	unsigned int GetSwapPage();  // 找到一个可替换的空页
+	unsigned int GetSwapPage();  // 找到一个可替换的内存页
 	MemPage* memPage[MEM_PAGEAMOUNT+1];
 };
 
@@ -119,6 +121,8 @@ public:
 class BUFFER
 {
 public:
+	BUFFER() = default;
+	~BUFFER();
 	FileAddr ReadFile(const char *fileName, unsigned int file_page);
 public:
 	std::vector<MemFile*> memFile;
