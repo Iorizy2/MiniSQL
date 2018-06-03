@@ -26,7 +26,7 @@ void FILECOND::Initialize()
 	total_page = 1; 
 }
 
-MemFile::MemFile(const char *file_name)
+MemFile::MemFile(const char *file_name, Clock *pMemClock)
 {
 	strcpy(this->fileName, file_name);
 	this->fileId = open(file_name, _O_BINARY | O_RDWR, 0664);
@@ -43,11 +43,19 @@ MemFile::MemFile(const char *file_name)
 		}
 		// 创建新的文件第一页并写入磁盘
 		this->total_page = 1;
+		auto freePage = pMemClock->GetSwapPage();
+		pMemClock->memPage[freePage]->fileId = this->fileId;
+		pMemClock->memPage[freePage]->filePageID = 0;
+		pMemClock->memPage[freePage]->isModified = true;
+		pMemClock->memPage[freePage]->pageHead->Initialize();
+		pMemClock->memPage[freePage]->GetFileCond()->Initialize();
+		//
+		/*this->total_page = 1;
 		void* ptr = malloc(FILE_PAGESIZE);
 		((PAGEHEAD*)ptr)->Initialize();
 		((FILECOND*)((char*)ptr + sizeof(PAGEHEAD)))->Initialize();
 		write(this->fileId, ptr, FILE_PAGESIZE);
-		delete ptr;
+		delete ptr;*/
 	}
 	
 }
@@ -136,7 +144,7 @@ FileAddr BUFFER::ReadFile(const char *fileName, unsigned int file_page)
 	}
 
 	//----- 如果文件没有打开
-	MemFile* newFile = new MemFile(fileName);
+	MemFile* newFile = new MemFile(fileName, &MemClock);
 	memFile.push_back(newFile);
 	return MemClock.GetMemFile(newFile->fileId, 0);
 }

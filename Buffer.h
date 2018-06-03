@@ -30,22 +30,6 @@
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
 
 /*********************************************************
-*             文件地址
-**********************************************************/
-class FileAddr
-{
-	friend class FILECOND;
-public:
-	FileAddr() :filePageID(0), offSet(0) {}
-	FileAddr(unsigned long _filePageID, unsigned int  _offSet) :filePageID(_filePageID), offSet(_offSet) {}
-public:
-	unsigned long filePageID;     // 页编号
-	unsigned int  offSet;         // 页内偏移量
-	void *Ptr2Mem;                // 内存地址
-};
-
-
-/*********************************************************
 *             页头信息，用以标识文件页
 **********************************************************/
 class PAGEHEAD
@@ -54,6 +38,21 @@ public:
 	void Initialize();
 	unsigned long pageId;		// 页编号
 	bool isFixed;				// 页是否常驻内存
+};
+
+
+/*********************************************************
+*             文件地址
+**********************************************************/
+class FileAddr
+{
+	friend class FILECOND;
+public:
+	FileAddr() :filePageID(0), offSet(sizeof(PAGEHEAD)) {}
+	FileAddr(unsigned long _filePageID, unsigned int  _offSet) :filePageID(_filePageID), offSet(_offSet) {}
+public:
+	unsigned long filePageID;     // 页编号
+	unsigned int  offSet;         // 页内偏移量
 };
 
 
@@ -71,32 +70,35 @@ public:
 	unsigned long total_page;         // 目前文件中共有页数
 };
 
+/*********************************************************
+*               内存页，用于缓存磁盘文件
+**********************************************************/
 class MemPage
 {
 public:
 	MemPage();
 
-	//**把内存中的页写回到文件中
+	// 把内存中的页写回到文件中
 	void Back2File() const;
 public:
-	unsigned long fileId;         // 文件指针
+	unsigned long fileId;         // 文件指针，fileId==0时为被抛弃的页
 	unsigned long filePageID;     // 文件页号
 	bool isModified;              // 是否脏页
 	void *Ptr2PageBegin;
 	PAGEHEAD *pageHead;
-	FILECOND* GetFileCond();
-
+	FILECOND* GetFileCond();      // 文件的第一页才有文件头
 };
 
 class Clock
 {
+	friend class MemFile;
 public:
 	Clock();
 
 	// 返回磁盘文件内存地址
 	FileAddr GetMemFile(unsigned long fileId, unsigned long filePageID);
 private:
-	unsigned int GetSwapPage();
+	unsigned int GetSwapPage();  // 找到一个可替换的空页
 	MemPage* memPage[MEM_PAGEAMOUNT+1];
 };
 
@@ -106,7 +108,7 @@ private:
 class MemFile
 {
 public:
-	MemFile(const char *file_name);
+	MemFile(const char *file_name, Clock *pMemClock = 0);
 public:
 	//void AddOnePage();
 	char fileName[MAX_FILENAME_LEN];
