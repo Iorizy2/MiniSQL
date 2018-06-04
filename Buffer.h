@@ -71,7 +71,11 @@ public:
 };
 
 /*********************************************************
-*               内存页，用于缓存磁盘文件
+*
+*   名称：内存页类
+*   功能：提供保存文件页的空间，以及该页相关的信息
+*   约束：内存页的大小固定
+*
 **********************************************************/
 class MemPage
 {
@@ -81,52 +85,86 @@ public:
 
 	// 把内存中的页写回到文件中
 	void Back2File() const;
+	// 设置为脏页
+	bool SetModified();
+	std::string MemPageInfo;
 public:
-	unsigned long fileId;         // 文件指针，fileId==0时为被抛弃的页
+	unsigned long fileId;         // 文件指针，while fileId==0 时为被抛弃的页
 	unsigned long filePageID;     // 文件页号
+	bool bIsLastUsed;             // 最近一次访问内存是否被使用，用于Clock算法
 	bool isModified;              // 是否脏页
-	void *Ptr2PageBegin;
-	PAGEHEAD *pageHead;
-	FILECOND* GetFileCond();      // 文件的第一页才有文件头
+	void *Ptr2PageBegin;          // 实际保存物理文件数据的地址
+	PAGEHEAD *pageHead;           // 页头指针
+	FILECOND* GetFileCond();      // 文件头指针（while filePageID == 0）
 };
 
+/*********************************************************
+*
+*   名称：内存页管理类（Clock页面置换算法）
+*   功能：物理页面在内存中的缓存，加速对物理文件的读写
+*   约束：调用者保证需要被载入的物理文件都存在，且加载的页面不越界
+*
+**********************************************************/
 class Clock
 {
 	friend class MemFile;
 public:
 	Clock();
 	~Clock();
-
 	// 返回磁盘文件内存地址
-	FileAddr GetMemFile(unsigned long fileId, unsigned long filePageID);
+	MemPage* GetMemAddr(unsigned long fileId, unsigned long filePageID);
+
+	// 创建新页，适用于创建新文件或者添加新页的情况下
+	MemPage* CreatNewPage(unsigned long fileId, unsigned long filePageID);
+
 private:
-	unsigned int GetSwapPage();  // 找到一个可替换的内存页
-	MemPage* memPage[MEM_PAGEAMOUNT+1];
+	// return the file page memory address if it is in memory
+	// otherwise return nullptr;
+	MemPage* GetExistedPage(unsigned long fileId, unsigned long filePageID);
+	MemPage* LoadFromFile(unsigned long fileId, unsigned long filePageID);
+
+	// 返回一个可替换的内存页索引
+	// 原页面内容该写回先写回
+	unsigned int GetReplaceablePage();  
+private:
+	MemPage* MemPages[MEM_PAGEAMOUNT+1];  // 内存页对象数组
 };
 
 /*********************************************************
-*               内存文件类
+*   名称：内存文件类
+*   功能：通过物理文件在内存中的映射文件的操作，从而操作物理文件
+*   约束：假设所有被操作的文件都存在且已经打开
 **********************************************************/
 class MemFile
 {
+	friend class BUFFER;
+private:
+	// 构造
+	MemFile(const char *file_name, unsigned long file_id,Clock *pMemClock = 0);
+private:
+	MemPage * AddOnePage(Clock *pMemClock);  // 返回新增的页号
+	MemPage* GetFileFirstPage(Clock *pMemClock);  //得到文件首页
 public:
-	MemFile(const char *file_name, Clock *pMemClock = 0);
-public:
-	//void AddOnePage();
 	char fileName[MAX_FILENAME_LEN];
 	unsigned long fileId;             // 文件指针
 	unsigned long total_page;         // 目前文件中共有页数
 };
+
 
 class BUFFER
 {
 public:
 	BUFFER() = default;
 	~BUFFER();
-	FileAddr ReadFile(const char *fileName, unsigned int file_page);
+	MemFile* GetMemFile(const char *fileName);
+	MemPage* CreateFile(const char *fileName);
+	
+
 public:
-	std::vector<MemFile*> memFile;
+	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 	Clock MemClock;
 };
+
+//FileAddr MemWrite(const void*, size_t, FileAddr*);
 
 #endif //define _BUFFER_H_
