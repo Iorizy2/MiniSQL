@@ -15,6 +15,13 @@
 ******************************************************************/
 #include"Buffer.h"
 
+// 定义全局内存缓冲页
+Clock* GetGlobalClock()
+{
+	static Clock MemClock;
+	return &MemClock;
+}
+
 void PAGEHEAD::Initialize()
 {
 	pageId = 0;
@@ -30,22 +37,24 @@ void FILECOND::Initialize()
 }
 
 
-FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest, Clock *pMemClock /*= 0*/)
+FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest)
 {
-	auto pMemPage = pMemClock->GetMemAddr(this->fileId, dest->filePageID);
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest->filePageID);
 	memcpy((char*)pMemPage->Ptr2PageBegin+dest->offSet, source, length);
+	pMemPage->SetModified();
 	return FileAddr();
 }
 
-MemFile::MemFile(const char *file_name, unsigned long file_id, Clock *pMemClock)
+MemFile::MemFile(const char *file_name, unsigned long file_id)
 {
 	strcpy(this->fileName, file_name);
 	this->fileId = file_id;
-	this->total_page = pMemClock->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page;
+	this->total_page = GetGlobalClock()->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page;
 }
 
-MemPage * MemFile::AddOnePage(Clock *pMemClock)
+MemPage * MemFile::AddOnePage()
 {
+	Clock *pMemClock = GetGlobalClock();
 	MemPage * newMemPage = pMemClock->CreatNewPage(this->fileId, this->total_page);
 	this->total_page += 1;
 	pMemClock->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page = this->total_page;
@@ -53,9 +62,9 @@ MemPage * MemFile::AddOnePage(Clock *pMemClock)
 	return newMemPage;
 }
 
-MemPage* MemFile::GetFileFirstPage(Clock *pMemClock)
+MemPage* MemFile::GetFileFirstPage()
 {
-	return pMemClock->GetMemAddr(this->fileId, 0);  // 文件首页
+	return GetGlobalClock()->GetMemAddr(this->fileId, 0);  // 文件首页
 }
 
 MemPage::MemPage()
@@ -217,7 +226,7 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 	int Ptr2File = open(fileName, _O_BINARY | O_RDWR, 0664);
 	if (Ptr2File != -1)
 	{
-		MemFile* newFile = new MemFile(fileName,Ptr2File, &MemClock);
+		MemFile* newFile = new MemFile(fileName,Ptr2File);
 		memFile.push_back(newFile);
 		return newFile;
 	}

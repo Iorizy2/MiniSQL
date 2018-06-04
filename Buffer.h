@@ -29,6 +29,9 @@
 #define MEM_PAGEAMOUNT		1024	// 内存页数量
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
 
+class Clock;
+Clock* GetGlobalClock();
+
 /*********************************************************
 *             页头信息，用以标识文件页
 **********************************************************/
@@ -49,6 +52,7 @@ class FileAddr
 	friend class FILECOND;
 public:
 	FileAddr() :filePageID(0), offSet(sizeof(PAGEHEAD)) {}
+	//void SetFileAddr();
 	FileAddr(unsigned long _filePageID, unsigned int  _offSet) :filePageID(_filePageID), offSet(_offSet) {}
 public:
 	unsigned long filePageID;     // 页编号
@@ -140,14 +144,14 @@ class MemFile
 	friend class BUFFER;
 public:
 	// 写入数据
-	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest, Clock *pMemClock = 0);
-	MemPage * AddOnePage(Clock *pMemClock);  // 当前文件添加一页空间
+	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest);
+	MemPage * AddOnePage();  // 当前文件添加一页空间
 private:
 	// 构造
-	MemFile(const char *file_name, unsigned long file_id,Clock *pMemClock = 0);
+	MemFile(const char *file_name, unsigned long file_id);
 private:
 	
-	MemPage* GetFileFirstPage(Clock *pMemClock);  //得到文件首页
+	MemPage* GetFileFirstPage();  //得到文件首页
 private:
 	char fileName[MAX_FILENAME_LEN];
 	unsigned long fileId;             // 文件指针
