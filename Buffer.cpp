@@ -29,22 +29,19 @@ void FILECOND::Initialize()
 	NewInsert = FileAddr(0, sizeof(PAGEHEAD)+sizeof(FILECOND));
 }
 
+
+FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest, Clock *pMemClock /*= 0*/)
+{
+	auto pMemPage = pMemClock->GetMemAddr(this->fileId, dest->filePageID);
+	memcpy((char*)pMemPage->Ptr2PageBegin+dest->offSet, source, length);
+	return FileAddr();
+}
+
 MemFile::MemFile(const char *file_name, unsigned long file_id, Clock *pMemClock)
 {
 	strcpy(this->fileName, file_name);
 	this->fileId = file_id;
 	this->total_page = pMemClock->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page;
-
-	// 文件不存在
-	//if (this->fileId == -1) 
-	//{
-	//	// 新建文件(打开文件)
-	//	this->fileId = open(file_name, _O_BINARY | O_RDWR | O_CREAT, 0664); 
-	//	
-	//	// 创建新的文件第一页并写入磁盘
-	//	pMemClock->CreatNewPage(this->fileId, 0);
-	//}
-	//this->total_page = pMemClock->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page;
 }
 
 MemPage * MemFile::AddOnePage(Clock *pMemClock)
@@ -222,6 +219,7 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 	{
 		MemFile* newFile = new MemFile(fileName,Ptr2File, &MemClock);
 		memFile.push_back(newFile);
+		return newFile;
 	}
 
 	// 文件不存在
@@ -229,29 +227,15 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 
 }
 
-//MemPage* BUFFER::ReadFile(const char *fileName, unsigned int file_page_id)
-//{
-//	// 如果文件已经打开
-//	for (int i = 0; i < memFile.size(); i++)
-//	{
-//		if ((strcmp(memFile[i]->fileName, fileName) == 0) && file_page_id<memFile[i]->total_page)
-//			return MemClock.GetMemAddr(memFile[i]->fileId, file_page_id);
-//	}
-//
-//	//----- 如果文件没有打开,要么打开文件，要么创建文件
-//	MemFile* newFile = new MemFile(fileName, &MemClock);
-//	memFile.push_back(newFile);
-//	return MemClock.GetMemAddr(newFile->fileId, file_page_id);
-//}
 
-MemPage* BUFFER::CreateFile(const char *fileName)
+void BUFFER::CreateFile(const char *fileName)
 {
 	// 文件存在 创建失败
 	int Ptr2File = open(fileName, _O_BINARY | O_RDWR, 0664);
 	if (Ptr2File != -1)
 	{
 		close(Ptr2File);
-		return nullptr;
+		return;
 	}
 
 	//创建文件
@@ -261,5 +245,14 @@ MemPage* BUFFER::CreateFile(const char *fileName)
 	((PAGEHEAD*)ptr)->pageId = 0;
 	((PAGEHEAD*)ptr)->isFixed = 1;
 	((FILECOND*)((char*)ptr + sizeof(PAGEHEAD)))->Initialize();
+	// 写回
+	write(newFile, ptr, FILE_PAGESIZE);
 	close(newFile);
+	return;
 }
+
+Clock* BUFFER::GetPtr2Clock()
+{
+	return &MemClock;
+}
+

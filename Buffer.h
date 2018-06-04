@@ -138,13 +138,17 @@ private:
 class MemFile
 {
 	friend class BUFFER;
+public:
+	// 写入数据
+	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest, Clock *pMemClock = 0);
+	MemPage * AddOnePage(Clock *pMemClock);  // 当前文件添加一页空间
 private:
 	// 构造
 	MemFile(const char *file_name, unsigned long file_id,Clock *pMemClock = 0);
 private:
-	MemPage * AddOnePage(Clock *pMemClock);  // 返回新增的页号
+	
 	MemPage* GetFileFirstPage(Clock *pMemClock);  //得到文件首页
-public:
+private:
 	char fileName[MAX_FILENAME_LEN];
 	unsigned long fileId;             // 文件指针
 	unsigned long total_page;         // 目前文件中共有页数
@@ -157,13 +161,13 @@ public:
 	BUFFER() = default;
 	~BUFFER();
 	MemFile* GetMemFile(const char *fileName);
-	MemPage* CreateFile(const char *fileName);
-	
-
+	void CreateFile(const char *fileName);
+	Clock* GetPtr2Clock();
 public:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 	Clock MemClock;
 };
+
 
 //FileAddr MemWrite(const void*, size_t, FileAddr*);
 

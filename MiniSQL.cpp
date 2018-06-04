@@ -12,10 +12,8 @@ int main()
 {
 	//MemFile file("test.data");
 	BUFFER buffer;
-	/*MemPage* p = (MemPage*)(buffer.ReadFile("test.data5", 0));
-	
-	cout << p->pageHead->pageId << endl;
-	cout << p->pageHead->isFixed << endl;*/
-	//buffer.AddPage("test.data5");
+	//buffer.CreateFile("test");
+	auto pMemPage = buffer.GetMemFile("test");
+	pMemPage->AddOnePage(buffer.GetPtr2Clock());
 	system("pause");
 }
