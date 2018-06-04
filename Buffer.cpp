@@ -259,9 +259,3 @@ void BUFFER::CreateFile(const char *fileName)
 	close(newFile);
 	return;
 }
-
-Clock* BUFFER::GetPtr2Clock()
-{
-	return &MemClock;
-}
-

@@ -166,13 +166,11 @@ public:
 	~BUFFER();
 	MemFile* GetMemFile(const char *fileName);
 	void CreateFile(const char *fileName);
-	Clock* GetPtr2Clock();
+	
 public:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
-	Clock MemClock;
 };
 
 
-//FileAddr MemWrite(const void*, size_t, FileAddr*);
 
 #endif //define _BUFFER_H_
