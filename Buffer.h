@@ -40,6 +40,10 @@ public:
 	void SetFileAddr(unsigned long _filePageID, unsigned int  _offSet);
 	unsigned long filePageID;     // 文件页编号
 	unsigned int  offSet;         // 页内偏移量
+	bool operator==(const FileAddr &rhs)
+	{
+		return (this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
 };
 
 
@@ -127,7 +131,7 @@ private:
 	MemPage* LoadFromFile(unsigned long fileId, unsigned long filePageID);
 
 	// Clock置换算法
-	//unsigned long ClockSwap();
+	unsigned long ClockSwap();
 
 	 
 private:
@@ -143,11 +147,16 @@ class MemFile
 {
 	friend class BUFFER;
 public:
+	FileAddr AddRecord(void*source, size_t sz_wipe);
+	FileAddr DeleteRecord(void*source, size_t sz_wipe, FileAddr *fd_to_wipe);
 	// 写入数据
-	FileAddr MemWrite(const void* source, size_t length);          // 在可写入地址写入数据
+	void* MemRead(FileAddr *mem_to_read);                           // 读取内存文件,返回读取位置指针
+	FileAddr MemWrite(const void* source, size_t length);           // 在可写入地址写入数据
 	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest);
-	MemPage * AddOnePage();                                        // 当前文件添加一页空间
-	MemPage* GetFileFirstPage();                                   // 得到文件首页
+	void MemWipe(void*source, size_t sz_wipe, FileAddr *fd_to_wipe);
+
+	MemPage * AddExtraPage();                                       // 当前文件添加一页空间
+	MemPage* GetFileFirstPage();                                    // 得到文件首页
 
 private:
 	// 构造

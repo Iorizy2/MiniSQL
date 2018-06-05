@@ -21,19 +21,32 @@ int main()
 	//IsPod();
 
 	BUFFER buffer; 
-	char FileName[] = "data";
+	char FileName[] = "data2";
 	volatile auto pMemFile = buffer.GetMemFile(FileName);
 	if (!pMemFile)
 	{
 		buffer.CreateFile(FileName);
 		pMemFile = buffer.GetMemFile(FileName);
 	}
-	char s[] = "hello world!";
-	FileAddr fd;
-	fd.SetFileAddr(0, 40);
-	pMemFile->MemWrite(s, sizeof(s),&fd);
-	GetGlobalClock()->~Clock();
-	buffer.CloseFile();
+	char str[] = "ooooooo";
+	//pMemFile->MemWrite(str, sizeof(str));
+	FileAddr fd = pMemFile->AddRecord(str, sizeof(str));
+	cout << fd.offSet << endl;
+	//FileAddr fd;
+	//fd.SetFileAddr(0, 68);
+	//pMemFile->DeleteRecord(str, sizeof(str), &fd);
+
+	//FileAddr fd;
+	/*fd.SetFileAddr(1, 8);
+	pMemFile->MemWipe(s,13,&fd);*/
+	//cout << ((PAGEHEAD*)p)->pageId << endl;
+	//pMemFile->MemWrite(s, sizeof(s), &fd);
+	/*for (int i = 0; i < 600; i++)
+	{
+		pMemFile->MemWrite(s, sizeof(s));
+	}*/
+	/*GetGlobalClock()->~Clock();
+	buffer.CloseFile();*/
 	/*buffer.GetMemFile("test1")->GetFileFirstPage();
 	buffer.GetMemFile("test2")->GetFileFirstPage();
 	buffer.GetMemFile("test3")->GetFileFirstPage();
@@ -54,5 +67,5 @@ int main()
 	//cout << "total page: " << pMemFile->GetFileFirstPage()->GetFileCond()->NewInsert.offSet << endl;
 
 	//cout << sizeof(PAGEHEAD) + sizeof(FILECOND) << endl;
-	//system("pause");
+	system("pause");
 }

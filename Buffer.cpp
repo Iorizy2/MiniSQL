@@ -41,7 +41,63 @@ void FILECOND::Initialize()
 	NewInsert = fd_tmp;
 }
 
-// 任意位置写入任意数据,返回写入后的新地址位置，写入失败返回原地址
+// 返回新添加记录的地址
+FileAddr MemFile::AddRecord(void*source, size_t record_sz)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
+	auto pFileCond = pMemPage->GetFileCond();
+	FileAddr fd; // 写入的位置
+	if (pFileCond->DelFirst == pFileCond->DelLast)
+	{
+		fd =  MemWrite(source, record_sz);
+	}
+	else
+	{
+		auto curFirst = pFileCond->DelFirst;
+		pFileCond->DelFirst = *(FileAddr*)MemRead(&pFileCond->DelFirst);
+		MemWrite(source, record_sz, &curFirst);
+		fd = curFirst;
+	}
+		
+	pMemPage->SetModified();
+	return fd;
+}
+
+FileAddr MemFile::DeleteRecord(void*record_data, size_t record_sz, FileAddr *fd_to_delete)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
+	auto pFileCond = pMemPage->GetFileCond();
+	// 没有任何删除记录
+	if (pFileCond->DelFirst == pFileCond->DelLast
+		&& pFileCond->DelFirst.filePageID == 0
+		&& pFileCond->DelFirst.offSet < (sizeof(PAGEHEAD) + sizeof(FILECOND)))
+	{
+		char str[] = "\0\0\0\0\0\0\0";
+		MemWipe(str, sizeof(str), fd_to_delete);
+		pFileCond->DelFirst = *fd_to_delete;
+		pFileCond->DelLast = *fd_to_delete;
+	}
+	else
+	{
+		char str[] = "\0\0\0\0\0\0\0";
+		MemWipe(str, sizeof(str), &pFileCond->DelLast);
+
+		MemWrite(fd_to_delete, sizeof(FileAddr), &pFileCond->DelLast);
+		//MemWipe(record_data, record_sz, fd_to_delete);
+		pFileCond->DelLast = *fd_to_delete;
+	}
+	pMemPage->SetModified();
+	return *fd_to_delete;
+}
+
+void* MemFile::MemRead(FileAddr *dest_to_read)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest_to_read->filePageID);
+	return (char*)pMemPage->Ptr2PageBegin + dest_to_read->offSet;
+	pMemPage->bIsLastUsed = true;
+}
+
+// 任意位置写入任意数据,返回写入后的下一个地址位置，写入失败返回原地址
 FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest->filePageID);
@@ -55,11 +111,13 @@ FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest)
 	pMemPage->isModified = true;
 	pMemPage->bIsLastUsed = true;
 
-	dest->offSet += length;
-	return *dest;
+	//dest->offSet += length;
+	FileAddr fd;
+	fd.SetFileAddr(dest->filePageID,dest->offSet+length);
+	return fd;
 }
 
-// 在可写入地址写入数据，若空间不足则申请新的页
+// 在可写入地址写入数据，若空间不足则申请新的页, 返回数据写入的地址
 FileAddr MemFile::MemWrite(const void* source, size_t length)
 {
 	// 获取可写入地址
@@ -67,9 +125,9 @@ FileAddr MemFile::MemWrite(const void* source, size_t length)
 
 	// 写入
 	FileAddr write_res = MemWrite(source, length, &InsertPos);
-	if (write_res.offSet == 0)  //空间不足，需要开辟新的页
+	if (write_res.filePageID==InsertPos.filePageID && write_res.offSet==InsertPos.offSet)  //空间不足，需要开辟新的页
 	{
-		AddOnePage();
+		AddExtraPage();
 		InsertPos.SetFileAddr(InsertPos.filePageID + 1, sizeof(PAGEHEAD));
 		write_res = MemWrite(source, length, &InsertPos);  // 重新写入
 	}
@@ -78,7 +136,16 @@ FileAddr MemFile::MemWrite(const void* source, size_t length)
 	GetGlobalClock()->GetMemAddr(this->fileId, 0)->GetFileCond()->NewInsert = write_res;
 	GetGlobalClock()->GetMemAddr(this->fileId, 0)->SetModified();
 	GetGlobalClock()->GetMemAddr(this->fileId, 0)->bIsLastUsed = true;
-	return write_res;
+	return InsertPos;
+}
+
+void MemFile::MemWipe(void*source, size_t sz_wipe, FileAddr *fd_to_wipe)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, fd_to_wipe->filePageID);
+	// wipe
+	memcpy((char*)pMemPage->Ptr2PageBegin+fd_to_wipe->offSet, source, sz_wipe);
+	pMemPage->isModified = true;
+	pMemPage->bIsLastUsed = true;
 }
 
 MemFile::MemFile(const char *file_name, unsigned long file_id)
@@ -88,7 +155,7 @@ MemFile::MemFile(const char *file_name, unsigned long file_id)
 	this->total_page = GetGlobalClock()->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page;
 }
 
-MemPage * MemFile::AddOnePage()
+MemPage * MemFile::AddExtraPage()
 {
 	Clock *pMemClock = GetGlobalClock();
 	//获取文件首页
@@ -226,25 +293,25 @@ MemPage* Clock::LoadFromFile(unsigned long fileId, unsigned long filePageID)
 	return MemPages[freePage];
 }
 
-//unsigned long Clock::ClockSwap()
-//{
-//	static unsigned long index = 1;
-//	assert(MemPages[index] != nullptr);
-//
-//	while (MemPages[index]->bIsLastUsed)     // 最近被使用过
-//	{
-//		MemPages[index]->bIsLastUsed = 0;
-//		index = (index + 1) % MEM_PAGEAMOUNT;
-//		if (index == 0)index++;
-//	}
-//
-//	auto res = index;
-//	MemPages[index]->bIsLastUsed = 1;
-//	index = (index + 1) % MEM_PAGEAMOUNT;
-//	if (index == 0)index++;
-//	return res;
-//	
-//}
+unsigned long Clock::ClockSwap()
+{
+	static unsigned long index = 1;
+	assert(MemPages[index] != nullptr);
+
+	while (MemPages[index]->bIsLastUsed)     // 最近被使用过
+	{
+		MemPages[index]->bIsLastUsed = 0;
+		index = (index + 1) % MEM_PAGEAMOUNT;
+		if (index == 0)index++;
+	}
+
+	auto res = index;
+	MemPages[index]->bIsLastUsed = 1;
+	index = (index + 1) % MEM_PAGEAMOUNT;
+	if (index == 0)index++;
+	return res;
+	
+}
 
 unsigned int Clock::GetReplaceablePage()
 {
@@ -266,8 +333,8 @@ unsigned int Clock::GetReplaceablePage()
 	}
 
 	// clock算法
-	//unsigned int i = ClockSwap();
-	unsigned int i = rand() % MEM_PAGEAMOUNT;
+	unsigned int i = ClockSwap();
+	//unsigned int i = rand() % MEM_PAGEAMOUNT;
 	if (i == 0)i++;
 	MemPages[i]->Back2File();
 	return i;
