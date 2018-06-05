@@ -127,7 +127,7 @@ private:
 	MemPage* LoadFromFile(unsigned long fileId, unsigned long filePageID);
 
 	// Clock置换算法
-	unsigned long ClockSwap();
+	//unsigned long ClockSwap();
 
 	 
 private:
@@ -144,18 +144,18 @@ class MemFile
 	friend class BUFFER;
 public:
 	// 写入数据
+	FileAddr MemWrite(const void* source, size_t length);          // 在可写入地址写入数据
 	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest);
-	MemPage * AddOnePage();                  // 当前文件添加一页空间
+	MemPage * AddOnePage();                                        // 当前文件添加一页空间
+	MemPage* GetFileFirstPage();                                   // 得到文件首页
+
 private:
 	// 构造
 	MemFile(const char *file_name, unsigned long file_id);
-public:
-	
-	MemPage* GetFileFirstPage();            //得到文件首页
 private:
 	char fileName[MAX_FILENAME_LEN];
-	unsigned long fileId;                   // 文件指针
-	unsigned long total_page;               // 目前文件中共有页数
+	unsigned long fileId;                                          // 文件指针
+	unsigned long total_page;                                      // 目前文件中共有页数
 };
 
 
@@ -166,7 +166,7 @@ public:
 	~BUFFER();
 	MemFile* GetMemFile(const char *fileName);
 	void CreateFile(const char *fileName);
-	
+	void CloseFile();
 public:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 };

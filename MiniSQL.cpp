@@ -21,19 +21,28 @@ int main()
 	//IsPod();
 
 	BUFFER buffer; 
-	char FileName[] = "test8";
-	//auto pMemFile = buffer.GetMemFile(FileName);
-	//if (!pMemFile)
-		//buffer.CreateFile(FileName);
-	
-	buffer.GetMemFile("test1")->GetFileFirstPage();
+	char FileName[] = "data";
+	volatile auto pMemFile = buffer.GetMemFile(FileName);
+	if (!pMemFile)
+	{
+		buffer.CreateFile(FileName);
+		pMemFile = buffer.GetMemFile(FileName);
+	}
+	char s[] = "hello world!";
+	FileAddr fd;
+	fd.SetFileAddr(0, 40);
+	pMemFile->MemWrite(s, sizeof(s),&fd);
+	GetGlobalClock()->~Clock();
+	buffer.CloseFile();
+	/*buffer.GetMemFile("test1")->GetFileFirstPage();
 	buffer.GetMemFile("test2")->GetFileFirstPage();
 	buffer.GetMemFile("test3")->GetFileFirstPage();
 	buffer.GetMemFile("test4")->GetFileFirstPage();
 	buffer.GetMemFile("test5")->GetFileFirstPage();
 	buffer.GetMemFile("test6")->GetFileFirstPage();
 	buffer.GetMemFile("test7")->GetFileFirstPage();
-	buffer.GetMemFile("test8")->GetFileFirstPage();
+	buffer.GetMemFile("test8")->GetFileFirstPage();*/
+
 
 	//if (pMemFile) pMemFile->AddOnePage();
 	// 写入
@@ -45,5 +54,5 @@ int main()
 	//cout << "total page: " << pMemFile->GetFileFirstPage()->GetFileCond()->NewInsert.offSet << endl;
 
 	//cout << sizeof(PAGEHEAD) + sizeof(FILECOND) << endl;
-	system("pause");
+	//system("pause");
 }
