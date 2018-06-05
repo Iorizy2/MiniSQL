@@ -14,6 +14,7 @@
 
 ******************************************************************/
 #include"Buffer.h"
+#include <iostream>
 
 // 定义全局内存缓冲页
 Clock* GetGlobalClock()
@@ -103,6 +104,9 @@ MemPage::~MemPage()
 
 void MemPage::Back2File() const
 {
+#ifndef NDEBUG
+	std::cout << this->fileId << " : write back to file " << std::endl;
+#endif
 	// 脏页需要写回
 	if (isModified)
 	{
@@ -198,6 +202,26 @@ MemPage* Clock::LoadFromFile(unsigned long fileId, unsigned long filePageID)
 	return MemPages[freePage];
 }
 
+unsigned long Clock::ClockSwap()
+{
+	static unsigned long index = 1;
+	assert(MemPages[index] != nullptr);
+
+	while (MemPages[index]->bIsLastUsed)     // 最近被使用过
+	{
+		MemPages[index]->bIsLastUsed = 0;
+		index = (index + 1) % MEM_PAGEAMOUNT;
+		if (index == 0)index++;
+	}
+
+	auto res = index;
+	MemPages[index]->bIsLastUsed = 1;
+	index = (index + 1) % MEM_PAGEAMOUNT;
+	if (index == 0)index++;
+	return res;
+	
+}
+
 unsigned int Clock::GetReplaceablePage()
 {
 	// 查找没有分配的内存页
@@ -207,8 +231,7 @@ unsigned int Clock::GetReplaceablePage()
 		{
 			MemPages[i] = new MemPage();
 			return i;
-		}
-			
+		}	
 	}
 
 	// 查找被抛弃的页
@@ -219,7 +242,7 @@ unsigned int Clock::GetReplaceablePage()
 	}
 
 	// clock算法
-	unsigned int i = rand() % MEM_PAGEAMOUNT;
+	unsigned int i = ClockSwap();
 	MemPages[i]->Back2File();
 	return i;
 }
@@ -245,6 +268,9 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 	int Ptr2File = open(fileName, _O_BINARY | O_RDWR, 0664);
 	if (Ptr2File != -1)
 	{
+#ifndef NDEBUG
+		std::cout << "Open File --> pointer:"<<Ptr2File << "\tname:" << fileName << std::endl;
+#endif
 		MemFile* newFile = new MemFile(fileName,Ptr2File);
 		memFile.push_back(newFile);
 		return newFile;

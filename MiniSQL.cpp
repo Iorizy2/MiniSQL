@@ -19,14 +19,23 @@ void IsPod()
 int main()
 {
 	//IsPod();
-	//MemFile file("test.data");
+
 	BUFFER buffer; 
-	char FileName[] = "test.idf";
-	auto pMemFile = buffer.GetMemFile(FileName);
-	if (!pMemFile)
-		buffer.CreateFile(FileName);
+	char FileName[] = "test8";
+	//auto pMemFile = buffer.GetMemFile(FileName);
+	//if (!pMemFile)
+		//buffer.CreateFile(FileName);
 	
-	if (pMemFile) pMemFile->AddOnePage();
+	buffer.GetMemFile("test1")->GetFileFirstPage();
+	buffer.GetMemFile("test2")->GetFileFirstPage();
+	buffer.GetMemFile("test3")->GetFileFirstPage();
+	buffer.GetMemFile("test4")->GetFileFirstPage();
+	buffer.GetMemFile("test5")->GetFileFirstPage();
+	buffer.GetMemFile("test6")->GetFileFirstPage();
+	buffer.GetMemFile("test7")->GetFileFirstPage();
+	buffer.GetMemFile("test8")->GetFileFirstPage();
+
+	//if (pMemFile) pMemFile->AddOnePage();
 	// 写入
 	/*char s[] = "hello world";
 	FileAddr fd;

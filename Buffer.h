@@ -18,15 +18,13 @@
 #define _BUFFER_H_
 #include <iostream>
 #include <vector>
-#include <string>
-#include <vector>
 #include <io.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cassert>
 
 #define FILE_PAGESIZE		4096	// 内存页(==文件页)大小
-#define MEM_PAGEAMOUNT		1024	// 内存页数量
+#define MEM_PAGEAMOUNT		6	// 内存页数量
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
 
 class Clock;
@@ -119,14 +117,19 @@ public:
 	MemPage* CreatNewPage(unsigned long fileId, unsigned long filePageID);
 
 private:
+	// 返回一个可替换的内存页索引
+	// 原页面内容该写回先写回
+	unsigned int GetReplaceablePage();
+
 	// return the file page memory address if it is in memory
 	// otherwise return nullptr;
 	MemPage* GetExistedPage(unsigned long fileId, unsigned long filePageID);
 	MemPage* LoadFromFile(unsigned long fileId, unsigned long filePageID);
 
-	// 返回一个可替换的内存页索引
-	// 原页面内容该写回先写回
-	unsigned int GetReplaceablePage();  
+	// Clock置换算法
+	unsigned long ClockSwap();
+
+	 
 private:
 	MemPage* MemPages[MEM_PAGEAMOUNT+1];  // 内存页对象数组
 };
