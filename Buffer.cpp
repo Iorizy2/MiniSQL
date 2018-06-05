@@ -31,18 +31,30 @@ void PAGEHEAD::Initialize()
 void FILECOND::Initialize()
 {
 	total_page = 1;
-	DelFirst = FileAddr();
-	DelLast = FileAddr();
-	NewInsert = FileAddr(0, sizeof(PAGEHEAD)+sizeof(FILECOND));
+
+	FileAddr fd_tmp;
+	fd_tmp.SetFileAddr(0, 0);
+	DelFirst = fd_tmp;
+	DelLast = fd_tmp;
+	fd_tmp.offSet = sizeof(PAGEHEAD) + sizeof(FILECOND);
+	NewInsert = fd_tmp;
 }
 
-
+// 任意位置写入任意数据,返回写入后的新地址位置，写入失败返回原地址
 FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest->filePageID);
+	// 如果该页剩余空间不足
+	if ((FILE_PAGESIZE - dest->offSet) < length)
+	{
+		return *dest;
+	}
 	memcpy((char*)pMemPage->Ptr2PageBegin+dest->offSet, source, length);
 	pMemPage->SetModified();
-	return FileAddr();
+	pMemPage->bIsLastUsed = true;
+
+	dest->offSet += length;
+	return *dest;
 }
 
 MemFile::MemFile(const char *file_name, unsigned long file_id)
@@ -55,10 +67,16 @@ MemFile::MemFile(const char *file_name, unsigned long file_id)
 MemPage * MemFile::AddOnePage()
 {
 	Clock *pMemClock = GetGlobalClock();
-	MemPage * newMemPage = pMemClock->CreatNewPage(this->fileId, this->total_page);
-	this->total_page += 1;
-	pMemClock->GetMemAddr(this->fileId, 0)->GetFileCond()->total_page = this->total_page;
-	pMemClock->GetMemAddr(this->fileId, 0)->isModified = true;
+	//获取文件首页
+	MemPage *FileFirstPage = pMemClock->GetMemAddr(this->fileId, 0);
+	this->total_page = FileFirstPage->GetFileCond()->total_page+1;
+	FileFirstPage->GetFileCond()->total_page += 1;
+	FileFirstPage->SetModified();
+	//创建新内存页
+	MemPage * newMemPage = pMemClock->CreatNewPage(this->fileId, FileFirstPage->GetFileCond()->total_page-1);
+	newMemPage->isModified = true;
+	newMemPage->bIsLastUsed = true;
+	
 	return newMemPage;
 }
 
@@ -71,14 +89,14 @@ MemPage::MemPage()
 {
 	Ptr2PageBegin = malloc(FILE_PAGESIZE);
 	pageHead = (PAGEHEAD*)Ptr2PageBegin;
-	isModified = true;
+	isModified = false;
 	bIsLastUsed = false;
 }
 
 MemPage::~MemPage()
 {
-	// 脏页需要写回
-	if (this->isModified)
+	// 脏页且不是抛弃的页需要写回
+	if (this->isModified && this->fileId)
 		this->Back2File();
 	delete Ptr2PageBegin;
 }
@@ -90,8 +108,8 @@ void MemPage::Back2File() const
 	{
 		lseek(this->fileId, this->filePageID*FILE_PAGESIZE, 0);
 		write(this->fileId, this->Ptr2PageBegin, FILE_PAGESIZE); // 写回文件
+		isModified = false;
 	}
-	
 }
 
 bool MemPage::SetModified()
@@ -137,6 +155,7 @@ MemPage* Clock::CreatNewPage(unsigned long file_id, unsigned long file_page_id)
 {
 	// 初始化内存页对象
 	auto i = GetReplaceablePage();
+	memset(MemPages[i]->Ptr2PageBegin, 0, FILE_PAGESIZE);
 	MemPages[i]->fileId = file_id;
 	MemPages[i]->filePageID = file_page_id;
 	MemPages[i]->isModified = true;  // 新页设置为脏页，需要写回
@@ -159,7 +178,7 @@ MemPage* Clock::CreatNewPage(unsigned long file_id, unsigned long file_page_id)
 MemPage* Clock::GetExistedPage(unsigned long fileId, unsigned long filePageID)
 {
 	// look up for the page in memPage list
-	for (int i = 0; i <= MEM_PAGEAMOUNT; i++)
+	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
 	{
 		if (MemPages[i] && MemPages[i]->fileId == fileId && MemPages[i]->filePageID == filePageID)
 			return MemPages[i];
@@ -251,11 +270,21 @@ void BUFFER::CreateFile(const char *fileName)
 	int newFile = open(fileName, _O_BINARY | O_RDWR | O_CREAT, 0664); // 新建文件(打开文件)
 
 	void *ptr = malloc(FILE_PAGESIZE);
-	((PAGEHEAD*)ptr)->pageId = 0;
-	((PAGEHEAD*)ptr)->isFixed = 1;
-	((FILECOND*)((char*)ptr + sizeof(PAGEHEAD)))->Initialize();
+	memset(ptr, 0, FILE_PAGESIZE);
+	PAGEHEAD *pPageHead = (PAGEHEAD *)ptr;
+	FILECOND *pFileCond = (FILECOND *)((char*)ptr + sizeof(PAGEHEAD));
+	pPageHead->pageId = 0;
+	pPageHead->isFixed = 1;
+	pFileCond->Initialize();
 	// 写回
 	write(newFile, ptr, FILE_PAGESIZE);
 	close(newFile);
+	delete ptr;
 	return;
+}
+
+void FileAddr::SetFileAddr(unsigned long _filePageID /*= 0*/, unsigned int _offSet /*= 0*/)
+{
+	filePageID = _filePageID;
+	offSet = _offSet;
 }

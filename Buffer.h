@@ -33,30 +33,27 @@ class Clock;
 Clock* GetGlobalClock();
 
 /*********************************************************
-*             页头信息，用以标识文件页
-**********************************************************/
-class PAGEHEAD
-{
-public:
-	void Initialize();
-	unsigned long pageId;		// 页编号
-	bool isFixed;				// 页是否常驻内存
-};
-
-
-/*********************************************************
-*             文件地址
+*             文件地址,定位文件中的位置
 **********************************************************/
 class FileAddr
 {
 	friend class FILECOND;
 public:
-	FileAddr() :filePageID(0), offSet(sizeof(PAGEHEAD)) {}
-	//void SetFileAddr();
-	FileAddr(unsigned long _filePageID, unsigned int  _offSet) :filePageID(_filePageID), offSet(_offSet) {}
-public:
-	unsigned long filePageID;     // 页编号
+	void SetFileAddr(unsigned long _filePageID, unsigned int  _offSet);
+	unsigned long filePageID;     // 文件页编号
 	unsigned int  offSet;         // 页内偏移量
+};
+
+
+/*********************************************************
+*             页头信息，用以标识文件页
+**********************************************************/
+class PAGEHEAD
+{
+public:
+	void Initialize();          // 初始化为文件第一页
+	unsigned long pageId;		// 页编号
+	bool isFixed;				// 页是否常驻内存
 };
 
 
@@ -67,7 +64,6 @@ class FILECOND
 {
 public:
 	void Initialize();
-	FILECOND()=default;
 	FileAddr DelFirst;                // 第一条被删除记录地址
 	FileAddr DelLast;                 // 最后一条被删除记录地址  
 	FileAddr NewInsert;               // 文件末尾可插入新数据的地址
@@ -83,20 +79,21 @@ public:
 **********************************************************/
 class MemPage
 {
+	friend class MemFile;
+	friend class Clock;
 public:
 	MemPage();
 	~MemPage();
+	void Back2File() const;       // 把内存中的页写回到文件中
+	bool SetModified();           // 设置为脏页
 
-	// 把内存中的页写回到文件中
-	void Back2File() const;
-	// 设置为脏页
-	bool SetModified();
-	std::string MemPageInfo;
 public:
 	unsigned long fileId;         // 文件指针，while fileId==0 时为被抛弃的页
 	unsigned long filePageID;     // 文件页号
-	bool bIsLastUsed;             // 最近一次访问内存是否被使用，用于Clock算法
-	bool isModified;              // 是否脏页
+
+	mutable bool bIsLastUsed;     // 最近一次访问内存是否被使用，用于Clock算法
+	mutable bool isModified;      // 是否脏页
+
 	void *Ptr2PageBegin;          // 实际保存物理文件数据的地址
 	PAGEHEAD *pageHead;           // 页头指针
 	FILECOND* GetFileCond();      // 文件头指针（while filePageID == 0）
@@ -145,17 +142,17 @@ class MemFile
 public:
 	// 写入数据
 	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest);
-	MemPage * AddOnePage();  // 当前文件添加一页空间
+	MemPage * AddOnePage();                  // 当前文件添加一页空间
 private:
 	// 构造
 	MemFile(const char *file_name, unsigned long file_id);
-private:
+public:
 	
-	MemPage* GetFileFirstPage();  //得到文件首页
+	MemPage* GetFileFirstPage();            //得到文件首页
 private:
 	char fileName[MAX_FILENAME_LEN];
-	unsigned long fileId;             // 文件指针
-	unsigned long total_page;         // 目前文件中共有页数
+	unsigned long fileId;                   // 文件指针
+	unsigned long total_page;               // 目前文件中共有页数
 };
 
 
