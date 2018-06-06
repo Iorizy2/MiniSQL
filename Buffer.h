@@ -24,7 +24,7 @@
 #include <cassert>
 
 #define FILE_PAGESIZE		4096	// 内存页(==文件页)大小
-#define MEM_PAGEAMOUNT		6	// 内存页数量
+#define MEM_PAGEAMOUNT		4096	// 内存页数量
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
 
 class Clock;
@@ -111,6 +111,7 @@ public:
 class Clock
 {
 	friend class MemFile;
+	friend class BUFFER;
 public:
 	Clock();
 	~Clock();
@@ -136,6 +137,7 @@ private:
 	 
 private:
 	MemPage* MemPages[MEM_PAGEAMOUNT+1];  // 内存页对象数组
+	void AllBack2File();
 };
 
 /*********************************************************
@@ -147,8 +149,9 @@ class MemFile
 {
 	friend class BUFFER;
 public:
-	FileAddr AddRecord(void*source_record, size_t sz_record);
-	FileAddr DeleteRecord(size_t sz_record, FileAddr *address_delete);
+	void SaveFile();
+	FileAddr AddRecord(void*source_record, size_t sz_record);                // 返回记录所添加的位置
+	FileAddr DeleteRecord(size_t sz_record, FileAddr *address_delete);       // 返回删除的位置
 
 private:
 	// 构造
@@ -161,6 +164,7 @@ private:
 
 	MemPage * AddExtraPage();                                       // 当前文件添加一页空间
 	MemPage* GetFileFirstPage();                                    // 得到文件首页
+
 private:
 	char fileName[MAX_FILENAME_LEN];
 	unsigned long fileId;                                          // 文件指针
@@ -175,7 +179,8 @@ public:
 	~BUFFER();
 	MemFile* GetMemFile(const char *fileName);
 	void CreateFile(const char *fileName);
-	void CloseFile();
+	void CloseAllFile();
+	void CloseFile(const char *FileName);
 public:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 };

@@ -41,6 +41,22 @@ void FILECOND::Initialize()
 	NewInsert = fd_tmp;
 }
 
+void MemFile::SaveFile()
+{
+	// 内存中所有保存该文件的页全部写回
+	auto pClock = GetGlobalClock();
+	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
+	{
+		if (pClock->MemPages[i]->fileId == this->fileId)
+		{
+			pClock->MemPages[i]->Back2File();
+			pClock->MemPages[i]->bIsLastUsed = 0;
+			pClock->MemPages[i]->isModified = false;
+			pClock->MemPages[i]->fileId = 0;
+		}
+	}
+}
+
 // 返回新添加记录的地址
 FileAddr MemFile::AddRecord(void*source, size_t sz_record)
 {
@@ -307,6 +323,20 @@ unsigned long Clock::ClockSwap()
 	
 }
 
+
+
+// 所有内存页执行写回操作，并抛弃该页
+void Clock::AllBack2File()
+{
+	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
+	{
+		MemPages[i]->Back2File();
+		MemPages[i]->isModified = false;
+		MemPages[i]->bIsLastUsed = false;
+		MemPages[i]->fileId = 0;  // 抛弃该页
+	}
+}
+
 unsigned int Clock::GetReplaceablePage()
 {
 	// 查找没有分配的内存页
@@ -396,11 +426,31 @@ void BUFFER::CreateFile(const char *fileName)
 	return;
 }
 
-void BUFFER::CloseFile()
+void BUFFER::CloseAllFile()
 {
+	auto pMemClock = GetGlobalClock();
+	pMemClock->AllBack2File();
+
 	for (size_t i = 0; i < memFile.size(); i++)
 	{
 		close(memFile[i]->fileId);
+	}
+	memFile.clear();
+}
+
+void BUFFER::CloseFile(const char *FileName)
+{
+	auto pMemPage = GetMemFile(FileName);
+	pMemPage->SaveFile();
+
+	for (auto it = memFile.begin(); it != memFile.end();)
+	{
+		if (strcmp((*it)->fileName, FileName) == 0)
+		{
+			close((*it)->fileId);
+			memFile.erase(it);
+			break;
+		}
 	}
 }
 
