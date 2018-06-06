@@ -28,12 +28,12 @@ int main()
 		buffer.CreateFile(FileName);
 		pMemFile = buffer.GetMemFile(FileName);
 	}
-	char str[] = "ooooooo";
+	char str[] = "uuuuuuu";
 	//pMemFile->MemWrite(str, sizeof(str));
-	FileAddr fd = pMemFile->AddRecord(str, sizeof(str));
-	cout << fd.offSet << endl;
+	//FileAddr fd = pMemFile->AddRecord(str, sizeof(str));
+	//cout << fd.offSet << endl;
 	//FileAddr fd;
-	//fd.SetFileAddr(0, 68);
+	//fd.SetFileAddr(0, 52);
 	//pMemFile->DeleteRecord(str, sizeof(str), &fd);
 
 	//FileAddr fd;
@@ -67,5 +67,5 @@ int main()
 	//cout << "total page: " << pMemFile->GetFileFirstPage()->GetFileCond()->NewInsert.offSet << endl;
 
 	//cout << sizeof(PAGEHEAD) + sizeof(FILECOND) << endl;
-	system("pause");
+	//system("pause");
 }

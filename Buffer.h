@@ -147,8 +147,12 @@ class MemFile
 {
 	friend class BUFFER;
 public:
-	FileAddr AddRecord(void*source, size_t sz_wipe);
-	FileAddr DeleteRecord(void*source, size_t sz_wipe, FileAddr *fd_to_wipe);
+	FileAddr AddRecord(void*source_record, size_t sz_record);
+	FileAddr DeleteRecord(size_t sz_record, FileAddr *address_delete);
+
+private:
+	// 构造
+	MemFile(const char *file_name, unsigned long file_id);
 	// 写入数据
 	void* MemRead(FileAddr *mem_to_read);                           // 读取内存文件,返回读取位置指针
 	FileAddr MemWrite(const void* source, size_t length);           // 在可写入地址写入数据
@@ -157,10 +161,6 @@ public:
 
 	MemPage * AddExtraPage();                                       // 当前文件添加一页空间
 	MemPage* GetFileFirstPage();                                    // 得到文件首页
-
-private:
-	// 构造
-	MemFile(const char *file_name, unsigned long file_id);
 private:
 	char fileName[MAX_FILENAME_LEN];
 	unsigned long fileId;                                          // 文件指针

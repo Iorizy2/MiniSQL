@@ -42,20 +42,20 @@ void FILECOND::Initialize()
 }
 
 // 返回新添加记录的地址
-FileAddr MemFile::AddRecord(void*source, size_t record_sz)
+FileAddr MemFile::AddRecord(void*source, size_t sz_record)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
 	FileAddr fd; // 写入的位置
 	if (pFileCond->DelFirst == pFileCond->DelLast)
 	{
-		fd =  MemWrite(source, record_sz);
+		fd =  MemWrite(source, sz_record);
 	}
 	else
 	{
 		auto curFirst = pFileCond->DelFirst;
 		pFileCond->DelFirst = *(FileAddr*)MemRead(&pFileCond->DelFirst);
-		MemWrite(source, record_sz, &curFirst);
+		MemWrite(source, sz_record, &curFirst);
 		fd = curFirst;
 	}
 		
@@ -63,7 +63,7 @@ FileAddr MemFile::AddRecord(void*source, size_t record_sz)
 	return fd;
 }
 
-FileAddr MemFile::DeleteRecord(void*record_data, size_t record_sz, FileAddr *fd_to_delete)
+FileAddr MemFile::DeleteRecord(size_t record_sz, FileAddr *address_delete)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
@@ -72,22 +72,16 @@ FileAddr MemFile::DeleteRecord(void*record_data, size_t record_sz, FileAddr *fd_
 		&& pFileCond->DelFirst.filePageID == 0
 		&& pFileCond->DelFirst.offSet < (sizeof(PAGEHEAD) + sizeof(FILECOND)))
 	{
-		char str[] = "\0\0\0\0\0\0\0";
-		MemWipe(str, sizeof(str), fd_to_delete);
-		pFileCond->DelFirst = *fd_to_delete;
-		pFileCond->DelLast = *fd_to_delete;
+		pFileCond->DelFirst = *address_delete;
+		pFileCond->DelLast = *address_delete;
 	}
 	else
 	{
-		char str[] = "\0\0\0\0\0\0\0";
-		MemWipe(str, sizeof(str), &pFileCond->DelLast);
-
-		MemWrite(fd_to_delete, sizeof(FileAddr), &pFileCond->DelLast);
-		//MemWipe(record_data, record_sz, fd_to_delete);
-		pFileCond->DelLast = *fd_to_delete;
+		MemWrite(address_delete, sizeof(FileAddr), &pFileCond->DelLast);
+		pFileCond->DelLast = *address_delete;
 	}
 	pMemPage->SetModified();
-	return *fd_to_delete;
+	return *address_delete;
 }
 
 void* MemFile::MemRead(FileAddr *dest_to_read)
@@ -342,7 +336,7 @@ unsigned int Clock::GetReplaceablePage()
 
 BUFFER::~BUFFER()
 {
-	for (int i = 0; i < memFile.size(); i++)
+	for (size_t i = 0; i < memFile.size(); i++)
 	{
 		delete memFile[i];
 	}
@@ -351,7 +345,7 @@ BUFFER::~BUFFER()
 MemFile* BUFFER::GetMemFile(const char *fileName)
 {
 	// 如果文件已经打开
-	for (int i = 0; i < memFile.size(); i++)
+	for (size_t i = 0; i < memFile.size(); i++)
 	{
 		if ((strcmp(memFile[i]->fileName, fileName) == 0))
 			return memFile[i];
@@ -404,7 +398,7 @@ void BUFFER::CreateFile(const char *fileName)
 
 void BUFFER::CloseFile()
 {
-	for (int i = 0; i < memFile.size(); i++)
+	for (size_t i = 0; i < memFile.size(); i++)
 	{
 		close(memFile[i]->fileId);
 	}
