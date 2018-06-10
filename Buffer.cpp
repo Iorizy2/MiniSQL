@@ -147,17 +147,18 @@ FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 	if (fd != *address_delete)
 	{
 		return FileAddr{ 0,0 };  // 删除失败,数据已经被删除过
+	} 
+	else if(pFileCond->DelFirst.offSet == 0 && pFileCond->DelLast.offSet == 0)  // 之前没有删除过记录
+	{
+		pFileCond->DelFirst = pFileCond->DelLast = *address_delete;
+		FileAddr tmp{ 0,0 };
+		MemWrite(&tmp, sizeof(FileAddr), &pFileCond->DelLast);
 	}
 	else
 	{
 		// 删除记录
-		bool no_del_record = true;  // 判断是否存在删除的记录
-		if (pFileCond->DelFirst.offSet == 0 && pFileCond->DelLast.offSet == 0)
-			no_del_record = false;
 		MemWrite(address_delete, sizeof(FileAddr), &pFileCond->DelLast);
 		pFileCond->DelLast = *address_delete;
-		if (!no_del_record)
-			pFileCond->DelFirst = pFileCond->DelLast;
 		FileAddr tmp{ 0,0 };
 		MemWrite(&tmp, sizeof(FileAddr), &pFileCond->DelLast);
 	}

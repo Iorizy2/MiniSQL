@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "Buffer.h"
 using namespace std;
+#pragma warning(disable:4996)
 
 // 判断POD数据
 void IsPod()
@@ -24,10 +25,10 @@ int main()
 	auto pMemFile = buffer.GetMemFile("data");
 	if(!pMemFile)
 		buffer.CreateFile("data");
-	char s[] = "test009";
-	//FileAddr fd_del = { 0,68 };
-	//auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
-	auto fd = buffer["data"]->AddRecord(s, sizeof(s));
+	char s[] = "test00E";
+	FileAddr fd_del = { 0,0X84 };
+	auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
+	//auto fd = buffer["data"]->AddRecord(s, sizeof(s));
 	cout << fd.filePageID << " " << fd.offSet << endl;
 	system("pause");
 }
