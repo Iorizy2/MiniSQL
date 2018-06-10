@@ -26,9 +26,9 @@ int main()
 	if(!pMemFile)
 		buffer.CreateFile("data");
 	char s[] = "test00E";
-	FileAddr fd_del = { 0,0X84 };
-	auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
-	//auto fd = buffer["data"]->AddRecord(s, sizeof(s));
+	FileAddr fd_del = { 1,0X18 };
+	//auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
+	auto fd = buffer["data"]->AddRecord(s, sizeof(s));
 	cout << fd.filePageID << " " << fd.offSet << endl;
 	system("pause");
 }

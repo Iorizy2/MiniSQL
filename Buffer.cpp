@@ -116,6 +116,7 @@ FileAddr MemFile::AddRecord(void*source, size_t sz_record)
 		MemWrite(tmp_source, sz_record+sizeof(FileAddr), &first_del_pos);
 	}
 	delete tmp_source;
+	pMemPage->SetModified();
 	return fd;
 }
 
