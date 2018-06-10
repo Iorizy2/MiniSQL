@@ -22,10 +22,12 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <cassert>
+#include "Error.h"
 
 #define FILE_PAGESIZE		4096	// 内存页(==文件页)大小
 #define MEM_PAGEAMOUNT		4096	// 内存页数量
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
+#define FileAddrSize (sizeof(FileAddr))
 
 class Clock;
 Clock* GetGlobalClock();
@@ -37,12 +39,19 @@ class FileAddr
 {
 	friend class FILECOND;
 public:
-	void SetFileAddr(unsigned long _filePageID, unsigned int  _offSet);
+	void SetFileAddr(const unsigned long _filePageID, const unsigned int  _offSet);
+	void ShiftOffset(const int OFFSET);
+
 	unsigned long filePageID;     // 文件页编号
 	unsigned int  offSet;         // 页内偏移量
-	bool operator==(const FileAddr &rhs)
+	
+	bool operator==(const FileAddr &rhs) const
 	{
 		return (this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
+	bool operator!=(const FileAddr &rhs) const
+	{
+		return !(this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
 	}
 };
 
@@ -86,19 +95,19 @@ class MemPage
 public:
 	MemPage();
 	~MemPage();
-	void Back2File() const;       // 把内存中的页写回到文件中
-	bool SetModified();           // 设置为脏页
+	void Back2File() const;            // 把内存中的页写回到文件中
+	bool SetModified();                // 设置为脏页
 
 public:
-	unsigned long fileId;         // 文件指针，while fileId==0 时为被抛弃的页
-	unsigned long filePageID;     // 文件页号
+	unsigned long fileId;              // 文件指针，while fileId==0 时为被抛弃的页
+	unsigned long filePageID;          // 文件页号
 
-	mutable bool bIsLastUsed;     // 最近一次访问内存是否被使用，用于Clock算法
-	mutable bool isModified;      // 是否脏页
+	mutable bool bIsLastUsed;          // 最近一次访问内存是否被使用，用于Clock算法
+	mutable bool isModified;           // 是否脏页
 
-	void *Ptr2PageBegin;          // 实际保存物理文件数据的地址
-	PAGEHEAD *pageHead;           // 页头指针
-	FILECOND* GetFileCond();      // 文件头指针（while filePageID == 0）
+	void *Ptr2PageBegin;               // 实际保存物理文件数据的地址
+	PAGEHEAD *pageHead;                // 页头指针
+	FILECOND* GetFileCond()const;      // 文件头指针（while filePageID == 0）
 };
 
 /*********************************************************
@@ -126,8 +135,7 @@ private:
 	// 原页面内容该写回先写回
 	unsigned int GetReplaceablePage();
 
-	// return the file page memory address if it is in memory
-	// otherwise return nullptr;
+	// 如果目标文件页存在内存缓存则返回其地址，否则返回 nullptr
 	MemPage* GetExistedPage(unsigned long fileId, unsigned long filePageID);
 	MemPage* LoadFromFile(unsigned long fileId, unsigned long filePageID);
 
@@ -150,8 +158,10 @@ class MemFile
 	friend class BUFFER;
 public:
 	void SaveFile();
+	void CloseFile();
+	FileAddr ReadRecord(FileAddr *address_delete, size_t record_sz);         // 读取记录数据
 	FileAddr AddRecord(void*source_record, size_t sz_record);                // 返回记录所添加的位置
-	FileAddr DeleteRecord(size_t sz_record, FileAddr *address_delete);       // 返回删除的位置
+	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);       // 返回删除的位置
 
 private:
 	// 构造
@@ -160,6 +170,7 @@ private:
 	void* MemRead(FileAddr *mem_to_read);                           // 读取内存文件,返回读取位置指针
 	FileAddr MemWrite(const void* source, size_t length);           // 在可写入地址写入数据
 	FileAddr MemWrite(const void* source, size_t length, FileAddr* dest);
+	
 	void MemWipe(void*source, size_t sz_wipe, FileAddr *fd_to_wipe);
 
 	MemPage * AddExtraPage();                                       // 当前文件添加一页空间
@@ -177,10 +188,18 @@ class BUFFER
 public:
 	BUFFER() = default;
 	~BUFFER();
+
+	MemFile* operator[](const char *fileName);
+
+	// 返回文件所映射的内存文件
 	MemFile* GetMemFile(const char *fileName);
+
+	// 创建文件，并格式化
 	void CreateFile(const char *fileName);
+
 	void CloseAllFile();
 	void CloseFile(const char *FileName);
+	
 public:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 };

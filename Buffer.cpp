@@ -60,42 +60,108 @@ void MemFile::SaveFile()
 // 返回新添加记录的地址
 FileAddr MemFile::AddRecord(void*source, size_t sz_record)
 {
+	//auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
+	//auto pFileCond = pMemPage->GetFileCond();
+	//FileAddr fd; // 写入的位置
+	//if (pFileCond->DelFirst == pFileCond->DelLast)
+	//{
+	//	fd =  MemWrite(source, sz_record);
+	//}
+	//else
+	//{
+	//	auto curFirst = pFileCond->DelFirst;
+	//	pFileCond->DelFirst = *(FileAddr*)MemRead(&pFileCond->DelFirst);
+	//	MemWrite(source, sz_record, &curFirst);
+	//	fd = curFirst;
+	//}
+	//	
+	//pMemPage->SetModified();
+
+
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
 	FileAddr fd; // 写入的位置
-	if (pFileCond->DelFirst == pFileCond->DelLast)
+	void *tmp_source;
+	if (pFileCond->DelFirst.offSet == 0 && pFileCond->DelLast.offSet == 0)
 	{
-		fd =  MemWrite(source, sz_record);
+		// 没有被删除过的空余空间，直接在文件尾插入数据
+		// 将添加的新地址作为记录数据的一部分写入
+		tmp_source = malloc(sz_record + sizeof(FileAddr));
+		memcpy(tmp_source, &pFileCond->NewInsert, sizeof(FileAddr));
+		memcpy((char*)tmp_source + sizeof(FileAddr), source, sz_record);
+		auto real_pos = MemWrite(tmp_source, sz_record+ sizeof(FileAddr));
+		MemWrite(&real_pos,sizeof(FileAddr), &real_pos);
+		fd = real_pos;
+	}
+	else if(pFileCond->DelFirst == pFileCond->DelLast)
+	{
+		// 在第一个被删除的数据处，填加新数据
+		tmp_source = malloc(sz_record + sizeof(FileAddr));
+		memcpy(tmp_source, &pFileCond->DelFirst, sizeof(FileAddr));
+		memcpy((char*)tmp_source + sizeof(FileAddr), source, sz_record);
+		MemWrite(tmp_source, sz_record+sizeof(FileAddr), &pFileCond->DelFirst);
+		fd = pFileCond->DelFirst;
+		pFileCond->DelFirst.offSet = 0;
+		pFileCond->DelLast.offSet = 0;
 	}
 	else
 	{
-		auto curFirst = pFileCond->DelFirst;
+		auto first_del_pos = pFileCond->DelFirst;
+		fd = pFileCond->DelFirst;
 		pFileCond->DelFirst = *(FileAddr*)MemRead(&pFileCond->DelFirst);
-		MemWrite(source, sz_record, &curFirst);
-		fd = curFirst;
+
+		tmp_source = malloc(sz_record + sizeof(FileAddr));
+		memcpy(tmp_source, &first_del_pos, sizeof(FileAddr));
+		memcpy((char*)tmp_source + sizeof(FileAddr), source, sz_record);
+		MemWrite(tmp_source, sz_record+sizeof(FileAddr), &first_del_pos);
 	}
-		
-	pMemPage->SetModified();
+	delete tmp_source;
 	return fd;
 }
 
-FileAddr MemFile::DeleteRecord(size_t record_sz, FileAddr *address_delete)
+FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 {
+	//auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
+	//auto pFileCond = pMemPage->GetFileCond();
+	//// 没有任何删除记录
+	//if (pFileCond->DelFirst == pFileCond->DelLast
+	//	&& pFileCond->DelFirst.filePageID == 0
+	//	&& pFileCond->DelFirst.offSet < (sizeof(PAGEHEAD) + sizeof(FILECOND)))
+	//{
+	//	pFileCond->DelFirst = *address_delete;
+	//	pFileCond->DelLast = *address_delete;
+	//}
+	//else
+	//{
+	//	MemWrite(address_delete, sizeof(FileAddr), &pFileCond->DelLast);
+	//	pFileCond->DelLast = *address_delete;
+	//}
+	//pMemPage->SetModified();
+	//return *address_delete;
+
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
-	// 没有任何删除记录
-	if (pFileCond->DelFirst == pFileCond->DelLast
-		&& pFileCond->DelFirst.filePageID == 0
-		&& pFileCond->DelFirst.offSet < (sizeof(PAGEHEAD) + sizeof(FILECOND)))
+
+	// 如果待删除数据地址的地址标识和本身地址不等，则是已经删除过的数据
+	FileAddr fd = *(FileAddr*)MemRead(address_delete);
+	if (fd != *address_delete)
 	{
-		pFileCond->DelFirst = *address_delete;
-		pFileCond->DelLast = *address_delete;
+		return FileAddr{ 0,0 };  // 删除失败,数据已经被删除过
 	}
 	else
 	{
+		// 删除记录
+		bool no_del_record = true;  // 判断是否存在删除的记录
+		if (pFileCond->DelFirst.offSet == 0 && pFileCond->DelLast.offSet == 0)
+			no_del_record = false;
 		MemWrite(address_delete, sizeof(FileAddr), &pFileCond->DelLast);
 		pFileCond->DelLast = *address_delete;
+		if (!no_del_record)
+			pFileCond->DelFirst = pFileCond->DelLast;
+		FileAddr tmp{ 0,0 };
+		MemWrite(&tmp, sizeof(FileAddr), &pFileCond->DelLast);
 	}
+
 	pMemPage->SetModified();
 	return *address_delete;
 }
@@ -148,6 +214,7 @@ FileAddr MemFile::MemWrite(const void* source, size_t length)
 	GetGlobalClock()->GetMemAddr(this->fileId, 0)->bIsLastUsed = true;
 	return InsertPos;
 }
+
 
 void MemFile::MemWipe(void*source, size_t sz_wipe, FileAddr *fd_to_wipe)
 {
@@ -211,9 +278,13 @@ void MemPage::Back2File() const
 	// 脏页需要写回
 	if (isModified)
 	{
-		lseek(this->fileId, this->filePageID*FILE_PAGESIZE, 0);
-		write(this->fileId, this->Ptr2PageBegin, FILE_PAGESIZE); // 写回文件
+		int temp = 0;
+		temp = lseek(this->fileId, this->filePageID*FILE_PAGESIZE, SEEK_SET);
+		if (temp == -1)throw ERROR::LSEEK_FAILED;
+		temp = write(this->fileId, this->Ptr2PageBegin, FILE_PAGESIZE); // 写回文件
+		if (temp != FILE_PAGESIZE) throw ERROR::WRITE_FAILED;  // 写失败
 		isModified = false;
+		bIsLastUsed = true;
 	}
 }
 
@@ -223,7 +294,7 @@ bool MemPage::SetModified()
 	return true;
 }
 
-FILECOND* MemPage::GetFileCond()
+FILECOND* MemPage::GetFileCond()const
 {
 	return (FILECOND*)((char*)Ptr2PageBegin + sizeof(PAGEHEAD));
 }
@@ -291,15 +362,21 @@ MemPage* Clock::GetExistedPage(unsigned long fileId, unsigned long filePageID)
 	return nullptr;
 }
 
+
+
+// 从磁盘加载文件页
 MemPage* Clock::LoadFromFile(unsigned long fileId, unsigned long filePageID)
 {
 	unsigned int freePage = GetReplaceablePage();
 	MemPages[freePage]->fileId = fileId;
 	MemPages[freePage]->filePageID = filePageID;
 	MemPages[freePage]->isModified = false;
+	MemPages[freePage]->bIsLastUsed = true;
 
-	lseek(fileId, filePageID*FILE_PAGESIZE, 0);  // 定位到将要取出的文件页的首地址
-	read(fileId, MemPages[freePage]->Ptr2PageBegin, FILE_PAGESIZE); // 读到内存中
+	long offset_t = lseek(fileId, filePageID*FILE_PAGESIZE, SEEK_SET);       // 定位到将要取出的文件页的首地址
+	if (offset_t == -1)throw ERROR::LSEEK_FAILED;
+	long byte_count = read(fileId, MemPages[freePage]->Ptr2PageBegin, FILE_PAGESIZE);          // 读到内存中
+	if (byte_count == 0)throw ERROR::READ_FAILED;
 	return MemPages[freePage];
 }
 
@@ -454,8 +531,18 @@ void BUFFER::CloseFile(const char *FileName)
 	}
 }
 
-void FileAddr::SetFileAddr(unsigned long _filePageID /*= 0*/, unsigned int _offSet /*= 0*/)
+MemFile* BUFFER::operator[](const char *fileName)
+{
+	return GetMemFile(fileName);
+}
+
+void FileAddr::SetFileAddr(const unsigned long _filePageID /*= 0*/, const unsigned int _offSet /*= 0*/)
 {
 	filePageID = _filePageID;
 	offSet = _offSet;
+}
+
+void FileAddr::ShiftOffset(const int OFFSET)
+{
+	this->offSet += OFFSET;
 }
