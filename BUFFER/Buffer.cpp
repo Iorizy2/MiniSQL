@@ -15,6 +15,7 @@
 ******************************************************************/
 #include"Buffer.h"
 #include <iostream>
+#include <string>
 
 // 定义全局内存缓冲页
 Clock* GetGlobalClock()
@@ -22,6 +23,13 @@ Clock* GetGlobalClock()
 	static Clock MemClock;
 	return &MemClock;
 }
+
+BUFFER& GetGlobalFileBuffer()
+{
+	static BUFFER buffer;
+	return buffer;
+}
+
 
 void PAGEHEAD::Initialize()
 {
@@ -139,7 +147,6 @@ FileAddr MemFile::MemWrite(const void* source, size_t length, FileAddr* dest)
 		return *dest;
 	}
 	memcpy((void*)((char*)pMemPage->Ptr2PageBegin+dest->offSet), source, length);
-	printf("in");
 	pMemPage->isModified = true;
 	pMemPage->bIsLastUsed = true;
 
@@ -214,6 +221,7 @@ MemPage::MemPage()
 {
 	Ptr2PageBegin = malloc(FILE_PAGESIZE);
 	pageHead = (PAGEHEAD*)Ptr2PageBegin;
+	fileId = 0;
 	isModified = false;
 	bIsLastUsed = false;
 }
@@ -272,6 +280,18 @@ Clock::~Clock()
 	}
 }
 
+#ifndef NDEBUG
+void Clock::PrintFileNameInMemory()
+{
+	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
+	{
+		if (MemPages[i] && MemPages[i]->fileId)
+		{
+			std::cout << MemPages[i]->fileId << "\t\t" << MemPages[i]->filePageID << std::endl;
+		}
+	}
+}
+#endif
 MemPage* Clock::GetMemAddr(unsigned long fileId, unsigned long filePageID)
 {
 	// 先查找是否存在内存中
@@ -385,19 +405,21 @@ unsigned int Clock::GetReplaceablePage()
 
 BUFFER::~BUFFER()
 {
-	for (size_t i = 0; i < memFile.size(); i++)
+	/*for (size_t i = 0; i < memFiles.size(); i++)
 	{
-		delete memFile[i];
-	}
+		delete memFiles[i];
+	}*/
+
+	CloseAllFile();
 }
 
 MemFile* BUFFER::GetMemFile(const char *fileName)
 {
 	// 如果文件已经打开
-	for (size_t i = 0; i < memFile.size(); i++)
+	for (size_t i = 0; i < memFiles.size(); i++)
 	{
-		if ((strcmp(memFile[i]->fileName, fileName) == 0))
-			return memFile[i];
+		if ((strcmp(memFiles[i]->fileName, fileName) == 0))
+			return memFiles[i];
 	}
 
 	// 文件存在但是没打开
@@ -405,10 +427,10 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 	if (Ptr2File != -1)
 	{
 #ifndef NDEBUG
-		std::cout << "Open File --> pointer:"<<Ptr2File << "\tname:" << fileName << std::endl;
+		//std::cout << "Open File --> pointer:"<<Ptr2File << "\tname:" << fileName << std::endl;
 #endif
 		MemFile* newFile = new MemFile(fileName,Ptr2File);
-		memFile.push_back(newFile);
+		memFiles.push_back(newFile);
 		return newFile;
 	}
 
@@ -447,19 +469,10 @@ void BUFFER::CreateFile(const char *fileName)
 
 void BUFFER::CloseAllFile()
 {
-	/*auto pMemClock = GetGlobalClock();
-	pMemClock->AllBack2File();
-
-	for (size_t i = 0; i < memFile.size(); i++)
+	while (!memFiles.empty())
 	{
-		close(memFile[i]->fileId);
-	}
-	memFile.clear();*/
-
-	while (!memFile.empty())
-	{
-		CloseFile((*memFile.begin())->fileName);
-		memFile.erase(memFile.begin());
+		CloseFile((*memFiles.begin())->fileName);
+		//memFiles.erase(memFiles.begin());
 	}
 }
 
@@ -470,8 +483,9 @@ void BUFFER::CloseFile(const char *FileName)
 	auto pClock = GetGlobalClock();
 	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
 	{
-		if (pClock->MemPages[i]->fileId == pMemPage->fileId)
+		if (pClock->MemPages[i] && pClock->MemPages[i]->fileId == pMemPage->fileId)
 		{
+			assert(pClock->MemPages[i]);
 			pClock->MemPages[i]->Back2File();
 			pClock->MemPages[i]->bIsLastUsed = 0;
 			pClock->MemPages[i]->isModified = false;
@@ -479,12 +493,13 @@ void BUFFER::CloseFile(const char *FileName)
 		}
 	}
 
-	for (auto it = memFile.begin(); it != memFile.end();)
+	for (auto it = memFiles.begin(); it != memFiles.end();)
 	{
 		if (strcmp((*it)->fileName, FileName) == 0)
 		{
 			close((*it)->fileId);
-			memFile.erase(it);
+			delete (*it);
+			memFiles.erase(it);
 			break;
 		}
 		it++;
@@ -506,3 +521,118 @@ void FileAddr::ShiftOffset(const int OFFSET)
 {
 	this->offSet += OFFSET;
 }
+
+
+std::string IntToStr(int i)
+{
+	std::string s;
+	while (i > 0)
+	{
+		s += ((i % 10) + '0');
+		i /= 10;
+	}
+	for (int i = 0, j = s.size() - 1; i <= j; i++, j--)
+		std::swap(s[i], s[j]);
+	return s;
+}
+void BufferModuleTest()
+{
+	using std::cout;
+	using std::endl;
+	auto & buffer = GetGlobalFileBuffer();
+	std::cout << "测试创建 5 个文件：test1...test5" << std::endl;
+	buffer.CreateFile("test1");
+	buffer.CreateFile("test2");
+	buffer.CreateFile("test3");
+	buffer.CreateFile("test4");
+	buffer.CreateFile("test5");
+
+	std::cout << "测试打开文件 test1" << std::endl;
+	auto pf_test1 = buffer["test1"];
+	if (!pf_test1)
+		std::cout << "打开文件 test1 失败" << std::endl;
+	else
+		std::cout << "打开成功" << std::endl;
+	
+
+	std::cout << "测试打开一个不存在的文件 test6" << std::endl;
+	auto pf_test6 = buffer["test6"];
+	if (!pf_test6)
+	{
+		std::cout << "打开文件 test6 失败" << std::endl;
+		std::cout << "创建 test6..." << std::endl;
+		buffer.CreateFile("test6");
+		pf_test6 = buffer["test6"];
+		if (!pf_test6)
+			std::cout << "创建失败" << std::endl;
+		else
+			std::cout << "创建成功" << std::endl;
+
+	}	
+	else
+		std::cout << "打开成功" << std::endl;
+
+	// 向test6读写数据
+	std::string s("test");
+	std::vector<FileAddr> vec_fd;
+	if (pf_test6)
+	{
+		cout << "向test6写入600条数据 testxxx(xxx为编号)" << endl;
+		for (int i = 1; i <= 600; i++)
+		{
+			if (i == 123)
+			{
+				int a = i;
+				int b = a;
+			}
+				
+			std::string str_tmp = s + IntToStr(i);
+			str_tmp.reserve(8);
+			FileAddr fd = buffer["test6"]->AddRecord((void*)str_tmp.c_str(), str_tmp.size()+1);
+			vec_fd.push_back(fd);
+		}
+		cout << "读取第123条和第257条的数据值" << endl;
+		const void*p = buffer["test6"]->ReadRecord(&vec_fd[122]);
+		cout << "第123条的数据是：" << endl;
+		cout << "file address:" << ((const FileAddr*)p)->filePageID << " " << ((const FileAddr*)p)->offSet << endl;
+		for (int i = 0; i < 8; i++)
+		{
+			cout << *(char*)((char*)p + sizeof(FileAddr) + i);
+		}
+		cout << endl;
+
+		p = buffer["test6"]->ReadRecord(&vec_fd[256]);
+		cout << "第257条的数据是：" << endl;
+		cout << "file address:" << ((const FileAddr*)p)->filePageID << " " << ((const FileAddr*)p)->offSet << endl;
+		for (int i = 0; i < 8; i++)
+		{
+			cout << *(char*)((char*)p + sizeof(FileAddr) + i);
+		}
+		cout << endl;
+
+		cout << "连续删除第200-400条数据" << endl;
+		for (int i = 200; i <= 400; i++)
+		{
+			buffer["test6"]->DeleteRecord(&vec_fd[i - 1], 8);
+		}
+
+		// 获取文件头地址
+		FileAddr FILECOND_fd;
+		FILECOND_fd.SetFileAddr(0, sizeof(PAGEHEAD));
+		const FILECOND *pFILECOND = (const FILECOND *)buffer["test6"]->ReadRecord(&FILECOND_fd);
+		cout << "Delfirst:" << endl;
+		cout << pFILECOND->DelFirst.filePageID << " " << pFILECOND->DelFirst.offSet << endl;
+
+		cout << "新添加一条数据 ABCDEFG" << endl;
+		FileAddr new_fd = buffer["test6"]->AddRecord("ABCDEFG", 8);
+		cout << "新添加的地址为" << endl;
+		cout << new_fd.filePageID << " " << new_fd.offSet << endl;
+		cout << "第200条记录的地址是" << endl;
+		cout << vec_fd[199].filePageID << " " << vec_fd[199].offSet << endl;
+		
+		cout << "Delfirst:" << endl;
+		cout << pFILECOND->DelFirst.filePageID << " " << pFILECOND->DelFirst.offSet << endl;
+		
+	}
+}
+

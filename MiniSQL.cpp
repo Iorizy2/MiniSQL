@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <string>
 #include "ERROR/Error.h"
 #include "BUFFER/Buffer.h"
 
@@ -16,17 +17,11 @@ void IsPod()
 int main()
 {
 	//IsPod();
-
-	BUFFER buffer;
-	auto pMemFile = buffer["data"];
+	//const auto &buffer = GetGlobalFileBuffer();
+	/*auto pMemFile = buffer["data"];
 	if(!pMemFile)
-		buffer.CreateFile("data");
+		buffer.CreateFile("data");*/
 
-
-	char s[] = "test00E";
-	FileAddr fd_del = { 1,0X18 };
-	//auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
-	//auto fd = buffer["data"]->AddRecord(s, sizeof(s));
-	//cout << fd.filePageID << " " << fd.offSet << endl;
+	BufferModuleTest();
 	system("pause");
 }
