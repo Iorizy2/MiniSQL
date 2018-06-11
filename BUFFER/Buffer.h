@@ -30,9 +30,9 @@ extern "C"
 
 
 
-#define FILE_PAGESIZE		1024	// 内存页(==文件页)大小
-#define MEM_PAGEAMOUNT		4096	// 内存页数量
-#define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
+#define FILE_PAGESIZE        1024	// 内存页(==文件页)大小
+#define MEM_PAGEAMOUNT       4096	// 内存页数量
+#define MAX_FILENAME_LEN     256	// 文件名（包含路径）最大长度
 #define FileAddrSize (sizeof(FileAddr))
 
 class Clock;
