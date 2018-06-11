@@ -151,23 +151,21 @@ private:
 	 
 private:
 	MemPage* MemPages[MEM_PAGEAMOUNT+1];  // 内存页对象数组
-	void AllBack2File();
 };
 
 /*********************************************************
 *   名称：  内存文件类
 *   功能：  通过物理文件在内存中的映射文件的操作，从而操作物理文件
 *   不变式：假设所有被操作的文件都存在且已经打开
+*   记录格式: 记录地址+记录数据
 **********************************************************/
 class MemFile
 {
 	friend class BUFFER;
 public:
-	void SaveFile();
-	//void CloseFile();
-	//FileAddr ReadRecord(FileAddr *address_delete, size_t record_sz);         // 读取记录数据
-	FileAddr AddRecord(void*source_record, size_t sz_record);                // 返回记录所添加的位置
-	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);       // 返回删除的位置
+	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
+	FileAddr AddRecord(void*source_record, size_t sz_record);                        // 返回记录所添加的位置
+	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);               // 返回删除的位置
 
 private:
 	// 构造
@@ -194,19 +192,15 @@ class BUFFER
 public:
 	BUFFER() = default;
 	~BUFFER();
+	MemFile* operator[](const char *fileName);      // 打开文件，不存在返回 nullptr
 
-	MemFile* operator[](const char *fileName);
-
+	void CreateFile(const char *fileName);          // 创建文件，并格式化
+	void CloseFile(const char *FileName);
+	void CloseAllFile();	
+private:
 	// 返回文件所映射的内存文件
 	MemFile* GetMemFile(const char *fileName);
-
-	// 创建文件，并格式化
-	void CreateFile(const char *fileName);
-
-	void CloseAllFile();
-	void CloseFile(const char *FileName);
-	
-public:
+private:
 	std::vector<MemFile*> memFile;  // 保存已经打开的文件列表
 };
 

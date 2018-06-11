@@ -18,9 +18,11 @@ int main()
 	//IsPod();
 
 	BUFFER buffer;
-	auto pMemFile = buffer.GetMemFile("data");
+	auto pMemFile = buffer["data"];
 	if(!pMemFile)
 		buffer.CreateFile("data");
+
+
 	char s[] = "test00E";
 	FileAddr fd_del = { 1,0X18 };
 	//auto fd = buffer["data"]->DeleteRecord(&fd_del, sizeof(s));
