@@ -1,13 +1,9 @@
 ﻿#include <iostream>
-#include <io.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <string>
-#include <stdlib.h>
+#include "ERROR/Error.h"
 #include "BUFFER/Buffer.h"
+
 using namespace std;
-#pragma warning(disable:4996)
+
 
 // 判断POD数据
 void IsPod()
