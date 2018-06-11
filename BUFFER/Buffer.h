@@ -98,9 +98,11 @@ class MemPage
 {
 	friend class MemFile;
 	friend class Clock;
+	friend class BUFFER;
 public:
 	MemPage();
 	~MemPage();
+private:
 	void Back2File() const;            // 把内存中的页写回到文件中
 	bool SetModified();                // 设置为脏页
 
@@ -130,6 +132,7 @@ class Clock
 public:
 	Clock();
 	~Clock();
+private:
 	// 返回磁盘文件内存地址
 	MemPage* GetMemAddr(unsigned long fileId, unsigned long filePageID);
 
@@ -162,7 +165,7 @@ private:
 class MemFile
 {
 	friend class BUFFER;
-public:
+private:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(void*source_record, size_t sz_record);                        // 返回记录所添加的位置
 	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);               // 返回删除的位置
