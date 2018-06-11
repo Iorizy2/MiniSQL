@@ -18,11 +18,17 @@
 #define _BUFFER_H_
 #include <iostream>
 #include <vector>
+#include <cassert>
+#include "Error.h"
+
+extern "C"
+{
 #include <io.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <cassert>
-#include "Error.h"
+}
+
+
 
 #define FILE_PAGESIZE		1024	// 内存页(==文件页)大小
 #define MEM_PAGEAMOUNT		4096	// 内存页数量
