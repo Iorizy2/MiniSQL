@@ -24,7 +24,7 @@
 #include <cassert>
 #include "Error.h"
 
-#define FILE_PAGESIZE		64	// 内存页(==文件页)大小
+#define FILE_PAGESIZE		1024	// 内存页(==文件页)大小
 #define MEM_PAGEAMOUNT		4096	// 内存页数量
 #define MAX_FILENAME_LEN    256		// 文件名（包含路径）最大长度
 #define FileAddrSize (sizeof(FileAddr))
@@ -83,9 +83,9 @@ public:
 
 /*********************************************************
 *
-*   名称：内存页类
-*   功能：提供保存文件页的空间，以及该页相关的信息
-*   约束：内存页的大小固定
+*   名称：  内存页类
+*   功能：  提供保存文件页的空间，以及该页相关的信息
+*   不变式：内存页的大小固定
 *
 **********************************************************/
 class MemPage
@@ -112,9 +112,9 @@ public:
 
 /*********************************************************
 *
-*   名称：内存页管理类（Clock页面置换算法）
-*   功能：物理页面在内存中的缓存，加速对物理文件的读写
-*   约束：调用者保证需要被载入的物理文件都存在，且加载的页面不越界
+*   名称：  内存页管理类（Clock页面置换算法）
+*   功能：  物理页面在内存中的缓存，加速对物理文件的读写
+*   不变式：调用者保证需要被载入的物理文件都存在，且加载的页面不越界
 *
 **********************************************************/
 class Clock
@@ -149,17 +149,17 @@ private:
 };
 
 /*********************************************************
-*   名称：内存文件类
-*   功能：通过物理文件在内存中的映射文件的操作，从而操作物理文件
-*   约束：假设所有被操作的文件都存在且已经打开
+*   名称：  内存文件类
+*   功能：  通过物理文件在内存中的映射文件的操作，从而操作物理文件
+*   不变式：假设所有被操作的文件都存在且已经打开
 **********************************************************/
 class MemFile
 {
 	friend class BUFFER;
 public:
 	void SaveFile();
-	void CloseFile();
-	FileAddr ReadRecord(FileAddr *address_delete, size_t record_sz);         // 读取记录数据
+	//void CloseFile();
+	//FileAddr ReadRecord(FileAddr *address_delete, size_t record_sz);         // 读取记录数据
 	FileAddr AddRecord(void*source_record, size_t sz_record);                // 返回记录所添加的位置
 	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);       // 返回删除的位置
 
