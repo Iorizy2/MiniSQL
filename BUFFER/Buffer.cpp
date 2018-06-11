@@ -94,24 +94,6 @@ FileAddr MemFile::AddRecord(void*source, size_t sz_record)
 
 FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 {
-	//auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
-	//auto pFileCond = pMemPage->GetFileCond();
-	//// 没有任何删除记录
-	//if (pFileCond->DelFirst == pFileCond->DelLast
-	//	&& pFileCond->DelFirst.filePageID == 0
-	//	&& pFileCond->DelFirst.offSet < (sizeof(PAGEHEAD) + sizeof(FILECOND)))
-	//{
-	//	pFileCond->DelFirst = *address_delete;
-	//	pFileCond->DelLast = *address_delete;
-	//}
-	//else
-	//{
-	//	MemWrite(address_delete, sizeof(FileAddr), &pFileCond->DelLast);
-	//	pFileCond->DelLast = *address_delete;
-	//}
-	//pMemPage->SetModified();
-	//return *address_delete;
-
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
 

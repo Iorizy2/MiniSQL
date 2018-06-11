@@ -192,7 +192,7 @@ class BUFFER
 public:
 	BUFFER() = default;
 	~BUFFER();
-	MemFile* operator[](const char *fileName);      // 打开文件，不存在返回 nullptr
+	MemFile* operator[](const char *fileName);      // 打开文件，打开失败返回 nullptr
 
 	void CreateFile(const char *fileName);          // 创建文件，并格式化
 	void CloseFile(const char *FileName);
