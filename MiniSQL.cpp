@@ -16,12 +16,12 @@ void IsPod()
 
 int main()
 {
-	//IsPod();
+	IsPod();
 	//const auto &buffer = GetGlobalFileBuffer();
 	/*auto pMemFile = buffer["data"];
 	if(!pMemFile)
 		buffer.CreateFile("data");*/
 
-	BufferModuleTest();
+	//BufferModuleTest();
 	system("pause");
 }

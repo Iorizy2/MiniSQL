@@ -47,6 +47,7 @@ void FILECOND::Initialize()
 	DelLast = fd_tmp;
 	fd_tmp.offSet = sizeof(PAGEHEAD) + sizeof(FILECOND);
 	NewInsert = fd_tmp;
+	memset(reserve, 0, FILECOND_RESERVE_SPACE);
 }
 
 const void* MemFile::ReadRecord(FileAddr *address_delete)const
@@ -405,11 +406,6 @@ unsigned int Clock::GetReplaceablePage()
 
 BUFFER::~BUFFER()
 {
-	/*for (size_t i = 0; i < memFiles.size(); i++)
-	{
-		delete memFiles[i];
-	}*/
-
 	CloseAllFile();
 }
 

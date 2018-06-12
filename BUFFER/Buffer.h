@@ -28,17 +28,17 @@ extern "C"
 #include <stdlib.h>
 }
 
-
-
-#define FILE_PAGESIZE        1024	// 内存页(==文件页)大小
+#define FILE_PAGESIZE        4096	// 内存页(==文件页)大小
 #define MEM_PAGEAMOUNT       4096	// 内存页数量
 #define MAX_FILENAME_LEN     256	// 文件名（包含路径）最大长度
 #define FileAddrSize (sizeof(FileAddr))
+
 
 class Clock;
 class BUFFER;
 Clock* GetGlobalClock();
 BUFFER& GetGlobalFileBuffer();
+const unsigned int FILECOND_RESERVE_SPACE = 256;  // 文件头预留空间
 
 /*********************************************************
 *             文件地址,定位文件中的位置
@@ -83,10 +83,11 @@ class FILECOND
 {
 public:
 	void Initialize();
-	FileAddr DelFirst;                // 第一条被删除记录地址
-	FileAddr DelLast;                 // 最后一条被删除记录地址  
-	FileAddr NewInsert;               // 文件末尾可插入新数据的地址
-	unsigned long total_page;         // 目前文件中共有页数
+	FileAddr DelFirst;                         // 第一条被删除记录地址
+	FileAddr DelLast;                          // 最后一条被删除记录地址  
+	FileAddr NewInsert;                        // 文件末尾可插入新数据的地址
+	unsigned long total_page;                  // 目前文件中共有页数
+	char reserve[FILECOND_RESERVE_SPACE];      // 预留空间 
 };
 
 /*********************************************************
