@@ -21,10 +21,12 @@
 class KeyAttr
 {
 public:
-	bool operator<(const KeyAttr &rhs) {}
-	bool operator>(const KeyAttr &rhs) {}
-	bool operator==(const KeyAttr &rhs) {}
-	bool operator<=(const KeyAttr &rhs) {}
+	int x;
+	char s[20];
+	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
+	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
+	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
+	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
 };
 
 constexpr int bptree_t = 60;                      // B+tree's degree, bptree_t >= 2
@@ -50,8 +52,11 @@ class BTree
 {
 public:
 	BTree(char *idx_name);                                     // 创建索引文件的B+树
-	FileAddr Search(KeyAttr search_key);
+	FileAddr Search(KeyAttr search_key);                       // 查找关键字是否已经存在
+	void Insert(KeyAttr k, FileAddr k_fd);                           //插入关键字k
 private:
+	void InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd);
+	void SplitChild(FileAddr x, int i, FileAddr y);                  // 分裂x的孩子结点x.children[i] , y
 	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                          // 判断关键字是否存在
 	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);              // 在内部节点查找
 	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);               // 在叶子结点查找
