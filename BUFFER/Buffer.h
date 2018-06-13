@@ -171,11 +171,13 @@ private:
 class MemFile
 {
 	friend class BUFFER;
+	friend class IndexFileHeadManage;
+	friend class BTree;
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(void*source_record, size_t sz_record);                        // 返回记录所添加的位置
 	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);               // 返回删除的位置
-
+	
 private:
 	// 构造
 	MemFile(const char *file_name, unsigned long file_id);

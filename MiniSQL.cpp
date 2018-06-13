@@ -2,6 +2,7 @@
 #include <string>
 #include "ERROR/Error.h"
 #include "BUFFER/Buffer.h"
+#include "BPLUSTREE/bptree.h"
 
 using namespace std;
 
@@ -12,6 +13,8 @@ void IsPod()
 	cout << std::is_pod<PAGEHEAD>::value << endl;
 	cout << std::is_pod<FileAddr>::value << endl;
 	cout << std::is_pod<FILECOND>::value << endl;
+	cout << std::is_pod<IndexFileHead>::value << endl;
+	cout << std::is_pod<BTreeNode>::value << endl;
 }
 
 int main()
