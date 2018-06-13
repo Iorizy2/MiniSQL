@@ -20,6 +20,10 @@ void DispatchError(ERROR error)
 			         "or there is not enough space left on the device for the operation.";
 		break;
 
+	case ERROR::FILENAME_CONVERT_FAILED:
+		std::cout << "file name convert failed";
+		break;
+
 	default:
 		break;
 	}

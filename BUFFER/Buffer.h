@@ -132,6 +132,7 @@ class Clock
 {
 	friend class MemFile;
 	friend class BUFFER;
+	friend class BTree;
 public:
 	Clock();
 	~Clock();
@@ -171,7 +172,6 @@ private:
 class MemFile
 {
 	friend class BUFFER;
-	friend class IndexFileHeadManage;
 	friend class BTree;
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)

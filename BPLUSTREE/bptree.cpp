@@ -1,93 +1,94 @@
 #include "bptree.h"
-IndexFileHeadManage::IndexFileHeadManage(const char*_idx_file, char* KeyStr)
-{
-	idx_file = (char*)malloc(strlen(_idx_file));
-	strcpy(idx_file, _idx_file);
 
-	auto& buffer = GetGlobalFileBuffer();
-	auto pMemPage = buffer[idx_file];
-	// 索引文件还不存在则创建
-	if (!pMemPage)
+BTree::BTree(char *_idx_name)
+	:idx_name(_idx_name)
+{
+	auto &buffer = GetGlobalFileBuffer();
+	auto pMemFile = buffer[_idx_name];
+
+	// 如果索引文件不存在则创建
+	if (!pMemFile)
 	{
-		buffer.CreateFile(_idx_file);
-		CreateIdxHead(idx_file);
+		// 创建索引文件
+		buffer.CreateFile(_idx_name);
+		pMemFile = buffer[_idx_name];
+
+		// 创建一个结点
+		BTNode leaf_node;
+		leaf_node.node_type = NodeType::LEAF;
+		leaf_node.count_valid_key = 0;
+		FileAddr leaf_node_fd= buffer[idx_name]->AddRecord(&leaf_node, sizeof(leaf_node));
+
+		// 将结点的地址写入文件头的预留空间区
+		memcpy(buffer[idx_name]->GetFileFirstPage()->GetFileCond()->reserve, &leaf_node_fd, sizeof(leaf_node_fd));
+	}
+	file_id = pMemFile->fileId;
+}
+
+FileAddr BTree::Search(KeyAttr search_key)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(file_id, 0);
+	auto pfilefd = (FileAddr*)pMemPage->GetFileCond()->reserve;  // 找到根结点的地址
+	Search(search_key, *pfilefd);
+}
+
+FileAddr BTree::Search(KeyAttr search_key, FileAddr node_fd)
+{
+	BTNode* pNode = FileAddrToMemPtr(node_fd);
+
+	if (pNode->node_type == NodeType::LEAF)
+	{
+		return SearchLeafNode(search_key, node_fd);
+	}
+	else
+	{
+		return SearchInnerNode(search_key, node_fd);
 	}
 }
 
-void IndexFileHeadManage::CreateIdxHead(char* KeyStr)
+FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 {
-	auto& buffer = GetGlobalFileBuffer();
-
-	SetKeyInfo(KeyStr);    // calculate the Keysize and KeyAttrNum
-
-	auto pMemPage= buffer[idx_file]->GetFileFirstPage();
-	auto pIdxHead = (IndexFileHead*)pMemPage->GetFileCond()->reserve;
-	pIdxHead->ROOT.filePageID = 0;
-	pIdxHead->ROOT.offSet = sizeof(PAGEHEAD) + sizeof(FILECOND) - FILECOND_RESERVE_SPACE;
-
-	pIdxHead->start.filePageID = 0;
-	pIdxHead->start.offSet = 0;
-	
-	KeyInfo = KeyStr;
-}
-
-
-FileAddr IndexFileHeadManage::GetRoot()
-{
-	auto& buffer = GetGlobalFileBuffer();
-	auto pMemPage = buffer[idx_file]->GetFileFirstPage();
-	auto pIdxHead = (IndexFileHead*)pMemPage->GetFileCond()->reserve;
-	return pIdxHead->ROOT;
-}
-
-void IndexFileHeadManage::SetKeyInfo(char* KeyStr)
-{
-	auto& buffer = GetGlobalFileBuffer();
-	auto pMemPage = buffer[idx_file]->GetFileFirstPage();
-	auto pIdxHead = (IndexFileHead*)pMemPage->GetFileCond()->reserve;
-
-
-	pIdxHead->FieldsNum = 0;		 // the number of fields(attributes) in primary key
-	pIdxHead->KeySize = 0;         // sizeof(Key_Attr) * KeyAttrNum
-	char* temp = KeyStr;
-	for (int i = 0; temp[i] != 0; i++)
+	FileAddr fd_res;
+	BTNode* pNode = FileAddrToMemPtr(node_fd);
+	for (int i = MaxKeyCount - 1; i >= 0; i--)
 	{
-		pIdxHead->FieldsNum++;
-		switch (temp[i])
+		if (pNode->key[i] <= search_key)
 		{
-			case 'i': pIdxHead->KeySize += sizeof(int);     break;
-			case 'f': pIdxHead->KeySize += sizeof(float);   break;
-			case 'c':
-			{
-				//deal with the max length in a string defined by the user
-				int num = 0;
-				for (i = i + 1; isdigit(temp[i]); i++)
-				{
-					num = num * 10 + temp[i] - '0';
-				}
-				i--;        // move the index back
-				num++;      // for '\0' which is the end of a string
-				pIdxHead->KeySize += num;
-				break;
-			}
-			default: throw(1021);  //1021 字段类行错误
+			fd_res = pNode->children[i];
+			break;
 		}
 	}
+	if (fd_res == FileAddr{ 0,0 })
+	{
+		return fd_res;
+	}	
+	else
+	{
+		BTNode* pNextNode = FileAddrToMemPtr(fd_res);
+		if (pNextNode->node_type == NodeType::LEAF)
+			return SearchLeafNode(search_key, fd_res);
+		else
+			SearchInnerNode(search_key, fd_res);
+	}
 }
 
-BTree::BTree(const char*idx_file, char* KeyStr)
-	:idx_head(idx_file, KeyStr)
+FileAddr BTree::SearchLeafNode(KeyAttr search_key, FileAddr node_fd)
 {
 
+	BTNode* pNode = FileAddrToMemPtr(node_fd);
+	for (int i = MaxKeyCount - 1; i >= 0; i--)
+	{
+		if (pNode->key[i] == search_key)
+		{
+			return pNode->children[i];
+		}
+	}
+	return FileAddr{ 0,0 };
 }
 
-KeyPostion BTree::search(NodePointer x, KeyAttr k)
+BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 {
-	auto& buffer = GetGlobalFileBuffer();
-	BTreeNode *pnode = (BTreeNode *)buffer[idx_head.idx_file]->ReadRecord(&x);
-	int i = 1;
-	while (i <= MaxKeyCount && k > pnode->key[i])
-		i += 1;
-	if (i <= MaxKeyCount && k == pnode->key[i])
-		return KeyPostion{ x, i };
+	auto pMemPage = GetGlobalClock()->GetMemAddr(file_id, node_fd.filePageID);
+
+	return (BTNode*)((char*)pMemPage->Ptr2PageBegin + node_fd.offSet);
 }

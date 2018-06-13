@@ -16,68 +16,48 @@
 #ifndef __BPTREE_H__
 #define __BPTREE_H__
 #include "../BUFFER/Buffer.h"
-using NodePointer = FileAddr;
+#include "../GLOBAL/global.h"
+
 class KeyAttr
 {
 public:
 	bool operator<(const KeyAttr &rhs) {}
 	bool operator>(const KeyAttr &rhs) {}
 	bool operator==(const KeyAttr &rhs) {}
+	bool operator<=(const KeyAttr &rhs) {}
 };
 
-constexpr int bptree_t = 100;                      // B+tree's degree, bptree_t >= 2
-constexpr int MaxKeyCount = 2 * bptree_t - 1;      // the max number of keys in a b+tree node
+constexpr int bptree_t = 60;                      // B+tree's degree, bptree_t >= 2
+constexpr int MaxKeyCount = 2 * bptree_t;      // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;        // the max number of child in a b+tree node
-// the head of index file
-// it contains the basic informatior used for b+ tree
-struct IndexFileHead
-{
-	FileAddr ROOT;                                // the address of the B+tree root
-	FileAddr start;                               // the address of the most left node
-	int      FieldsNum;                           // the number of fields 
-	int      KeySize;                             // the size of key word
-	int      MaxKeyNum;                           // the max number of keys in a node
-};
 
-// 
-class IndexFileHeadManage
+// define B+tree Node
+enum class NodeType {ROOT, INNER, LEAF};
+class BTNode
 {
 public:
-	IndexFileHeadManage(const char*idx_file, char* KeyStr);
-	FileAddr GetRoot();                             // get the File Point of the root
-	char *idx_file;
-	char *KeyInfo;                                 // a string record the information of the key
+	NodeType node_type;                              // node type
+	int count_valid_key;                             // the number of key has stored in the node
 
-private:
-	void    CreateIdxHead(char* KeyStr);            // produce the information in the IdxHead
-	IndexFileHead IdxHead;
-	void    SetKeyInfo(char* Key_Info);             // calculate the Keysize and KeyAttrNum
+	KeyAttr key[MaxKeyCount];                        // array of keys
+	FileAddr children[MaxChildCount];                // if the node is not a leaf node, children store the children pointer
+                                                     // otherwise it store record address;
+
+	FileAddr next;                                   // if leaf node
 };
 
-// B+Tree Node
-class BTreeNode
-{
-public:
-	int         valid_key_count;               // the number of the valid Keys
-	KeyAttr     key[MaxKeyCount+1];              // the array of Keys
-	FileAddr    child[MaxChildCount];          // the array of points who point to the son nodes
-	bool is_leaf;                              // leaf is true
-};
-
-
-// the position of a key in node
-struct KeyPostion
-{
-	NodePointer pos;
-	int i;
-};
 class BTree
 {
 public:
-	BTree(const char*idx_file, char* KeyStr);
+	BTree(char *idx_name);                                     // 创建索引文件的B+树
+	FileAddr Search(KeyAttr search_key);
 private:
-	KeyPostion search(NodePointer x, KeyAttr k);    // search key k in subtree x
+	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                          // 判断关键字是否存在
+	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);              // 在内部节点查找
+	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);               // 在叶子结点查找
+	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                  // 文件地址转换为内存指针
 private:
-	IndexFileHeadManage idx_head;
+	char *idx_name;
+	int file_id;
 };
 #endif

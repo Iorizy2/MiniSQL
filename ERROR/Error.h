@@ -22,7 +22,8 @@ using ULONG = unsigned long;
 enum class ERROR :ULONG {
 	LSEEK_FAILED,
 	READ_FAILED,
-	WRITE_FAILED
+	WRITE_FAILED,
+	FILENAME_CONVERT_FAILED
 };
 
 void DispatchError(ERROR error);
