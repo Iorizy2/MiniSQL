@@ -116,7 +116,6 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 	
 	px->children[j] = z_fd;
 	px->count_valid_key++;
-	//FileAddr fd_z = GetGlobalFileBuffer()[idx_name]->AddRecord()
 }
 
 FileAddr BTree::Search(KeyAttr search_key)
@@ -130,7 +129,7 @@ FileAddr BTree::Search(KeyAttr search_key, FileAddr node_fd)
 {
 	BTNode* pNode = FileAddrToMemPtr(node_fd);
 
-	if (pNode->node_type == NodeType::LEAF)
+	if (pNode->node_type == NodeType::LEAF|| pNode->node_type == NodeType::ROOT)
 	{
 		return SearchLeafNode(search_key, node_fd);
 	}
@@ -143,18 +142,18 @@ FileAddr BTree::Search(KeyAttr search_key, FileAddr node_fd)
 void BTree::Insert(KeyAttr k, FileAddr k_fd)
 {
 	// 如果该关键字已经存在则插入失败
-	//try
-	//{
-	//	auto key_fd = Search(k);
-	//	if (key_fd != FileAddr{ 0,0 })
-	//		throw ERROR::KEY_INSERT_FAILED;
-	//}
-	//catch (const ERROR error)
-	//{
-	//	DispatchError(error);
-	//	std::cout << std::endl;
-	//	return;
-	//}
+	try
+	{
+		auto key_fd = Search(k);
+		if (key_fd != FileAddr{ 0,0 })
+			throw ERROR::KEY_INSERT_FAILED;
+	}
+	catch (const ERROR error)
+	{
+		DispatchError(error);
+		std::cout << std::endl;
+		return;
+	}
 
 	// 得到根结点的fd
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
@@ -194,6 +193,17 @@ void BTree::PrintBTree()
 	static int n = 0;
 	// 得到根结点的fd
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
+	auto pRoot = FileAddrToMemPtr(root_fd);
+	if (pRoot->node_type == NodeType::ROOT)
+	{
+		for (int i = 0; i < pRoot->count_valid_key; i++)
+		{
+			n++;
+			std::cout << pRoot->key[i];
+		}
+		std::cout << std::endl << "total nodes: " << n << std::endl;
+		return;
+	}
 	fds.push(root_fd);
 	while (!fds.empty())
 	{
@@ -223,9 +233,9 @@ void BTree::PrintBTree()
 
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 {
-	FileAddr fd_res;
+	FileAddr fd_res{0,0};
 	BTNode* pNode = FileAddrToMemPtr(node_fd);
-	for (int i = MaxKeyCount - 1; i >= 0; i--)
+	for (int i = pNode->count_valid_key - 1; i >= 0; i--)
 	{
 		if (pNode->key[i] <= search_key)
 		{
@@ -243,8 +253,9 @@ FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 		if (pNextNode->node_type == NodeType::LEAF)
 			return SearchLeafNode(search_key, fd_res);
 		else
-			SearchInnerNode(search_key, fd_res);
+			return SearchInnerNode(search_key, fd_res);
 	}
+	return fd_res;
 }
 
 FileAddr BTree::SearchLeafNode(KeyAttr search_key, FileAddr node_fd)
@@ -298,7 +309,7 @@ void BTreeTest()
 
 	// 生成随机关键字
 	srand(time(0));
-	const int key_count = 800;
+	const int key_count = 80000;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)
@@ -310,12 +321,52 @@ void BTreeTest()
 		key.s[0] = rand()%32+32;
 		key.s[1] = '\0';
 		keys.push_back(key);
-		char kk[60];
-		FileAddr fd = buffer[dbf_name.c_str()]->AddRecord(kk, sizeof(kk));
+		FileAddr fd = buffer[dbf_name.c_str()]->AddRecord(&key, sizeof(key));
 		rec_fds.push_back(fd);
 
 		tree.Insert(key, fd);
 	}
 
-	tree.PrintBTree();
+	// 将测试数据写入文本文件
+	using std::fstream;
+	using std::ios;
+	std::ofstream output;
+	output.open("test.txt");
+	for (int i = 0; i < key_count; i++)
+	{
+		output << keys[i].x << "\t" << keys[i].s << "\tfd: " << rec_fds[i].filePageID << "  " << rec_fds[i].offSet << std::endl;
+	}
+	output.close();
+
+	//使用索引文件查找
+	char c = 'c';
+	while (1)
+	{
+		if (c == 'q')
+			break;
+		fflush(stdin);
+		std::cout << "input key" << std::endl;
+		KeyAttr key;
+		int x;
+		std::cin >> x;
+		key.x = x;
+		auto start = std::chrono::system_clock::now();
+		auto fd = tree.Search(key);
+		auto end = std::chrono::system_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		if (fd.offSet == 0)
+		{
+			std::cout << "关键字不存在";
+			continue;
+		}
+		FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
+		std::cout << "查找结果" << std::endl;
+		std::cout << p->filePageID << "  " << p->offSet << std::endl;
+		std::cout << "花费了"
+			<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
+			<< "秒" << std::endl;
+		std::cout << "任意键继续:";
+		c = getchar();
+	}
+	//tree.PrintBTree();
 }

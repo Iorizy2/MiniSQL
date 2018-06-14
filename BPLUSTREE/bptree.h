@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <fstream>
+#include <chrono>
 
 class KeyAttr
 {
@@ -36,7 +38,7 @@ public:
 };
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
-constexpr int bptree_t = 20;                      // B+tree's degree, bptree_t >= 2
+constexpr int bptree_t = 60;                      // B+tree's degree, bptree_t >= 2
 constexpr int MaxKeyCount = 2 * bptree_t;      // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;        // the max number of child in a b+tree node
 
