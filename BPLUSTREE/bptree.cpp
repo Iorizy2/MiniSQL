@@ -3,6 +3,9 @@
 BTree::BTree(char *_idx_name)
 	:idx_name(_idx_name)
 {
+	idx_name = (char*)malloc(strlen(_idx_name) + 1);
+	strcpy(idx_name, _idx_name);
+	
 	auto &buffer = GetGlobalFileBuffer();
 	auto pMemFile = buffer[_idx_name];
 
@@ -13,23 +16,26 @@ BTree::BTree(char *_idx_name)
 		buffer.CreateFile(_idx_name);
 		pMemFile = buffer[_idx_name];
 
-		// 创建一个结点
-		BTNode leaf_node;
-		leaf_node.node_type = NodeType::LEAF;
-		leaf_node.count_valid_key = 0;
-		FileAddr leaf_node_fd= buffer[idx_name]->AddRecord(&leaf_node, sizeof(leaf_node));
+		// 初始化索引文件，创建一个根结点
+		BTNode root_node;
+		root_node.node_type = NodeType::ROOT;
+		root_node.count_valid_key = 0;
+		FileAddr root_node_fd= buffer[idx_name]->AddRecord(&root_node, sizeof(root_node));
 
 		// 将结点的地址写入文件头的预留空间区
-		memcpy(buffer[idx_name]->GetFileFirstPage()->GetFileCond()->reserve, &leaf_node_fd, sizeof(leaf_node_fd));
+		memcpy(buffer[idx_name]->GetFileFirstPage()->GetFileCond()->reserve, &root_node_fd, sizeof(root_node_fd));
 	}
 	file_id = pMemFile->fileId;
 }
 
+// 在一个非满结点 x, 插入关键字 k, k的数据地址为 k_fd
 void BTree::InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd)
 {
 	auto px = FileAddrToMemPtr(x);
 	int i = px->count_valid_key-1;
-	if (px->node_type == NodeType::LEAF)
+
+	// 如果该结点是叶子结点，直接插入
+	if (px->node_type == NodeType::LEAF|| px->node_type == NodeType::ROOT)
 	{
 		while (i >= 0 && k < px->key[i])
 		{
@@ -43,27 +49,28 @@ void BTree::InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd)
 	}
 	else
 	{
-		while (i >= 0 && k < px->key[i])
-			i -= 1;
+		while (i >= 0 && k < px->key[i])  i = i - 1;
+
 		// 如果插入的值比内节点的值还小
-		if (i < 0)
-		{
+		if (i < 0){
 			i = 0;
 			px->key[i] = k;
 		}
 		assert(i >= 0);
+
 		FileAddr ci = px->children[i];
 		auto pci = FileAddrToMemPtr(ci);
 		if (pci->count_valid_key == MaxKeyCount)
 		{
 			SplitChild(x, i, ci);
-			if (k > px->key[i + 1])
+			if (k >= px->key[i + 1])
 				i += 1;
 		}
 		InsertNotFull(px->children[i], k, k_fd);
 	}
 }
 
+// 将x下标为i的孩子满结点分裂
 void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 {
 	auto pMemPageX = GetGlobalClock()->GetMemAddr(file_id, x.filePageID);
@@ -73,11 +80,13 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 
 	BTNode*px = FileAddrToMemPtr(x);
 	BTNode*py = FileAddrToMemPtr(y);
-	BTNode z;
-	FileAddr z_fd;
+	BTNode z;         // 分裂出来的新结点
+	FileAddr z_fd;    // 新结点的文件内地址
 	
 	z.node_type = py->node_type;
 	z.count_valid_key = MaxKeyCount / 2;
+
+	// 将y结点的一般数据转移到新结点
 	for (int i = MaxKeyCount / 2; i < MaxKeyCount; i++)
 	{
 		z.key[i - MaxKeyCount / 2] = py->key[i];
@@ -85,6 +94,7 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 	}
 	py->count_valid_key = MaxKeyCount / 2;
 
+	// 在y的父节点x上添加新创建的子结点 z
 	int j;
 	for ( j= px->count_valid_key-1; j> i; j--)
 	{
@@ -92,8 +102,9 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 		px->children[j+1] = px->children[j];
 	}
 	
-	j++;// j should be i+1;
+	j++; // after j++, j should be i+1;
 	px->key[j] = z.key[0];
+
 	if (py->node_type == NodeType::LEAF)
 	{
 		z.next = py->next;
@@ -150,14 +161,24 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 	auto proot = FileAddrToMemPtr(root_fd);
 	if (proot->count_valid_key == MaxKeyCount)
 	{
+		// 创建新的结点 s ,作为根结点
 		BTNode s;
-		s.node_type = NodeType::ROOT;
+		s.node_type = NodeType::INNER;  // 只有初始化才使用 NodeType::ROOT
 		s.count_valid_key = 1;
 		s.key[0] = proot->key[0];
 		s.children[0] = root_fd;
 		FileAddr s_fd = GetGlobalFileBuffer()[idx_name]->AddRecord(&s, sizeof(BTNode));
+
+		// 将新的根节点文件地址写入
 		*(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve = s_fd;
 		GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->isModified = true;
+
+		//将旧的根结点设置为叶子结点
+		auto pOldRoot = FileAddrToMemPtr(root_fd);
+		if(pOldRoot->node_type == NodeType::ROOT)
+			pOldRoot->node_type = NodeType::LEAF;
+
+		// 先分裂再插入
 		SplitChild(s_fd, 0, s.children[0]);
 		InsertNotFull(s_fd, k, k_fd);
 	}
@@ -170,6 +191,7 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 void BTree::PrintBTree()
 {
 	std::queue<FileAddr> fds;
+	static int n = 0;
 	// 得到根结点的fd
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
 	fds.push(root_fd);
@@ -179,13 +201,24 @@ void BTree::PrintBTree()
 		FileAddr tmp = fds.front();
 		fds.pop();
 		auto pNode = FileAddrToMemPtr(tmp);
-		for (int i = 0; i < pNode->count_valid_key; i++)
+
+		if (pNode->node_type != NodeType::LEAF)
 		{
-			std::cout << pNode->key[i] << std::endl;
-			if(pNode->node_type!=NodeType::LEAF)
+			for (int i = 0; i < pNode->count_valid_key; i++)
+			{
 				fds.push(pNode->children[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < pNode->count_valid_key; i++)
+			{
+				n++;
+				std::cout << pNode->key[i];
+			}
 		}
 	}
+	std::cout << std::endl << "total nodes: " << n << std::endl;
 }
 
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
@@ -265,7 +298,7 @@ void BTreeTest()
 
 	// 生成随机关键字
 	srand(time(0));
-	const int key_count = 8000;
+	const int key_count = 800;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)

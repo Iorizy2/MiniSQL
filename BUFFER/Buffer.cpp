@@ -238,7 +238,7 @@ MemPage::~MemPage()
 void MemPage::Back2File() const
 {
 #ifndef NDEBUG
-	std::cout << this->fileId << " : write back to file " << std::endl;
+	//std::cout << this->fileId << " : write back to file " << std::endl;
 #endif
 	// ÔàÒ³ÐèÒªÐ´»Ø
 	if (isModified)
