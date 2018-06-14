@@ -139,7 +139,7 @@ FileAddr BTree::Search(KeyAttr search_key, FileAddr node_fd)
 	}
 }
 
-void BTree::Insert(KeyAttr k, FileAddr k_fd)
+bool BTree::Insert(KeyAttr k, FileAddr k_fd)
 {
 	// 如果该关键字已经存在则插入失败
 	try
@@ -152,7 +152,7 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 	{
 		DispatchError(error);
 		std::cout << std::endl;
-		return;
+		return false;
 	}
 
 	// 得到根结点的fd
@@ -185,6 +185,7 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 	{
 		InsertNotFull(root_fd, k, k_fd);
 	}
+	return true;
 }
 
 void BTree::PrintBTree()
@@ -309,7 +310,7 @@ void BTreeTest()
 
 	// 生成随机关键字
 	srand(time(0));
-	const int key_count = 80000;
+	const int key_count = 6000;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)
@@ -324,7 +325,13 @@ void BTreeTest()
 		FileAddr fd = buffer[dbf_name.c_str()]->AddRecord(&key, sizeof(key));
 		rec_fds.push_back(fd);
 
-		tree.Insert(key, fd);
+		bool b_insert = tree.Insert(key, fd);
+		if (!b_insert)
+		{
+			rec_fds.pop_back();
+			buffer[dbf_name.c_str()]->DeleteRecord(&fd, sizeof(key));
+			i--;
+		}
 	}
 
 	// 将测试数据写入文本文件

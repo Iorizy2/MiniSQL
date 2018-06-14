@@ -63,7 +63,7 @@ public:
 	BTree(char *idx_name);                                     // 创建索引文件的B+树
 	~BTree() { delete idx_name; }
 	FileAddr Search(KeyAttr search_key);                       // 查找关键字是否已经存在
-	void Insert(KeyAttr k, FileAddr k_fd);                           //插入关键字k
+	bool Insert(KeyAttr k, FileAddr k_fd);                           //插入关键字k
 	void PrintBTree();                                         // 层序打印所有结点信息
 private:
 	void InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd);
