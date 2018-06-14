@@ -19,12 +19,15 @@
 #include "../GLOBAL/global.h"
 #include <iostream>
 #include <queue>
+#include <string>
+#include <vector>
+#include <ctime>
 
 class KeyAttr
 {
 public:
 	int x;
-	char s[20];
+	char s[10];
 	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
 	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
 	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
@@ -32,7 +35,7 @@ public:
 };
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
-constexpr int bptree_t = 60;                      // B+tree's degree, bptree_t >= 2
+constexpr int bptree_t = 20;                      // B+tree's degree, bptree_t >= 2
 constexpr int MaxKeyCount = 2 * bptree_t;      // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;        // the max number of child in a b+tree node
 
@@ -69,4 +72,6 @@ private:
 	char *idx_name;
 	int file_id;
 };
+
+void BTreeTest();
 #endif

@@ -45,6 +45,13 @@ void BTree::InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd)
 	{
 		while (i >= 0 && k < px->key[i])
 			i -= 1;
+		// 如果插入的值比内节点的值还小
+		if (i < 0)
+		{
+			i = 0;
+			px->key[i] = k;
+		}
+		assert(i >= 0);
 		FileAddr ci = px->children[i];
 		auto pci = FileAddrToMemPtr(ci);
 		if (pci->count_valid_key == MaxKeyCount)
@@ -79,11 +86,13 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 	py->count_valid_key = MaxKeyCount / 2;
 
 	int j;
-	for ( j= px->count_valid_key; j > i; j--)
+	for ( j= px->count_valid_key-1; j> i; j--)
 	{
-		px->key[j] = px->key[j-1];
-		px->children[j] = px->children[j - 1];
+		px->key[j+1] = px->key[j];
+		px->children[j+1] = px->children[j];
 	}
+	
+	j++;// j should be i+1;
 	px->key[j] = z.key[0];
 	if (py->node_type == NodeType::LEAF)
 	{
@@ -95,6 +104,7 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 		z_fd = GetGlobalFileBuffer()[idx_name]->AddRecord(&z, sizeof(z));
 	
 	px->children[j] = z_fd;
+	px->count_valid_key++;
 	//FileAddr fd_z = GetGlobalFileBuffer()[idx_name]->AddRecord()
 }
 
@@ -121,6 +131,20 @@ FileAddr BTree::Search(KeyAttr search_key, FileAddr node_fd)
 
 void BTree::Insert(KeyAttr k, FileAddr k_fd)
 {
+	// 如果该关键字已经存在则插入失败
+	//try
+	//{
+	//	auto key_fd = Search(k);
+	//	if (key_fd != FileAddr{ 0,0 })
+	//		throw ERROR::KEY_INSERT_FAILED;
+	//}
+	//catch (const ERROR error)
+	//{
+	//	DispatchError(error);
+	//	std::cout << std::endl;
+	//	return;
+	//}
+
 	// 得到根结点的fd
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
 	auto proot = FileAddrToMemPtr(root_fd);
@@ -135,6 +159,7 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 		*(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve = s_fd;
 		GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->isModified = true;
 		SplitChild(s_fd, 0, s.children[0]);
+		InsertNotFull(s_fd, k, k_fd);
 	}
 	else
 	{
@@ -157,9 +182,9 @@ void BTree::PrintBTree()
 		for (int i = 0; i < pNode->count_valid_key; i++)
 		{
 			std::cout << pNode->key[i] << std::endl;
-			fds.push(pNode->children[i]);
+			if(pNode->node_type!=NodeType::LEAF)
+				fds.push(pNode->children[i]);
 		}
-
 	}
 }
 
@@ -216,4 +241,48 @@ std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 	os << key.x << " " << key.s;
 	return os;
 
+}
+
+
+void BTreeTest()
+{
+	using std::string;
+	using std::vector;
+	auto &buffer = GetGlobalFileBuffer();
+	string idx_name = "test.idx";
+	string dbf_name = "test.dbf";
+
+	// 删除已有的文件
+	remove(idx_name.c_str());
+	remove(dbf_name.c_str());
+
+	// 创建文件
+	//buffer.CreateFile(idx_name.c_str());  //索引文件需要用索引树创建才能初始化b+树的根结点
+	buffer.CreateFile(dbf_name.c_str());
+
+	// 创建索引树
+	BTree tree(const_cast<char*>(idx_name.c_str()));
+
+	// 生成随机关键字
+	srand(time(0));
+	const int key_count = 8000;
+	vector<KeyAttr> keys;
+	vector<FileAddr> rec_fds;
+	for (int i = 0; i < key_count; i++)
+	{
+		if (i == 14)
+			int a = 1;
+		KeyAttr key;
+		key.x = rand();
+		key.s[0] = rand()%32+32;
+		key.s[1] = '\0';
+		keys.push_back(key);
+		char kk[60];
+		FileAddr fd = buffer[dbf_name.c_str()]->AddRecord(kk, sizeof(kk));
+		rec_fds.push_back(fd);
+
+		tree.Insert(key, fd);
+	}
+
+	tree.PrintBTree();
 }
