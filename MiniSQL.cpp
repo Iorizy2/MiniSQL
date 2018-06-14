@@ -39,9 +39,9 @@ int main()
 	auto k2_res = tree.Search(k2);
 	char*p = (char*)buffer["test.dbf"]->ReadRecord(&k1_fd);
 	p += sizeof(FileAddr);
-	cout << ((KeyAttr*)p)->x << endl;
-	cout << ((KeyAttr*)p)->s << endl;
+	//cout << ((KeyAttr*)p)->x << endl;
+	//cout << ((KeyAttr*)p)->s << endl;
 
-	//cout << k2_res.offSet << endl;
+	tree.PrintBTree();
 	system("pause");
 }

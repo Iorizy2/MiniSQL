@@ -142,6 +142,27 @@ void BTree::Insert(KeyAttr k, FileAddr k_fd)
 	}
 }
 
+void BTree::PrintBTree()
+{
+	std::queue<FileAddr> fds;
+	// 得到根结点的fd
+	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
+	fds.push(root_fd);
+	while (!fds.empty())
+	{
+		// 打印该结点的所有的关键字
+		FileAddr tmp = fds.front();
+		fds.pop();
+		auto pNode = FileAddrToMemPtr(tmp);
+		for (int i = 0; i < pNode->count_valid_key; i++)
+		{
+			std::cout << pNode->key[i] << std::endl;
+			fds.push(pNode->children[i]);
+		}
+
+	}
+}
+
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 {
 	FileAddr fd_res;
@@ -187,4 +208,12 @@ BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 	auto pMemPage = GetGlobalClock()->GetMemAddr(file_id, node_fd.filePageID);
 	pMemPage->isModified = true;
 	return (BTNode*)((char*)pMemPage->Ptr2PageBegin + node_fd.offSet+sizeof(FileAddr));
+}
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
+{
+
+	os << key.x << " " << key.s;
+	return os;
+
 }

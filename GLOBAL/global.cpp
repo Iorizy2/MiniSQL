@@ -15,3 +15,19 @@ std::string IdxToDbf(std::string idx_name)
 
 	return dbf_name;
 }
+
+std::string DbfToIdx(std::string dbf_name)
+{
+	std::string idx_name(dbf_name);
+
+	int i = idx_name.size() - 1;
+	while (idx_name[i] != '.')
+		i--;
+	if (i < 0) throw ERROR::FILENAME_CONVERT_FAILED;
+	idx_name[i + 1] = 'i';
+	idx_name[i + 2] = 'd';
+	idx_name[i + 3] = 'x';
+	idx_name[i + 4] = '\0';
+
+	return idx_name;
+}
