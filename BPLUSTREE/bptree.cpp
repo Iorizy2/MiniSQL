@@ -1,6 +1,6 @@
 #include "bptree.h"
 
-BTree::BTree(char *_idx_name)
+BTree::BTree(char *_idx_name, char _KeyType, char *_RecordInfo)
 	:idx_name(_idx_name)
 {
 	idx_name = (char*)malloc(strlen(_idx_name) + 1);
@@ -18,12 +18,22 @@ BTree::BTree(char *_idx_name)
 
 		// 初始化索引文件，创建一个根结点
 		BTNode root_node;
+		if (sizeof(BTNode) > (FILE_PAGESIZE - sizeof(PAGEHEAD)))
+			throw ERROR::BPLUSTREE_DEGREE_TOOBIG;
 		root_node.node_type = NodeType::ROOT;
 		root_node.count_valid_key = 0;
+		root_node.next = FileAddr{ 0,0 };
 		FileAddr root_node_fd= buffer[idx_name]->AddRecord(&root_node, sizeof(root_node));
 
+		// 初始化其他索引文件头信息
+		idx_head.root = root_node_fd;
+		idx_head.MostLeftNode = root_node_fd;
+		idx_head.KeyType = _KeyType;
+		strcpy(idx_head.RecordInfo, _RecordInfo);
+
 		// 将结点的地址写入文件头的预留空间区
-		memcpy(buffer[idx_name]->GetFileFirstPage()->GetFileCond()->reserve, &root_node_fd, sizeof(root_node_fd));
+		memcpy(buffer[idx_name]->GetFileFirstPage()->GetFileCond()->reserve, &idx_head, sizeof(idx_head));
+
 	}
 	file_id = pMemFile->fileId;
 }
@@ -232,6 +242,29 @@ void BTree::PrintBTree()
 	std::cout << std::endl << "total nodes: " << n << std::endl;
 }
 
+void BTree::Print()
+{
+	auto phead = (IndexHeadNode*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
+	auto pNode = FileAddrToMemPtr(phead->MostLeftNode);
+	static int n = 0;
+	while (pNode->next.offSet != 0)
+	{
+		for (int i = 0; i < pNode->count_valid_key; i++)
+		{
+			n++;
+			std::cout << pNode->key[i];
+		}
+			
+		pNode = FileAddrToMemPtr(pNode->next);
+	}
+	for (int i = 0; i < pNode->count_valid_key; i++)
+	{
+		n++;
+		std::cout << pNode->key[i];
+	}
+	std::cout << std::endl << n << std::endl;
+}
+
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 {
 	FileAddr fd_res{0,0};
@@ -283,9 +316,8 @@ BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 {
 
-	os << key.x << " " << key.s;
+	os << key.x << " ";
 	return os;
-
 }
 
 
@@ -310,7 +342,7 @@ void BTreeTest()
 
 	// 生成随机关键字
 	srand(time(0));
-	const int key_count = 6000;
+	const int key_count = 2000;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)
@@ -346,44 +378,40 @@ void BTreeTest()
 	output.close();
 
 	//使用索引文件查找
-	char c = 'c';
-	while (1)
-	{
-		if (c == 'q')
-			break;
-		fflush(stdin);
-		std::cout << "input key" << std::endl;
-		KeyAttr key;
-		int x;
-		std::cin >> x;
-		key.x = x;
-		auto start = std::chrono::system_clock::now();
-		auto fd = tree.Search(key);
-		/*FileAddr fd;
-		fd.offSet = 0;
-		for (int i = 0; i < keys.size(); i++)
-		{
-			if (keys[i].x == x)
-			{
-				fd = rec_fds[i];
-				break;
-			}
-		}*/
-		auto end = std::chrono::system_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-		if (fd.offSet == 0)
-		{
-			std::cout << "关键字不存在";
-			continue;
-		}
-		FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
-		std::cout << "查找结果" << std::endl;
-		std::cout << p->filePageID << "  " << p->offSet << std::endl;
-		std::cout << "花费了"
-			<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
-			<< "微秒" << std::endl;
-		std::cout << "任意键继续:";
-		c = getchar();
-	}
-	//tree.PrintBTree();
+	//char c = 'c';
+	//while (1)
+	//{
+	//	if (c == 'q')
+	//		break;
+	//	fflush(stdin);
+	//	std::cout << "input key" << std::endl;
+	//	KeyAttr key;
+	//	int x;
+	//	std::cin >> x;
+	//	key.x = x;
+	//	auto start = std::chrono::system_clock::now();
+	//	auto fd = tree.Search(key);
+	//	auto end = std::chrono::system_clock::now();
+	//	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	//	if (fd.offSet == 0)
+	//	{
+	//		std::cout << "关键字不存在";
+	//	}
+	//	else
+	//	{
+	//		FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
+	//		std::cout << "查找结果" << std::endl;
+	//		std::cout << p->filePageID << "  " << p->offSet << std::endl;
+	//		std::cout << "花费了"
+	//			<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
+	//			<< "微秒" << std::endl;
+	//	}
+	//	
+	//	std::cout << "任意键继续:";
+	//	fflush(stdin);
+	//	c = getchar();
+	//}
+	tree.Print();
 }
+
+

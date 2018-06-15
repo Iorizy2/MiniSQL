@@ -24,7 +24,7 @@
 #include <ctime>
 #include <fstream>
 #include <chrono>
-
+const int RecordInfoLength = 32;  //记录最大的字段数量
 class KeyAttr
 {
 public:
@@ -38,9 +38,19 @@ public:
 };
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
-constexpr int bptree_t = 60;                      // B+tree's degree, bptree_t >= 2
-constexpr int MaxKeyCount = 2 * bptree_t;      // the max number of keys in a b+tree node
-constexpr int MaxChildCount = 2 * bptree_t;        // the max number of child in a b+tree node
+constexpr int bptree_t = 20;                         // B+tree's degree, bptree_t >= 2
+constexpr int MaxKeyCount = 2 * bptree_t;            // the max number of keys in a b+tree node
+constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child in a b+tree node
+
+// 索引文件头信息结点
+class IndexHeadNode
+{
+public:
+	FileAddr    root;                               // the address of the root
+	FileAddr    MostLeftNode;                              // the address of the most left node
+	char        KeyType;                             // 关键字类型
+	char        RecordInfo[RecordInfoLength];          // 记录字段相关信息
+};
 
 // define B+tree Node
 enum class NodeType {ROOT, INNER, LEAF};
@@ -60,21 +70,24 @@ public:
 class BTree
 {
 public:
-	BTree(char *idx_name);                                     // 创建索引文件的B+树
+	BTree(char *idx_name, char _KeyType = 'i', char *_RecordInfo="i");                                                      // 创建索引文件的B+树
 	~BTree() { delete idx_name; }
-	FileAddr Search(KeyAttr search_key);                       // 查找关键字是否已经存在
-	bool Insert(KeyAttr k, FileAddr k_fd);                           //插入关键字k
-	void PrintBTree();                                         // 层序打印所有结点信息
+	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
+	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
+	void PrintBTree();                                                          // 层序打印所有结点信息
+	void Print();
 private:
 	void InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd);
-	void SplitChild(FileAddr x, int i, FileAddr y);                  // 分裂x的孩子结点x.children[i] , y
-	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                          // 判断关键字是否存在
+	void SplitChild(FileAddr x, int i, FileAddr y);                              // 分裂x的孩子结点x.children[i] , y
+	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                       // 判断关键字是否存在
 	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);              // 在内部节点查找
 	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);               // 在叶子结点查找
 	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                  // 文件地址转换为内存指针
+	//FileAddr MostLeftNode;                                                       // 最左边的页结点（用于快速遍历）
 private:
 	char *idx_name;
 	int file_id;
+	IndexHeadNode idx_head;
 };
 
 void BTreeTest();
