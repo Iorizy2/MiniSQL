@@ -1,2 +1,2 @@
 # MiniSQL
-一个简易的数据库
+**MiniSQL** is a  **Relational database**, written in Modern C/C++ style. 

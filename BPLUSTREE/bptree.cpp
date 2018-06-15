@@ -359,6 +359,16 @@ void BTreeTest()
 		key.x = x;
 		auto start = std::chrono::system_clock::now();
 		auto fd = tree.Search(key);
+		/*FileAddr fd;
+		fd.offSet = 0;
+		for (int i = 0; i < keys.size(); i++)
+		{
+			if (keys[i].x == x)
+			{
+				fd = rec_fds[i];
+				break;
+			}
+		}*/
 		auto end = std::chrono::system_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		if (fd.offSet == 0)
@@ -371,7 +381,7 @@ void BTreeTest()
 		std::cout << p->filePageID << "  " << p->offSet << std::endl;
 		std::cout << "花费了"
 			<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
-			<< "秒" << std::endl;
+			<< "微秒" << std::endl;
 		std::cout << "任意键继续:";
 		c = getchar();
 	}

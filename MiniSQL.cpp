@@ -12,6 +12,8 @@ void IsPod();
 int main()
 {
 	//IsPod();
+	cout << "修改控制台应用图标实例" << endl;//结果：修改成功了,呵呵
+
 	BTreeTest();
 	system("pause");
 }
