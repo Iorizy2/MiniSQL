@@ -101,7 +101,7 @@ void BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
 
 		// 更新本结点
 		px->key[i] = key_bro;
-		for (int j = py->count_valid_key - 1; j > 0; j--)
+		for (int j = py->count_valid_key - 1; j >= 0; j--)
 		{
 			py->key[j + 1] = py->key[j];
 			py->children[j + 1] = py->children[j];
@@ -117,7 +117,7 @@ void BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
 	// 若兄弟结点中没有富余的key,则当前结点和兄弟结点合并成一个新的叶子结点，并删除父结点中的key
 
 	// 若右兄弟存在将其合并
-	if (i < px->count_valid_key - 2)
+	if (i < px->count_valid_key - 1)
 	{
 		auto RBrother = FileAddrToMemPtr(px->children[i + 1]);
 		for (int j = 0; j < RBrother->count_valid_key; j++)
@@ -144,8 +144,8 @@ void BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
 		auto LBrother = FileAddrToMemPtr(px->children[i - 1]);
 		for (int j = 0; j < py->count_valid_key; j++)
 		{
-			LBrother->key[py->count_valid_key] = py->key[j];
-			LBrother->children[py->count_valid_key] = py->children[j];
+			LBrother->key[LBrother->count_valid_key] = py->key[j];
+			LBrother->children[LBrother->count_valid_key] = py->children[j];
 			LBrother->count_valid_key++;
 		}
 
@@ -381,7 +381,9 @@ void BTree::Delete(KeyAttr key)
 	auto px = FileAddrToMemPtr(root_fd);
 	auto py = FileAddrToMemPtr(px->children[i]);
 
-	if (py->node_type == NodeType::LEAF)
+	DeleteKeyAtInnerNode(root_fd, i, key);
+
+	/*if (py->node_type == NodeType::LEAF)
 	{
 		DeleteKeyAtLeafNode(root_fd, i, key);
 	}
@@ -389,7 +391,7 @@ void BTree::Delete(KeyAttr key)
 	{
 		DeleteKeyAtInnerNode(root_fd, i, key);
 		
-	}
+	}*/
 
 
 	if (proot->count_valid_key == 1)
@@ -402,23 +404,22 @@ void BTree::Delete(KeyAttr key)
 	}
 }
 
-void BTree::PrintBTree()
+void BTree::PrintBTreeStruct()
 {
 	std::queue<FileAddr> fds;
-	static int n = 0;
+	//int n = 0;
 	// 得到根结点的fd
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
 	auto pRoot = FileAddrToMemPtr(root_fd);
-	if (pRoot->node_type == NodeType::ROOT)
+	if (pRoot->node_type == NodeType::ROOT||pRoot->node_type == NodeType::LEAF)
 	{
-		for (int i = 0; i < pRoot->count_valid_key; i++)
+		if (pRoot->count_valid_key > 0)
 		{
-			n++;
-			std::cout << pRoot->key[i];
+			pRoot->PrintSelf();
 		}
-		std::cout << std::endl << "total nodes: " << n << std::endl;
 		return;
 	}
+
 	fds.push(root_fd);
 	while (!fds.empty())
 	{
@@ -426,7 +427,10 @@ void BTree::PrintBTree()
 		FileAddr tmp = fds.front();
 		fds.pop();
 		auto pNode = FileAddrToMemPtr(tmp);
-
+		std::cout << "Node File Address:" << tmp.filePageID << " " << tmp.offSet << std::endl;
+		pNode->PrintSelf();
+		std::cout << std::endl;
+		
 		if (pNode->node_type != NodeType::LEAF)
 		{
 			for (int i = 0; i < pNode->count_valid_key; i++)
@@ -434,19 +438,12 @@ void BTree::PrintBTree()
 				fds.push(pNode->children[i]);
 			}
 		}
-		else
-		{
-			for (int i = 0; i < pNode->count_valid_key; i++)
-			{
-				n++;
-				std::cout << pNode->key[i];
-			}
-		}
+		
 	}
-	std::cout << std::endl << "total nodes: " << n << std::endl;
+	//std::cout << "total nodes: " << n << std::endl;
 }
 
-void BTree::Print()
+void BTree::PrintAllLeafNode()
 {
 	auto phead = (IndexHeadNode*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
 	auto pNode = FileAddrToMemPtr(phead->MostLeftNode);
@@ -545,7 +542,7 @@ void BTreeTest()
 
 	// 生成随机关键字
 	srand(time(time_t(0)));
-	const int key_count = 8;
+	const int key_count = 1008;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)
@@ -579,7 +576,9 @@ void BTreeTest()
 		output << keys[i].x << "\t" << keys[i].s << "\tfd: " << rec_fds[i].filePageID << "  " << rec_fds[i].offSet << std::endl;
 	}
 	output.close();
-	tree.Print();
+	tree.PrintAllLeafNode();
+	std::cout << std::endl;
+	//tree.PrintBTreeStruct();
 	//使用索引文件查找
 	char c = 'c';
 	while (1)
@@ -609,7 +608,7 @@ void BTreeTest()
 		}
 
 		std::cout << "索引列表："<<std::endl;
-		tree.Print();
+		tree.PrintBTreeStruct();
 		std::cout << std::endl;
 
 		if (c == 'q')
@@ -642,7 +641,34 @@ void BTreeTest()
 		char x = getchar();
 		
 	}
-	tree.Print();
+	tree.PrintAllLeafNode();
 }
 
 
+void BTNode::PrintSelf()
+{
+	using std::cout;
+	using std::endl;
+	cout << "Node Type: ";
+	switch (node_type)
+	{
+	case NodeType::ROOT:
+		cout << "ROOT";
+		break;
+	case NodeType::INNER:
+		cout << "INNER";
+		break;
+	case NodeType::LEAF:
+		cout << "LEAF";
+		break;
+	default:
+		break;
+	}
+	cout << "\tcount_valid_key: " << count_valid_key << endl;
+
+	for (int i = 0; i < count_valid_key; i++)
+	{
+		cout << "index: "<<i<<" key: " << key[i].x << "\t" << "child addr: " << children[i].filePageID << " " << children[i].offSet << endl;
+	}
+
+}

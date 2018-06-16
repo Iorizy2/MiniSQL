@@ -66,6 +66,7 @@ public:
                                                      // otherwise it store record address;
 
 	FileAddr next;                                   // if leaf node
+	void PrintSelf();
 };
 
 class BTree
@@ -76,8 +77,8 @@ public:
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
 	void Delete(KeyAttr k);
-	void PrintBTree();                                                          // 层序打印所有结点信息
-	void Print();
+	void PrintBTreeStruct();                                                          // 层序打印所有结点信息
+	void PrintAllLeafNode();
 private:
 	void DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
 	void DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
