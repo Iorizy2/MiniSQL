@@ -29,16 +29,17 @@ class KeyAttr
 {
 public:
 	int x;
-	char s[10];
+	char s[1];
 	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
 	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
 	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
 	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
 	bool operator>=(const KeyAttr &rhs) { return x >= rhs.x; }
+	bool operator!=(const KeyAttr &rhs) { return x != rhs.x; }
 };
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
-constexpr int bptree_t = 20;                         // B+tree's degree, bptree_t >= 2
+constexpr int bptree_t = 3;                         // B+tree's degree, bptree_t >= 2
 constexpr int MaxKeyCount = 2 * bptree_t;            // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child in a b+tree node
 
@@ -74,9 +75,12 @@ public:
 	~BTree() { delete idx_name; }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
+	void Delete(KeyAttr k);
 	void PrintBTree();                                                          // 层序打印所有结点信息
 	void Print();
 private:
+	void DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
+	void DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
 	void InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd);
 	void SplitChild(FileAddr x, int i, FileAddr y);                              // 分裂x的孩子结点x.children[i] , y
 	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                       // 判断关键字是否存在

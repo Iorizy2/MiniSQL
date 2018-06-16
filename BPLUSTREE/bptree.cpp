@@ -38,6 +38,158 @@ BTree::BTree(char *_idx_name, char _KeyType, char *_RecordInfo)
 	file_id = pMemFile->fileId;
 }
 
+void BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
+{
+	auto px = FileAddrToMemPtr(x);
+	auto py = FileAddrToMemPtr(px->children[i]);
+
+	if (py->node_type == NodeType::LEAF)
+	{
+		DeleteKeyAtLeafNode(x, i, key);
+	}
+	else
+	{
+		int j = py->count_valid_key-1;
+		while (py->key[j] > key)j--;
+		assert(j>=0);
+		DeleteKeyAtInnerNode(px->children[i], j, key);
+	}
+
+	// 判断删除后的结点个数
+	if (py->count_valid_key >= MaxKeyCount / 2)
+		return;
+
+	// 如果删除后的关键字个数不满足B+树的规定，向兄弟结点借用key
+
+	// 如果右兄弟存在且有富余关键字
+	if ((i <= px->count_valid_key - 2) && (FileAddrToMemPtr(px->children[i + 1])->count_valid_key > MaxKeyCount / 2))
+	{
+		auto RBrother = FileAddrToMemPtr(px->children[i + 1]);
+		// 借来的关键字
+		auto key_bro = RBrother->key[0];
+		auto fd_bro = RBrother->children[0];
+
+
+		// 更新右兄弟的索引结点
+		px->key[i + 1] = RBrother->key[1];
+		// 跟新右兄弟结点
+		for (int j = 1; j <= RBrother->count_valid_key - 1; j++)
+		{
+			RBrother->key[j - 1] = RBrother->key[j];
+			RBrother->children[j - 1] = RBrother->children[j];
+		}
+		RBrother->count_valid_key -= 1;
+
+		// 更新本叶子结点
+		py->key[py->count_valid_key] = key_bro;
+		py->children[py->count_valid_key] = fd_bro;
+		py->count_valid_key += 1;
+
+		return;
+	}
+
+	// 如果左兄弟存在且有富余关键字
+	if (i > 0 && FileAddrToMemPtr(px->children[i - 1])->count_valid_key > MaxKeyCount / 2)
+	{
+		auto LBrother = FileAddrToMemPtr(px->children[i - 1]);
+		// 借来的关键字
+		auto key_bro = LBrother->key[LBrother->count_valid_key - 1];
+		auto fd_bro = LBrother->children[LBrother->count_valid_key - 1];
+
+		// 更新左兄弟结点
+		LBrother->count_valid_key - 1;
+
+		// 更新本结点
+		px->key[i] = key_bro;
+		for (int j = py->count_valid_key - 1; j > 0; j--)
+		{
+			py->key[j + 1] = py->key[j];
+			py->children[j + 1] = py->children[j];
+		}
+		py->key[0] = key_bro;
+		py->children[0] = fd_bro;
+
+		py->count_valid_key += 1;
+
+		return;
+	}
+
+	// 若兄弟结点中没有富余的key,则当前结点和兄弟结点合并成一个新的叶子结点，并删除父结点中的key
+
+	// 若右兄弟存在将其合并
+	if (i < px->count_valid_key - 2)
+	{
+		auto RBrother = FileAddrToMemPtr(px->children[i + 1]);
+		for (int j = 0; j < RBrother->count_valid_key; j++)
+		{
+			py->key[py->count_valid_key] = RBrother->key[j];
+			py->children[py->count_valid_key] = RBrother->children[j];
+			py->count_valid_key++;
+		}
+
+		// 更新next
+		py->next = RBrother->next;
+		// 删除右结点
+		GetGlobalFileBuffer()[idx_name]->DeleteRecord(&px->children[i + 1], sizeof(BTNode));
+		// 更新父节点索引
+		for (int j = i + 2; j < px->count_valid_key; j++)
+		{
+			px->key[j - 1] = px->key[j];
+			px->children[j - 1] = px->children[j];
+		}
+		px->count_valid_key--;
+	}
+	else
+	{// 将左结点合并
+		auto LBrother = FileAddrToMemPtr(px->children[i - 1]);
+		for (int j = 0; j < py->count_valid_key; j++)
+		{
+			LBrother->key[py->count_valid_key] = py->key[j];
+			LBrother->children[py->count_valid_key] = py->children[j];
+			LBrother->count_valid_key++;
+		}
+
+		// 更新next
+		LBrother->next = py->next;
+
+		// 删除本结点
+		GetGlobalFileBuffer()[idx_name]->DeleteRecord(&px->children[i], sizeof(BTNode));
+		// 更新父节点索引
+		for (int j = i + 1; j < px->count_valid_key; j++)
+		{
+			px->key[j - 1] = px->key[j];
+			px->children[j - 1] = px->children[j];
+		}
+		px->count_valid_key--;
+	}
+
+}
+
+// 假设待删除的关键字已经存在
+void BTree::DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key)
+{
+	auto px = FileAddrToMemPtr(x);
+	auto py = FileAddrToMemPtr(px->children[i]);
+	
+	int j = py->count_valid_key - 1;
+	while (py->key[j] != key)j--;
+	assert(j >= 0);
+	// 删除叶节点中最小的关键字，更新父节点
+	if (j == 0)
+	{
+		px->key[i] = py->key[j+1];
+	}
+
+	j++;
+	while (j <= py->count_valid_key - 1)
+	{
+		py->children[j - 1] = py->children[j];
+		py->key[j - 1] = py->key[j];
+		j++;
+	}
+	py->count_valid_key -= 1;
+}
+
 // 在一个非满结点 x, 插入关键字 k, k的数据地址为 k_fd
 void BTree::InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd)
 {
@@ -198,6 +350,58 @@ bool BTree::Insert(KeyAttr k, FileAddr k_fd)
 	return true;
 }
 
+void BTree::Delete(KeyAttr key)
+{
+	auto search_res = Search(key);
+	if (search_res.offSet == 0)
+		return;
+
+	// 得到根结点的fd
+	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve;
+	auto proot = FileAddrToMemPtr(root_fd);
+
+	if (proot->node_type == NodeType::ROOT|| proot->node_type == NodeType::LEAF)
+	{
+		// 直接删除
+		int j = proot->count_valid_key - 1;
+		while (proot->key[j] != key)j--;
+		assert(j >= 0);
+		for (j++; j < proot->count_valid_key; j++)
+		{
+			proot->key[j - 1] = proot->key[j];
+			proot->children[j - 1] = proot->children[j];
+		}
+		proot->count_valid_key--;
+		return;
+	}
+
+	int i = proot->count_valid_key - 1;
+	while (proot->key[i] > key)i--;
+	assert(i >= 0);
+	auto px = FileAddrToMemPtr(root_fd);
+	auto py = FileAddrToMemPtr(px->children[i]);
+
+	if (py->node_type == NodeType::LEAF)
+	{
+		DeleteKeyAtLeafNode(root_fd, i, key);
+	}
+	else
+	{
+		DeleteKeyAtInnerNode(root_fd, i, key);
+		
+	}
+
+
+	if (proot->count_valid_key == 1)
+	{
+		// 将新的根节点文件地址写入
+		*(FileAddr*)GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->GetFileCond()->reserve = proot->children[0];
+		GetGlobalFileBuffer()[idx_name]->GetFileFirstPage()->isModified = true;
+
+		GetGlobalFileBuffer()[idx_name]->DeleteRecord(&root_fd, sizeof(BTNode));
+	}
+}
+
 void BTree::PrintBTree()
 {
 	std::queue<FileAddr> fds;
@@ -315,7 +519,6 @@ BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 {
-
 	os << key.x << " ";
 	return os;
 }
@@ -341,8 +544,8 @@ void BTreeTest()
 	BTree tree(const_cast<char*>(idx_name.c_str()));
 
 	// 生成随机关键字
-	srand(time(0));
-	const int key_count = 2000;
+	srand(time(time_t(0)));
+	const int key_count = 8;
 	vector<KeyAttr> keys;
 	vector<FileAddr> rec_fds;
 	for (int i = 0; i < key_count; i++)
@@ -376,41 +579,69 @@ void BTreeTest()
 		output << keys[i].x << "\t" << keys[i].s << "\tfd: " << rec_fds[i].filePageID << "  " << rec_fds[i].offSet << std::endl;
 	}
 	output.close();
-
+	tree.Print();
 	//使用索引文件查找
-	//char c = 'c';
-	//while (1)
-	//{
-	//	if (c == 'q')
-	//		break;
-	//	fflush(stdin);
-	//	std::cout << "input key" << std::endl;
-	//	KeyAttr key;
-	//	int x;
-	//	std::cin >> x;
-	//	key.x = x;
-	//	auto start = std::chrono::system_clock::now();
-	//	auto fd = tree.Search(key);
-	//	auto end = std::chrono::system_clock::now();
-	//	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	//	if (fd.offSet == 0)
-	//	{
-	//		std::cout << "关键字不存在";
-	//	}
-	//	else
-	//	{
-	//		FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
-	//		std::cout << "查找结果" << std::endl;
-	//		std::cout << p->filePageID << "  " << p->offSet << std::endl;
-	//		std::cout << "花费了"
-	//			<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
-	//			<< "微秒" << std::endl;
-	//	}
-	//	
-	//	std::cout << "任意键继续:";
-	//	fflush(stdin);
-	//	c = getchar();
-	//}
+	char c = 'c';
+	while (1)
+	{
+		fflush(stdin);
+		std::cout << "operator: insert(i), delete(d), quit(q)" << std::endl;
+		c = getchar();
+		if (c == 'd')
+		{
+			std::cout << "delete key" << std::endl;
+			KeyAttr key;
+			int x;
+			std::cin >> x;
+			key.x = x;
+			tree.Delete(key);
+
+			
+		}
+		if (c == 'i')
+		{
+			std::cout << "insert key" << std::endl;
+			KeyAttr key;
+			int x;
+			std::cin >> x;
+			key.x = x;
+			tree.Insert(key, FileAddr{11,11});
+		}
+
+		std::cout << "索引列表："<<std::endl;
+		tree.Print();
+		std::cout << std::endl;
+
+		if (c == 'q')
+		{
+			break;
+		}
+		
+		//auto start = std::chrono::system_clock::now();
+		//auto fd = tree.Search(key);
+		//auto end = std::chrono::system_clock::now();
+		//auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		//if (fd.offSet == 0)
+		//{
+		//	std::cout << "关键字不存在";
+		//}
+		//else
+		//{
+		//	FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
+		//	std::cout << "查找结果" << std::endl;
+		//	std::cout << p->filePageID << "  " << p->offSet << std::endl;
+		//	std::cout << "花费了"
+		//		<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
+		//		<< "微秒" << std::endl;
+		//}
+		
+		//std::cout << "任意键继续:";
+		fflush(stdin);
+		fflush(stdin);
+		fflush(stdin);
+		char x = getchar();
+		
+	}
 	tree.Print();
 }
 
