@@ -97,7 +97,7 @@ void BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
 		auto fd_bro = LBrother->children[LBrother->count_valid_key - 1];
 
 		// 更新左兄弟结点
-		LBrother->count_valid_key - 1;
+		LBrother->count_valid_key -=1;
 
 		// 更新本结点
 		px->key[i] = key_bro;

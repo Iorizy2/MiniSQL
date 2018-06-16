@@ -87,7 +87,7 @@ private:
 	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);              // 在内部节点查找
 	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);               // 在叶子结点查找
 	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                  // 文件地址转换为内存指针
-	//FileAddr MostLeftNode;                                                       // 最左边的页结点（用于快速遍历）
+	
 private:
 	char *idx_name;
 	int file_id;
