@@ -11,7 +11,7 @@ void IsPod();
 
 int main()
 {
-	//IsPod();
+	IsPod();
 	try
 	{
 
@@ -36,5 +36,5 @@ void IsPod()
 	cout << std::is_pod<FileAddr>::value << endl;
 	cout << std::is_pod<FILECOND>::value << endl;
 	cout << std::is_pod<BTNode>::value << endl;
-	//cout << std::is_pod<BTreeNode>::value << endl;
+	cout << std::is_pod<TestRecord>::value << endl;
 }

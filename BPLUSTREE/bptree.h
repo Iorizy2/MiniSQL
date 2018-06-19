@@ -25,6 +25,15 @@
 #include <fstream>
 #include <chrono>
 const int RecordInfoLength = 32;  //记录最大的字段数量
+class TestRecord
+{
+public:
+	int index;
+	char name[20];
+	double year;
+};
+void SetRecord(TestRecord &rec, int i, const char *_name, double _year);
+
 class KeyAttr
 {
 public:
@@ -72,22 +81,22 @@ public:
 class BTree
 {
 public:
-	BTree(char *idx_name, char _KeyType = 'i', char *_RecordInfo="i");                                                      // 创建索引文件的B+树
+	BTree(char *idx_name, char _KeyType = 'i', char *_RecordInfo="i");          // 创建索引文件的B+树
 	~BTree() { delete idx_name; }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
-	void Delete(KeyAttr k);
-	void PrintBTreeStruct();                                                          // 层序打印所有结点信息
+	FileAddr Delete(KeyAttr k);                                                 // 返回该关键字记录在数据文件中的地址
+	void PrintBTreeStruct();                                                    // 层序打印所有结点信息
 	void PrintAllLeafNode();
 private:
-	void DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
-	void DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);             // x的下标为i的结点为叶子结点
+	FileAddr DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);              // x的下标为i的结点为叶子结点
+	FileAddr DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);               // x的下标为i的结点为叶子结点
 	void InsertNotFull(FileAddr x, KeyAttr k, FileAddr k_fd);
-	void SplitChild(FileAddr x, int i, FileAddr y);                              // 分裂x的孩子结点x.children[i] , y
-	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                       // 判断关键字是否存在
-	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);              // 在内部节点查找
-	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);               // 在叶子结点查找
-	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                  // 文件地址转换为内存指针
+	void SplitChild(FileAddr x, int i, FileAddr y);                             // 分裂x的孩子结点x.children[i] , y
+	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                      // 判断关键字是否存在
+	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);             // 在内部节点查找
+	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);              // 在叶子结点查找
+	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                 // 文件地址转换为内存指针
 	
 private:
 	char *idx_name;
