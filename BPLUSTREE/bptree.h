@@ -25,15 +25,6 @@
 #include <fstream>
 #include <chrono>
 const int RecordInfoLength = 32;  //记录最大的字段数量
-class TestRecord
-{
-public:
-	int index;
-	char name[20];
-	double year;
-};
-void SetRecord(TestRecord &rec, int i, const char *_name, double _year);
-
 class KeyAttr
 {
 public:
@@ -81,6 +72,7 @@ public:
 class BTree
 {
 public:
+	//BTree(const std::string idx_name, const std::string _KeyType, const std::string _RecordInfo);          // 创建索引文件的B+树
 	BTree(char *idx_name, char _KeyType = 'i', char *_RecordInfo="i");          // 创建索引文件的B+树
 	~BTree() { delete idx_name; }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在

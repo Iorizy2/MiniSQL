@@ -1,4 +1,12 @@
 #include "bptree.h"
+//BTree::BTree(const std::string str_idx_name, const std::string str_KeyType, const std::string str_RecordInfo)
+//{
+//	std::string _idx_name = str_idx_name;
+//	std::string _KeyType = str_KeyType;
+//	std::string _RecordInfo = str_RecordInfo;
+//	BTree(_idx_name.c_str(), _KeyType.c_str(), _RecordInfo.c_str());
+//}
+
 
 BTree::BTree(char *_idx_name, char _KeyType, char *_RecordInfo)
 	:idx_name(_idx_name)
@@ -517,19 +525,6 @@ BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 	return (BTNode*)((char*)pMemPage->Ptr2PageBegin + node_fd.offSet+sizeof(FileAddr));
 }
 
-void SetRecord(TestRecord &rec,int i, const char *_name, double _year)
-{
-
-		rec.index = i;
-		int j;
-		for (j = 0; j < 19 && j < strlen(_name); j++)
-		{
-			rec.name[j] = _name[j];
-		}
-		rec.name[j] = '\0';
-		rec.year = _year;
-	
-}
 
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 {
@@ -567,157 +562,4 @@ void BTNode::PrintSelf()
 
 }
 
-void BTreeTest()
-{
-	using std::string;
-	using std::vector;
-	using std::cin;
-	using std::cout;
-	using std::endl;
-	auto &buffer = GetGlobalFileBuffer();
-	string idx_name = "test.idx";
-	string dbf_name = "test.dbf";
 
-	// 删除已有的文件
-	remove(idx_name.c_str());
-	remove(dbf_name.c_str());
-
-	// 创建文件
-	//buffer.CreateFile(idx_name.c_str());  //索引文件需要用索引树创建才能初始化b+树的根结点
-	buffer.CreateFile(dbf_name.c_str());
-
-	// 创建索引树
-	BTree tree(const_cast<char*>(idx_name.c_str()));
-
-	// 生成随机关键字
-	//srand(time(time_t(0)));
-	//const int key_count = 0;
-	//vector<KeyAttr> keys;
-	//vector<FileAddr> rec_fds;
-	//for (int i = 0; i < key_count; i++)
-	//{
-	//	if (i == 14)
-	//		int a = 1;
-	//	KeyAttr key;
-	//	key.x = rand();
-	//	key.s[0] = rand() % 32 + 32;
-	//	key.s[1] = '\0';
-	//	keys.push_back(key);
-	//	FileAddr fd = buffer[dbf_name.c_str()]->AddRecord(&key, sizeof(key));
-	//	rec_fds.push_back(fd);
-
-	//	bool b_insert = tree.Insert(key, fd);
-	//	if (!b_insert)
-	//	{
-	//		rec_fds.pop_back();
-	//		buffer[dbf_name.c_str()]->DeleteRecord(&fd, sizeof(key));
-	//		i--;
-	//	}
-	//}
-
-	//// 将测试数据写入文本文件
-	//using std::fstream;
-	//using std::ios;
-	//std::ofstream output;
-	//output.open("test.txt");
-	//for (int i = 0; i < key_count; i++)
-	//{
-	//	output << keys[i].x << "\t" << keys[i].s << "\tfd: " << rec_fds[i].filePageID << "  " << rec_fds[i].offSet << std::endl;
-	//}
-	//output.close();
-	//tree.PrintAllLeafNode();
-	//std::cout << std::endl;
-	//tree.PrintBTreeStruct();
-	//使用索引文件查找
-	
-	char c = 'c';
-	while (1)
-	{
-		fflush(stdin);
-		std::cout << "operator: insert(i), delete(d), search(q), print(p), quit(q)" << std::endl;
-		c = getchar();
-		if (c == 'd')
-		{
-			std::cout << "delete key" << std::endl;
-			KeyAttr key;
-			int x;
-			std::cin >> x;
-			key.x = x;
-			auto fd = tree.Delete(key);
-			cout << "被删除的记录地址" << fd.filePageID << " " << fd.offSet << endl;
-			buffer[dbf_name.c_str()]->DeleteRecord(&fd, sizeof(TestRecord));
-
-
-		}
-		if (c == 'i')
-		{
-			std::cout << "insert record" << std::endl;
-
-			TestRecord rec;
-			cin >> rec.index;
-			cin >> rec.name;
-			cin >> rec.year;
-			KeyAttr key;
-			key.x = rec.index;
-
-
-			auto data_fd = GetGlobalFileBuffer()[dbf_name.c_str()]->AddRecord(&rec, sizeof(rec));
-			tree.Insert(key, data_fd);
-		}
-		if (c == 's')
-		{
-			std::cout << "input search key" << std::endl;
-			KeyAttr key;
-			cin >> key.x;
-			auto fd = tree.Search(key);
-			if (fd.offSet == 0)
-				cout << "关键字不存在" << endl;
-			else
-			{
-				auto pdata =(char*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
-				cout << "记录的地址为:" << ((FileAddr*)pdata)->filePageID << " " << ((FileAddr*)pdata)->offSet << endl;
-				pdata += sizeof(FileAddr);
-				cout << "记录内容：" << ((TestRecord*)pdata)->index << " " << ((TestRecord*)pdata)->name << " " << ((TestRecord*)pdata)->year << endl;
-
-			}
-		}
-		if (c == 'p')
-		{
-			std::cout << "索引列表：" << std::endl;
-			tree.PrintBTreeStruct();
-			std::cout << std::endl;
-		}
-		
-
-		if (c == 'q')
-		{
-			break;
-		}
-
-		//auto start = std::chrono::system_clock::now();
-		//auto fd = tree.Search(key);
-		//auto end = std::chrono::system_clock::now();
-		//auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-		//if (fd.offSet == 0)
-		//{
-		//	std::cout << "关键字不存在";
-		//}
-		//else
-		//{
-		//	FileAddr*p = (FileAddr*)buffer[dbf_name.c_str()]->ReadRecord(&fd);
-		//	std::cout << "查找结果" << std::endl;
-		//	std::cout << p->filePageID << "  " << p->offSet << std::endl;
-		//	std::cout << "花费了"
-		//		<< double(duration.count()) //* std::chrono::microseconds::period::num / std::chrono::microseconds::period::den
-		//		<< "微秒" << std::endl;
-		//}
-
-		//std::cout << "任意键继续:";
-		fflush(stdin);
-		fflush(stdin);
-		fflush(stdin);
-		char x = getchar();
-
-	}
-	tree.PrintAllLeafNode();
-}

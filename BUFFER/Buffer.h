@@ -102,6 +102,7 @@ class MemPage
 	friend class MemFile;
 	friend class Clock;
 	friend class BUFFER;
+	friend void TestModule();
 public:
 	MemPage();
 	~MemPage();
@@ -133,6 +134,7 @@ class Clock
 	friend class MemFile;
 	friend class BUFFER;
 	friend class BTree;
+	friend void TestModule();
 public:
 	Clock();
 	~Clock();
@@ -173,10 +175,12 @@ class MemFile
 {
 	friend class BUFFER;
 	friend class BTree;
+	friend void TestModule();
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(void*source_record, size_t sz_record);                        // 返回记录所添加的位置
 	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);               // 返回删除的位置
+	bool UpdateRecord(FileAddr *address_delete, void *record_data, size_t record_sz);
 	
 private:
 	// 构造
@@ -200,6 +204,7 @@ private:
 
 class BUFFER
 {
+	friend void TestModule();
 public:
 	BUFFER() = default;
 	~BUFFER();

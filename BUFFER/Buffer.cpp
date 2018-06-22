@@ -131,6 +131,14 @@ FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 	return *address_delete;
 }
 
+bool MemFile::UpdateRecord(FileAddr *address, void *record_data, size_t record_sz)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, address->filePageID);
+	auto pdest = (char*)pMemPage->Ptr2PageBegin + address->offSet + sizeof(FileAddr);
+	memcpy(pdest, record_data, record_sz);
+	pMemPage->isModified = true;
+}
+
 void* MemFile::MemRead(FileAddr *dest_to_read)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest_to_read->filePageID);
