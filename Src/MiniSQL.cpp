@@ -1,9 +1,9 @@
 ﻿#include <iostream>
 #include <string>
-#include "Src/ERROR/Error.h"
-#include "Src/BUFFER/Buffer.h"
-#include "Src/BPLUSTREE/bptree.h"
-#include "Src/RECORD/Record.h"
+#include "ERROR/Error.h"
+#include "BUFFER/Buffer.h"
+#include "BPLUSTREE/bptree.h"
+#include "RECORD/Record.h"
 //#define NDEBUG 
 using namespace std;
 
