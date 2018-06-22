@@ -73,7 +73,7 @@ class BTree
 {
 public:
 	//BTree(const std::string idx_name, const std::string _KeyType, const std::string _RecordInfo);          // 创建索引文件的B+树
-	BTree(char *idx_name, char _KeyType = 'i', char *_RecordInfo="i");          // 创建索引文件的B+树
+	BTree(const std::string idx_name, const char _KeyType, const std::string _RecordInfo);          // 创建索引文件的B+树
 	~BTree() { delete idx_name; }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
@@ -93,6 +93,7 @@ private:
 private:
 	char *idx_name;
 	int file_id;
+	std::string str_idx_name;
 	IndexHeadNode idx_head;
 };
 

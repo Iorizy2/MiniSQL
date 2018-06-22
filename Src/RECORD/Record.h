@@ -30,8 +30,8 @@ union Column_Value
 	int   		        IntValue;		 //整形值
 	double 		        DoubleValue;	     //浮点型值
 	char                *StrValue;	     //字符串指针 
+	
 };
-
 // 字段的单元信息
 class Column_Cell
 {
@@ -45,6 +45,7 @@ public:
 	std::string columu_name;
 	Column_Value column_value;
 	Column_Cell *next;
+	Column_Cell& operator=(const Column_Cell&rhs);
 };
 
 class RecordHead

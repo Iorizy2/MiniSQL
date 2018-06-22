@@ -19,9 +19,8 @@ int main()
 #ifndef NDEBUG
 	try
 	{
-
-		//TestModule();
-		throw SQLError::LSEEK_ERROR();
+		TestModule();
+		//throw SQLError::LSEEK_ERROR();
 		
 	}
 	catch (SQLError::BaseError &e)
@@ -30,6 +29,7 @@ int main()
 		cout << endl;
 	}
 #endif
+
 	system("pause");
 }
 
@@ -39,7 +39,7 @@ void IsPod()
 	cout << std::is_pod<FileAddr>::value << endl;
 	cout << std::is_pod<FILECOND>::value << endl;
 	cout << std::is_pod<BTNode>::value << endl;
-	cout << std::is_pod<Column_Value>::value << endl;
+	cout << std::is_pod<Column_Value>::value << endl; 
 }
 #ifndef NDEBUG
 void TestModule()
@@ -61,7 +61,7 @@ void TestModule()
 	// 创建数据文件
 	buffer.CreateFile(dbf_name.c_str());
 	// 创建索引文件
-	BTree tree(const_cast<char*>(idx_name.c_str()), 'i', const_cast<char*>(record_info.c_str()));
+	BTree tree(idx_name, 'i', const_cast<char*>(record_info.c_str()));
 
 	Record record;
 	unsigned int record_sz = 0;  // 记录大小
@@ -138,7 +138,7 @@ void TestModule()
 			cc.column_type = Column_Type::C;
 			std::string s;
 			cin >> s;
-			char pstr[43];// = (char*)malloc(3 + str_sz_tmp);
+			char *pstr = (char*)malloc(3 + str_sz_tmp);
 			pstr[0] = '0';
 			pstr[1] = '4';
 			pstr[2] = '3';

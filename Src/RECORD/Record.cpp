@@ -47,7 +47,7 @@ void RecordHead::AddColumnCell(const Column_Cell &cc)
 	else
 	{
 		pLast->next = new Column_Cell;
-		*pLast->next = cc;
+		*(pLast->next) = cc;
 		pLast = pLast->next;
 		pLast->next = nullptr;
 	}
@@ -88,7 +88,7 @@ void* Column_Cell::data() const
 		return (void*)&column_value.IntValue;
 		break;
 	case Column_Type::C:
-		return (void*)&column_value.StrValue;
+		return column_value.StrValue;
 		break;
 	case Column_Type::D:
 		return (void*)&column_value.DoubleValue;
@@ -110,6 +110,22 @@ Column_Cell::~Column_Cell()
 		}
 			
 	}
+}
+
+Column_Cell& Column_Cell::operator=(const Column_Cell&rhs)
+{
+	column_type = rhs.column_type;
+	columu_name = rhs.columu_name;
+	column_value = rhs.column_value;
+
+	// 如果是指针类型，则指保留一个指针副本
+	
+	if (rhs.column_type == Column_Type::C)
+	{
+		Column_Cell& tmp = const_cast<Column_Cell&>(rhs);
+		tmp.column_value.StrValue = nullptr;
+	}
+	return *this;
 }
 
 FileAddr Record::InsertRecord(const std::string dbf_name, const RecordHead &rd)

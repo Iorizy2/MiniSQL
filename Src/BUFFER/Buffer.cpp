@@ -57,7 +57,7 @@ const void* MemFile::ReadRecord(FileAddr *address_delete)const
 }
 
 // 返回新添加记录的地址
-FileAddr MemFile::AddRecord(void*source, size_t sz_record)
+FileAddr MemFile::AddRecord(const void* const source, size_t sz_record)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
