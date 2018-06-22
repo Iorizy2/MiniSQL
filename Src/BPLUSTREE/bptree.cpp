@@ -27,7 +27,7 @@ BTree::BTree(char *_idx_name, char _KeyType, char *_RecordInfo)
 		// 初始化索引文件，创建一个根结点
 		BTNode root_node;
 		if (sizeof(BTNode) > (FILE_PAGESIZE - sizeof(PAGEHEAD)))
-			throw ERROR::BPLUSTREE_DEGREE_TOOBIG;
+			throw SQLError::BPLUSTREE_DEGREE_TOOBIG_ERROR();
 		root_node.node_type = NodeType::ROOT;
 		root_node.count_valid_key = 0;
 		root_node.next = FileAddr{ 0,0 };
@@ -318,11 +318,11 @@ bool BTree::Insert(KeyAttr k, FileAddr k_fd)
 	{
 		auto key_fd = Search(k);
 		if (key_fd != FileAddr{ 0,0 })
-			throw ERROR::KEY_INSERT_FAILED;
+			throw SQLError::KEY_INSERT_ERROR();
 	}
-	catch (const ERROR error)
+	catch (const SQLError::BaseError &error)
 	{
-		DispatchError(error);
+		SQLError::DispatchError(error);
 		std::cout << std::endl;
 		return false;
 	}

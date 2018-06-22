@@ -20,12 +20,13 @@ int main()
 	try
 	{
 
-		TestModule();
+		//TestModule();
+		throw SQLError::LSEEK_ERROR();
 		
 	}
-	catch (ERROR e)
+	catch (SQLError::BaseError &e)
 	{
-		DispatchError(e);
+		SQLError::DispatchError(e);
 		cout << endl;
 	}
 #endif

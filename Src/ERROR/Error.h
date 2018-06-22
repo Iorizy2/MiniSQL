@@ -17,17 +17,73 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 #include <iostream>
-using ULONG = unsigned long;
+namespace SQLError
+{
+	/************************************************************************
+	*
+	*   接口类
+	*
+	*************************************************************************/
+	class BaseError
+	{
+	public:
+		virtual void PrintError()const = 0;
+	};
 
-enum class ERROR :ULONG {
-	LSEEK_FAILED,
-	READ_FAILED,
-	WRITE_FAILED,
-	FILENAME_CONVERT_FAILED,
-	KEY_INSERT_FAILED,
-	BPLUSTREE_DEGREE_TOOBIG
-};
+	// 错误处理函数
+	void DispatchError(const SQLError::BaseError &error);
 
-void DispatchError(ERROR error);
+
+	/************************************************************************
+	*                     
+	*   具体类
+	*
+	*************************************************************************/
+
+	// 派生类错误
+	class LSEEK_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	// 文件读错误
+	class READ_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	// 文件写错误
+	class WRITE_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	// 文件名转换错误
+	class FILENAME_CONVERT_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	// 索引文件插入关键字失败
+	class KEY_INSERT_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	// B+树的度偏大
+	class BPLUSTREE_DEGREE_TOOBIG_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
+
+	
+}
+
 
 #endif
