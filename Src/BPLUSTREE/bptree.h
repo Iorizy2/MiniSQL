@@ -15,8 +15,8 @@
 ******************************************************************/
 #ifndef __BPTREE_H__
 #define __BPTREE_H__
-#include "../BUFFER/Buffer.h"
-#include "../GLOBAL/global.h"
+#include "../Src/BUFFER/Buffer.h"
+#include "../Src/GLOBAL/global.h"
 #include <iostream>
 #include <queue>
 #include <string>

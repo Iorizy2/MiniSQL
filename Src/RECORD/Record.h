@@ -16,11 +16,11 @@
 
 #ifndef __RECORD_H__
 #define __RECORD_H__
-#include "../BUFFER/Buffer.h"
+#include "../Src/BUFFER/Buffer.h"
 #include <string>
 #include <vector>
 #include <tuple>
-#include "../ERROR/Error.h"
+#include "../Src/ERROR/Error.h"
 
 // ◊÷∂Œ¿‡–Õ I---int  C---char   D---Doouble
 enum class Column_Type { I, C, D };
