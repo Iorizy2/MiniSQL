@@ -137,6 +137,7 @@ bool MemFile::UpdateRecord(FileAddr *address, void *record_data, size_t record_s
 	auto pdest = (char*)pMemPage->Ptr2PageBegin + address->offSet + sizeof(FileAddr);
 	memcpy(pdest, record_data, record_sz);
 	pMemPage->isModified = true;
+	return true;
 }
 
 void* MemFile::MemRead(FileAddr *dest_to_read)
@@ -536,7 +537,7 @@ void FileAddr::ShiftOffset(const int OFFSET)
 	this->offSet += OFFSET;
 }
 
-
+#ifndef NDEBUG
 std::string IntToStr(int i)
 {
 	std::string s;
@@ -650,3 +651,4 @@ void BufferModuleTest()
 	}
 }
 
+#endif

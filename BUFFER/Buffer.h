@@ -102,7 +102,9 @@ class MemPage
 	friend class MemFile;
 	friend class Clock;
 	friend class BUFFER;
+#ifndef NDEBUG
 	friend void TestModule();
+#endif
 public:
 	MemPage();
 	~MemPage();
@@ -134,7 +136,9 @@ class Clock
 	friend class MemFile;
 	friend class BUFFER;
 	friend class BTree;
+#ifndef NDEBUG
 	friend void TestModule();
+#endif
 public:
 	Clock();
 	~Clock();
@@ -175,7 +179,9 @@ class MemFile
 {
 	friend class BUFFER;
 	friend class BTree;
+#ifndef NDEBUG
 	friend void TestModule();
+#endif
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(void*source_record, size_t sz_record);                        // 返回记录所添加的位置
@@ -204,7 +210,9 @@ private:
 
 class BUFFER
 {
+#ifndef NDEBUG
 	friend void TestModule();
+#endif
 public:
 	BUFFER() = default;
 	~BUFFER();
@@ -221,7 +229,9 @@ private:
 };
 
 // BUFFER 模块测试函数
+#ifndef NDEBUG
 std::string IntToStr(int i);
 void BufferModuleTest();
+#endif
 
 #endif //define _BUFFER_H_

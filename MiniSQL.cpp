@@ -4,18 +4,22 @@
 #include "BUFFER/Buffer.h"
 #include "BPLUSTREE/bptree.h"
 #include "RECORD/Record.h"
-#define NDEBUG 
+//#define NDEBUG 
 using namespace std;
 
 // 判断POD数据
 void IsPod();
+#ifndef NDEBUG
 void TestModule();
+#endif
 
 int main()
 {
 	IsPod();
+#ifndef NDEBUG
 	try
 	{
+
 		TestModule();
 		
 	}
@@ -24,7 +28,7 @@ int main()
 		DispatchError(e);
 		cout << endl;
 	}
-	
+#endif
 	system("pause");
 }
 
@@ -36,7 +40,7 @@ void IsPod()
 	cout << std::is_pod<BTNode>::value << endl;
 	cout << std::is_pod<Column_Value>::value << endl;
 }
-
+#ifndef NDEBUG
 void TestModule()
 {
 	using std::string;
@@ -188,3 +192,4 @@ void TestModule()
 	delete rdinfo;
 	tree.PrintAllLeafNode();
 }
+#endif

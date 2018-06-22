@@ -96,5 +96,4 @@ private:
 	IndexHeadNode idx_head;
 };
 
-void BTreeTest();
 #endif
