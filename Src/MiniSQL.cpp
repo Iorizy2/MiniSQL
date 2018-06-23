@@ -22,6 +22,7 @@ int main()
 		TestModule();
 		//throw SQLError::LSEEK_ERROR();
 		
+		
 	}
 	catch (SQLError::BaseError &e)
 	{
@@ -61,7 +62,8 @@ void TestModule()
 	// 创建数据文件
 	buffer.CreateFile(dbf_name.c_str());
 	// 创建索引文件
-	BTree tree(idx_name, 'i', const_cast<char*>(record_info.c_str()));
+	string column_name = "";
+	BTree tree(idx_name, 'i', record_info, column_name);
 
 	Record record;
 	unsigned int record_sz = 0;  // 记录大小
@@ -70,9 +72,9 @@ void TestModule()
 	// 计算记录大小
 	auto pMemPage = buffer.GetMemFile(idx_name.c_str());
 	IndexHeadNode * pIndexHeadNode = (IndexHeadNode*)(pMemPage->GetFileFirstPage()->GetFileCond()->reserve);
-	cout << pIndexHeadNode->RecordInfo << endl;
-	char *rdinfo = (char*)malloc(strlen(pIndexHeadNode->RecordInfo)+1);
-	memcpy(rdinfo, pIndexHeadNode->RecordInfo, strlen(pIndexHeadNode->RecordInfo)+1);
+	cout << pIndexHeadNode->RecordTypeInfo << endl;
+	char *rdinfo = (char*)malloc(strlen(pIndexHeadNode->RecordTypeInfo)+1);
+	memcpy(rdinfo, pIndexHeadNode->RecordTypeInfo, strlen(pIndexHeadNode->RecordTypeInfo)+1);
 	
 	for (int i = 0; rdinfo[i] != '0'; i++)
 	{

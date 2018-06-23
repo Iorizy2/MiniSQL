@@ -24,6 +24,21 @@
 #include "../Src/BUFFER/Buffer.h"
 #include "../Src/ERROR/Error.h"
 
+class KeyAttr
+{
+public:
+	int x;
+	char s[1];
+	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
+	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
+	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
+	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
+	bool operator>=(const KeyAttr &rhs) { return x >= rhs.x; }
+	bool operator!=(const KeyAttr &rhs) { return x != rhs.x; }
+};
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
+
 /***********************************************************************************
 *
 *    定义记录各个字段的类型
@@ -113,7 +128,7 @@ public:
 	// 删除记录，返回删除的记录所在数据文件的地址
 	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t record_size = 0);
 
-	// 更新记录整条
+	// 更新整条记录
 	bool UpdateRecord(const std::string dbf_name, const RecordHead &rd, FileAddr fd);   
 
 private:

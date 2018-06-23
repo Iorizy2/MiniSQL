@@ -38,7 +38,7 @@ class Clock;
 class BUFFER;
 Clock* GetGlobalClock();
 BUFFER& GetGlobalFileBuffer();
-const unsigned int FILECOND_RESERVE_SPACE = 256;  // 文件头预留空间
+const unsigned int FILECOND_RESERVE_SPACE = 512;  // 文件头预留空间
 
 /*********************************************************
 *             文件地址,定位文件中的位置

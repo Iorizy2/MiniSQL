@@ -1,6 +1,6 @@
 #include "bptree.h"
 
-BTree::BTree(const std::string idx_name, const char _KeyType, const std::string _RecordInfo)
+BTree::BTree(const std::string idx_name, const char _KeyType, const std::string _RecordTypeInfo, const std::string _RecordColumnName)
 	:str_idx_name(idx_name)
 {
 	auto &buffer = GetGlobalFileBuffer();
@@ -25,7 +25,8 @@ BTree::BTree(const std::string idx_name, const char _KeyType, const std::string 
 		idx_head.root = root_node_fd;
 		idx_head.MostLeftNode = root_node_fd;
 		idx_head.KeyType = _KeyType;
-		strcpy(idx_head.RecordInfo, _RecordInfo.c_str());
+		strcpy(idx_head.RecordTypeInfo, _RecordTypeInfo.c_str());
+		strcpy(idx_head.RecordColumnName, _RecordColumnName.c_str());
 
 		// 将结点的地址写入文件头的预留空间区
 		memcpy(buffer[str_idx_name.c_str()]->GetFileFirstPage()->GetFileCond()->reserve, &idx_head, sizeof(idx_head));
@@ -450,7 +451,16 @@ void BTree::PrintBTreeStruct()
 void BTree::PrintAllLeafNode()
 {
 	auto phead = (IndexHeadNode*)GetGlobalFileBuffer()[str_idx_name.c_str()]->GetFileFirstPage()->GetFileCond()->reserve;
+	auto pRoot = FileAddrToMemPtr(phead->root);
+	if (pRoot->count_valid_key <= 0)
+	{
+		std::cout << "记录为空" << std::endl;
+		return;
+	}
+
 	auto pNode = FileAddrToMemPtr(phead->MostLeftNode);
+	
+	
 	static int n = 0;
 	while (pNode->next.offSet != 0)
 	{
