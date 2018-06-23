@@ -15,8 +15,7 @@ BTree::BTree(const std::string idx_name, const char _KeyType, const std::string 
 
 		// 初始化索引文件，创建一个根结点
 		BTNode root_node;
-		if (sizeof(BTNode) > (FILE_PAGESIZE - sizeof(PAGEHEAD)))
-			throw SQLError::BPLUSTREE_DEGREE_TOOBIG_ERROR();
+		assert(sizeof(BTNode) < (FILE_PAGESIZE - sizeof(PAGEHEAD)));
 		root_node.node_type = NodeType::ROOT;
 		root_node.count_valid_key = 0;
 		root_node.next = FileAddr{ 0,0 };
@@ -248,10 +247,10 @@ void BTree::SplitChild(FileAddr x, int i, FileAddr y)
 	z.count_valid_key = MaxKeyCount / 2;
 
 	// 将y结点的一般数据转移到新结点
-	for (int i = MaxKeyCount / 2; i < MaxKeyCount; i++)
+	for (int k = MaxKeyCount / 2; k < MaxKeyCount; k++)
 	{
-		z.key[i - MaxKeyCount / 2] = py->key[i];
-		z.children[i - MaxKeyCount / 2] = py->children[i];
+		z.key[k - MaxKeyCount / 2] = py->key[k];
+		z.children[k - MaxKeyCount / 2] = py->children[k];
 	}
 	py->count_valid_key = MaxKeyCount / 2;
 
@@ -380,8 +379,8 @@ FileAddr BTree::Delete(KeyAttr key)
 	int i = proot->count_valid_key - 1;
 	while (proot->key[i] > key)i--;
 	assert(i >= 0);
-	auto px = FileAddrToMemPtr(root_fd);
-	auto py = FileAddrToMemPtr(px->children[i]);
+	//auto px = FileAddrToMemPtr(root_fd);
+	//auto py = FileAddrToMemPtr(px->children[i]);
 
 	auto fd_delete = DeleteKeyAtInnerNode(root_fd, i, key);
 
@@ -463,6 +462,7 @@ void BTree::PrintAllLeafNode()
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 {
 	FileAddr fd_res{0,0};
+
 	BTNode* pNode = FileAddrToMemPtr(node_fd);
 	for (int i = pNode->count_valid_key - 1; i >= 0; i--)
 	{
@@ -472,6 +472,7 @@ FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 			break;
 		}
 	}
+
 	if (fd_res == FileAddr{ 0,0 })
 	{
 		return fd_res;
@@ -484,7 +485,7 @@ FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
 		else
 			return SearchInnerNode(search_key, fd_res);
 	}
-	return fd_res;
+	//return fd_res;
 }
 
 FileAddr BTree::SearchLeafNode(KeyAttr search_key, FileAddr node_fd)

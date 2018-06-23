@@ -102,7 +102,7 @@ void TestModule()
 	{
 		fflush(stdin);
 		std::cout << "operator: insert(i), delete(d), search(q), print(p), quit(q)" << std::endl;
-		c = getchar();
+		c = (char)getchar();
 		if (c == 'd')
 		{
 			std::cout << "delete key" << std::endl;
@@ -148,7 +148,7 @@ void TestModule()
 			cc.column_value.StrValue = pstr;
 			record_head.AddColumnCell(cc);
 
-			Record record;
+			
 			auto data_fd = record.InsertRecord(dbf_name, record_head);
 			tree.Insert(key, data_fd);
 		}
@@ -194,7 +194,7 @@ void TestModule()
 		fflush(stdin);
 		fflush(stdin);
 		fflush(stdin);
-		char x = getchar();
+		getchar();
 
 	}
 	delete rdinfo;

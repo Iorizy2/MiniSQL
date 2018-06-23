@@ -103,6 +103,7 @@ FileAddr MemFile::AddRecord(const void* const source, size_t sz_record)
 
 FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 {
+	if (!record_sz)return FileAddr{ 0,0 };
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
 
@@ -143,8 +144,9 @@ bool MemFile::UpdateRecord(FileAddr *address, void *record_data, size_t record_s
 void* MemFile::MemRead(FileAddr *dest_to_read)
 {
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, dest_to_read->filePageID);
-	return (char*)pMemPage->Ptr2PageBegin + dest_to_read->offSet;
 	pMemPage->bIsLastUsed = true;
+	return (char*)pMemPage->Ptr2PageBegin + dest_to_read->offSet;
+	
 }
 
 // 任意位置写入任意数据,返回写入后的下一个地址位置，写入失败返回原地址
@@ -546,8 +548,8 @@ std::string IntToStr(int i)
 		s += ((i % 10) + '0');
 		i /= 10;
 	}
-	for (int i = 0, j = s.size() - 1; i <= j; i++, j--)
-		std::swap(s[i], s[j]);
+	for (int n = 0, j = s.size() - 1; n <= j; n++, j--)
+		std::swap(s[n], s[j]);
 	return s;
 }
 void BufferModuleTest()
@@ -595,12 +597,6 @@ void BufferModuleTest()
 		cout << "向test6写入600条数据 testxxx(xxx为编号)" << endl;
 		for (int i = 1; i <= 600; i++)
 		{
-			if (i == 123)
-			{
-				int a = i;
-				int b = a;
-			}
-				
 			std::string str_tmp = s + IntToStr(i);
 			str_tmp.reserve(8);
 			FileAddr fd = buffer["test6"]->AddRecord((void*)str_tmp.c_str(), str_tmp.size()+1);
