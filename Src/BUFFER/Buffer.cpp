@@ -103,7 +103,8 @@ FileAddr MemFile::AddRecord(const void* const source, size_t sz_record)
 
 FileAddr MemFile::DeleteRecord(FileAddr *address_delete, size_t record_sz)
 {
-	if (!record_sz)return FileAddr{ 0,0 };
+	if (!record_sz)return FileAddr{ 0,0 }; // record_sz 保留参数位置
+
 	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, 0);
 	auto pFileCond = pMemPage->GetFileCond();
 

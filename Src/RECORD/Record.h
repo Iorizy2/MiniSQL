@@ -69,7 +69,7 @@ class Record
 {
 public:
 	FileAddr InsertRecord(const std::string dbf_name, const RecordHead &rd);
-	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t record_size);
+	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t record_size = 0);
 	bool UpdateRecord(const std::string dbf_name, const RecordHead &rd, FileAddr fd);   // ¸üÐÂ¼ÇÂ¼
 private:
 	std::tuple<unsigned long, char*> GetRecordData(const RecordHead &rd);

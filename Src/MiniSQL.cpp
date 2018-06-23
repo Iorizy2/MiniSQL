@@ -152,6 +152,43 @@ void TestModule()
 			auto data_fd = record.InsertRecord(dbf_name, record_head);
 			tree.Insert(key, data_fd);
 		}
+		if (c == 'u')
+		{
+			std::cout << "update record" << std::endl;
+			KeyAttr key;
+			std::cout << "input key :" << std::endl;
+			cin >> key.x;
+			auto update_fd = tree.Search(key);
+
+			std::cout << "input new record :" << std::endl;
+			RecordHead record_head;
+			Column_Cell cc;
+
+			cc.column_type = Column_Type::I;
+			cin >> cc.column_value.IntValue;
+			record_head.AddColumnCell(cc);
+
+			cc.column_type = Column_Type::D;
+			cin >> cc.column_value.DoubleValue;
+			record_head.AddColumnCell(cc);
+
+			cc.column_type = Column_Type::C;
+			std::string s;
+			cin >> s;
+			char *pstr = (char*)malloc(3 + str_sz_tmp);
+			pstr[0] = '0';
+			pstr[1] = '4';
+			pstr[2] = '3';
+
+			memcpy(pstr + 3, s.data(), s.size());
+			*(pstr + 3 + s.size()) = '\0';
+			cc.column_value.StrValue = pstr;
+			record_head.AddColumnCell(cc);
+
+
+			auto data_fd = record.UpdateRecord(dbf_name, record_head, update_fd);
+			//tree.Insert(key, data_fd);
+		}
 		if (c == 's')
 		{
 			std::cout << "input search key" << std::endl;
