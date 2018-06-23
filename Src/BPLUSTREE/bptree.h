@@ -76,6 +76,7 @@ public:
 	~BTree() { }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
+	FileAddr UpdateKey(KeyAttr k, KeyAttr k_new);                               // 返回关键字对应的记录地址
 	FileAddr Delete(KeyAttr k);                                                 // 返回该关键字记录在数据文件中的地址
 	void PrintBTreeStruct();                                                    // 层序打印所有结点信息
 	void PrintAllLeafNode();

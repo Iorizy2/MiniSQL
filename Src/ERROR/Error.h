@@ -22,6 +22,8 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 #include <iostream>
+#include <fstream>
+#include <string>
 namespace SQLError
 {
 	/************************************************************************
@@ -29,10 +31,13 @@ namespace SQLError
 	*   接口类
 	*
 	*************************************************************************/
+	extern std::fstream log_file;
 	class BaseError
 	{
 	public:
 		virtual void PrintError()const = 0;
+		//virtual void WriteToLog()const = 0;
+		
 	};
 
 	// 错误处理函数

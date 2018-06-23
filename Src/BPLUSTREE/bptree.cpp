@@ -348,6 +348,17 @@ bool BTree::Insert(KeyAttr k, FileAddr k_fd)
 	return true;
 }
 
+// 更新关键字
+FileAddr BTree::UpdateKey(KeyAttr k, KeyAttr k_new)
+{
+	// 在索引中删除旧的关键字
+	auto data_fd = Delete(k);  // 保存关键字对应的记录地址
+
+	//更新新的关键字
+	Insert(k_new, data_fd);
+	return data_fd;
+}
+
 FileAddr BTree::Delete(KeyAttr key)
 {
 	auto search_res = Search(key);

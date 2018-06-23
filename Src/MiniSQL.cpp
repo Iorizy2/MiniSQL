@@ -156,9 +156,12 @@ void TestModule()
 		{
 			std::cout << "update record" << std::endl;
 			KeyAttr key;
-			std::cout << "input key :" << std::endl;
+			KeyAttr key_new;
+			std::cout << "input key to update :" << std::endl;
 			cin >> key.x;
-			auto update_fd = tree.Search(key);
+			std::cout << "input new key  :" << std::endl;
+			cin >> key_new.x;
+			auto update_fd = tree.UpdateKey(key, key_new);
 
 			std::cout << "input new record :" << std::endl;
 			RecordHead record_head;
