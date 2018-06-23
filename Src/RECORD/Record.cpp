@@ -1,5 +1,12 @@
 #include "Record.h"
 
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
+{
+	//os << key.x << " ";
+	return os;
+}
+
 RecordHead::RecordHead()
 	:phead(nullptr), data(nullptr), pLast(nullptr)
 {

@@ -530,15 +530,6 @@ BTNode * BTree::FileAddrToMemPtr(FileAddr node_fd)
 	return (BTNode*)((char*)pMemPage->Ptr2PageBegin + node_fd.offSet+sizeof(FileAddr));
 }
 
-
-std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
-{
-	os << key.x << " ";
-	return os;
-}
-
-
-
 void BTNode::PrintSelf()
 {
 	using std::cout;

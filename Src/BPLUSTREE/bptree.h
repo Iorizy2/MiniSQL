@@ -26,12 +26,6 @@
 #include <fstream>
 #include <chrono>
 
-constexpr int RecordColumnCount = 12*4;  // 记录字段数量限制,假设所有字段都是字符数组，一个字符数组字段需要4个字符->CXXX
-constexpr int ColumnNameLength = 20;     // 单个字段名称长度限制
-constexpr int bptree_t = 3;                         // B+tree's degree, bptree_t >= 2
-constexpr int MaxKeyCount = 2 * bptree_t;            // the max number of keys in a b+tree node
-constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child in a b+tree node
-
 // 索引文件头信息结点,保存在文件头预留空间
 class IndexHeadNode
 {

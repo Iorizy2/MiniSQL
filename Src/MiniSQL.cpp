@@ -19,7 +19,7 @@ int main()
 #ifndef NDEBUG
 	try
 	{
-		TestModule();
+		//TestModule();
 		//throw SQLError::LSEEK_ERROR();
 		
 		
@@ -40,7 +40,7 @@ void IsPod()
 	cout << std::is_pod<FileAddr>::value << endl;
 	cout << std::is_pod<FILECOND>::value << endl;
 	cout << std::is_pod<BTNode>::value << endl;
-	cout << std::is_pod<Column_Value>::value << endl; 
+	cout << std::is_pod<Column_Value>::value << endl;
 }
 #ifndef NDEBUG
 void TestModule()

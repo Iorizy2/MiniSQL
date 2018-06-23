@@ -21,23 +21,9 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include "../Src/GLOBAL/global.h"
 #include "../Src/BUFFER/Buffer.h"
 #include "../Src/ERROR/Error.h"
-
-class KeyAttr
-{
-public:
-	int x;
-	char s[1];
-	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
-	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
-	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
-	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
-	bool operator>=(const KeyAttr &rhs) { return x >= rhs.x; }
-	bool operator!=(const KeyAttr &rhs) { return x != rhs.x; }
-};
-
-std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
 /***********************************************************************************
 *
@@ -52,16 +38,41 @@ enum class Column_Type { I, C, D };
 
 /***********************************************************************************
 *
+*    定义索引文件关键字属性
+*
+***********************************************************************************/
+class KeyAttr
+{
+public:
+	int x;
+	Column_Type type;
+	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
+	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
+	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
+	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
+	bool operator>=(const KeyAttr &rhs) { return x >= rhs.x; }
+	bool operator!=(const KeyAttr &rhs) { return x != rhs.x; }
+};
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
+
+/***********************************************************************************
+*
 *    联合的数据结构定义 字段的值
 *
 ***********************************************************************************/
-
+class KeyAttr;
 union Column_Value
 {
 	int   		        IntValue;		 //整形值
 	double 		        DoubleValue;     //浮点型值
 	char*               StrValue;	     //字符串指针 
-	
+
+	// 类型转换
+	operator KeyAttr()const
+	{
+
+	}
 };
 
 /***********************************************************************************
@@ -108,6 +119,9 @@ private:
 	Column_Cell *pLast;
 	void *data;
 };
+
+
+
 
 /***********************************************************************************
 *
