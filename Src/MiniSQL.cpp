@@ -166,7 +166,14 @@ void TestModule()
 				cout << "记录的地址为:" << ((FileAddr*)pdata)->filePageID << " " << ((FileAddr*)pdata)->offSet << endl;
 				pdata += sizeof(FileAddr);
 
-				//cout << "记录内容：" << ((TestRecord*)pdata)->index << " " << ((TestRecord*)pdata)->name << " " << ((TestRecord*)pdata)->year << endl;
+				cout << "记录内容：" << *((int*)pdata)<<" ";
+				pdata += sizeof(int);
+				cout << *((double*)pdata) << " ";
+				pdata += sizeof(double);
+				cout << pdata << endl;
+				//cout<< ((char*)pdata)[0] << " " << ((char*)pdata)[1] << " " << ((char*)pdata)[2];
+				
+				//cout<< " " << ((TestRecord*)pdata)->name << " " << ((TestRecord*)pdata)->year << endl;
 
 			}
 		}

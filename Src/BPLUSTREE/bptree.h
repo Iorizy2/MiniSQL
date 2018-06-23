@@ -72,9 +72,8 @@ public:
 class BTree
 {
 public:
-	//BTree(const std::string idx_name, const std::string _KeyType, const std::string _RecordInfo);          // 创建索引文件的B+树
 	BTree(const std::string idx_name, const char _KeyType, const std::string _RecordInfo);          // 创建索引文件的B+树
-	~BTree() { delete idx_name; }
+	~BTree() { }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
 	FileAddr Delete(KeyAttr k);                                                 // 返回该关键字记录在数据文件中的地址
@@ -91,7 +90,6 @@ private:
 	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                 // 文件地址转换为内存指针
 	
 private:
-	char *idx_name;
 	int file_id;
 	std::string str_idx_name;
 	IndexHeadNode idx_head;

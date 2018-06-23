@@ -359,6 +359,8 @@ FileAddr BTree::Delete(KeyAttr key)
 	FileAddr root_fd = *(FileAddr*)GetGlobalFileBuffer()[str_idx_name.c_str()]->GetFileFirstPage()->GetFileCond()->reserve;
 	auto proot = FileAddrToMemPtr(root_fd);
 
+
+	// 根节点为ROOT 或者 LEAF 直接删除
 	if (proot->node_type == NodeType::ROOT|| proot->node_type == NodeType::LEAF)
 	{
 		// 直接删除
@@ -381,17 +383,7 @@ FileAddr BTree::Delete(KeyAttr key)
 	auto px = FileAddrToMemPtr(root_fd);
 	auto py = FileAddrToMemPtr(px->children[i]);
 
-	DeleteKeyAtInnerNode(root_fd, i, key);
-
-	/*if (py->node_type == NodeType::LEAF)
-	{
-		DeleteKeyAtLeafNode(root_fd, i, key);
-	}
-	else
-	{
-		DeleteKeyAtInnerNode(root_fd, i, key);
-		
-	}*/
+	auto fd_delete = DeleteKeyAtInnerNode(root_fd, i, key);
 
 
 	if (proot->count_valid_key == 1)
@@ -402,6 +394,8 @@ FileAddr BTree::Delete(KeyAttr key)
 
 		GetGlobalFileBuffer()[str_idx_name.c_str()]->DeleteRecord(&root_fd, sizeof(BTNode));
 	}
+
+	return fd_delete;
 }
 
 void BTree::PrintBTreeStruct()
