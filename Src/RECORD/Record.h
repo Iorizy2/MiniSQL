@@ -178,8 +178,6 @@ public:
 	// 更新整条记录
 	bool UpdateRecord(const std::string dbf_name, const RecordHead &rd, FileAddr fd);   
 
-	// 更新特定字段
-
 private:
 
 	// 将以链表的形式传入的记录数据读取并保存为一个整数据块以便于写入数据文件
