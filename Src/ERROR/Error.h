@@ -92,7 +92,12 @@ namespace SQLError
 		void PrintError() const override;
 	};
 
-	
+	// 关键字名字长度超过限制
+	class KeyAttr_NameLength_ERROR :public BaseError
+	{
+	public:
+		void PrintError() const override;
+	};
 }
 
 

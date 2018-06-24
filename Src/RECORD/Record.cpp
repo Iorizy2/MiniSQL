@@ -3,7 +3,23 @@
 
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 {
-	//os << key.x << " ";
+	switch (key.type)
+	{
+	case Column_Type::I:
+		os << key.value.IntValue << " ";
+		break;
+
+	case Column_Type::C:
+		os << key.value.StrValue << " ";
+		break;
+
+	case Column_Type::D:
+		os << key.value.DoubleValue << " ";
+		break;
+	default:
+		break;
+	}
+
 	return os;
 }
 
@@ -178,4 +194,118 @@ std::tuple<unsigned long, char*> Record::GetRecordData(const RecordHead &rd)
 
 	auto tp = std::make_tuple(data_size, rd_data);
 	return tp;
+}
+
+bool KeyAttr::operator<(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue < rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 < s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue < rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue > rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 > s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue > rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this < rhs);
+}
+
+bool KeyAttr::operator!=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this == rhs);
+}
+
+bool KeyAttr::operator<=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this > rhs);
+}
+
+bool KeyAttr::operator==(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = (this->value.IntValue == rhs.value.IntValue);
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = (s1 == s2);
+		break;
+
+	case Column_Type::D:
+		res = (this->value.DoubleValue == rhs.value.DoubleValue);
+		break;
+	default:
+		break;
+	}
+	return res;
 }

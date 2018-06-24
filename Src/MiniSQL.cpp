@@ -15,14 +15,12 @@ void TestModule();
 
 int main()
 {
-	IsPod();
+	//IsPod();
 #ifndef NDEBUG
 	try
 	{
-		//TestModule();
+		TestModule();
 		//throw SQLError::LSEEK_ERROR();
-		
-		
 	}
 	catch (SQLError::BaseError &e)
 	{
@@ -107,7 +105,7 @@ void TestModule()
 		c = (char)getchar();
 		if (c == 'd')
 		{
-			std::cout << "delete key" << std::endl;
+			/*std::cout << "delete key" << std::endl;
 			KeyAttr key;
 			int x;
 			std::cin >> x;
@@ -115,13 +113,13 @@ void TestModule()
 			auto fd = tree.Delete(key);
 			cout << "被删除的记录地址" << fd.filePageID << " " << fd.offSet << endl;
 
-			record.DeleteRecord(dbf_name, fd, record_sz);
+			record.DeleteRecord(dbf_name, fd, record_sz);*/
 
 
 		}
 		if (c == 'i')
 		{
-			std::cout << "insert record" << std::endl;
+			/*std::cout << "insert record" << std::endl;
 			KeyAttr key;
 
 			RecordHead record_head;
@@ -152,11 +150,11 @@ void TestModule()
 
 			
 			auto data_fd = record.InsertRecord(dbf_name, record_head);
-			tree.Insert(key, data_fd);
+			tree.Insert(key, data_fd);*/
 		}
 		if (c == 'u')
 		{
-			std::cout << "update record" << std::endl;
+			/*std::cout << "update record" << std::endl;
 			KeyAttr key;
 			KeyAttr key_new;
 			std::cout << "input key to update :" << std::endl;
@@ -191,12 +189,12 @@ void TestModule()
 			record_head.AddColumnCell(cc);
 
 
-			auto data_fd = record.UpdateRecord(dbf_name, record_head, update_fd);
-			//tree.Insert(key, data_fd);
+			auto data_fd = record.UpdateRecord(dbf_name, record_head, update_fd);*/
+			
 		}
 		if (c == 's')
 		{
-			std::cout << "input search key" << std::endl;
+			/*std::cout << "input search key" << std::endl;
 			KeyAttr key;
 			cin >> key.x;
 			auto fd = tree.Search(key);
@@ -213,11 +211,8 @@ void TestModule()
 				cout << *((double*)pdata) << " ";
 				pdata += sizeof(double);
 				cout << pdata << endl;
-				//cout<< ((char*)pdata)[0] << " " << ((char*)pdata)[1] << " " << ((char*)pdata)[2];
 				
-				//cout<< " " << ((TestRecord*)pdata)->name << " " << ((TestRecord*)pdata)->year << endl;
-
-			}
+			}*/
 		}
 		if (c == 'p')
 		{

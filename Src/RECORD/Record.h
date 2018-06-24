@@ -44,16 +44,21 @@ enum class Column_Type { I, C, D };
 class KeyAttr
 {
 public:
-	int x;
+	using Key_Value = union {
+		int   		        IntValue;		 //整形值
+		double 		        DoubleValue;     //浮点型值
+		char                StrValue[ColumnNameLength];	     //字符串指针 
+	};
 	Column_Type type;
-	bool operator<(const KeyAttr &rhs) { return x < rhs.x; }
-	bool operator>(const KeyAttr &rhs) { return x > rhs.x; }
-	bool operator==(const KeyAttr &rhs) { return x == rhs.x; }
-	bool operator<=(const KeyAttr &rhs) { return x <= rhs.x; }
-	bool operator>=(const KeyAttr &rhs) { return x >= rhs.x; }
-	bool operator!=(const KeyAttr &rhs) { return x != rhs.x; }
-};
+	Key_Value value;
 
+	bool operator<(const KeyAttr &rhs);
+	bool operator>(const KeyAttr &rhs);
+	bool operator==(const KeyAttr &rhs);
+	bool operator<=(const KeyAttr &rhs);
+	bool operator>=(const KeyAttr &rhs);
+	bool operator!=(const KeyAttr &rhs);
+};
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 
 /***********************************************************************************
@@ -61,18 +66,11 @@ std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 *    联合的数据结构定义 字段的值
 *
 ***********************************************************************************/
-class KeyAttr;
 union Column_Value
 {
 	int   		        IntValue;		 //整形值
 	double 		        DoubleValue;     //浮点型值
 	char*               StrValue;	     //字符串指针 
-
-	// 类型转换
-	operator KeyAttr()const
-	{
-
-	}
 };
 
 /***********************************************************************************
@@ -95,6 +93,41 @@ public:
 	Column_Value column_value;
 	Column_Cell *next;
 	Column_Cell& operator=(const Column_Cell&rhs);
+
+	// 类型转换
+	operator KeyAttr()const
+	{
+		KeyAttr key_attr;
+
+		switch (column_type)
+		{
+		case Column_Type::I:
+			key_attr.type = column_type;
+			key_attr.value.IntValue = column_value.IntValue;
+			break;
+
+		case Column_Type::C:
+			key_attr.type = column_type;
+			if (strlen(column_value.StrValue) > ColumnNameLength)
+			{
+				throw SQLError::KeyAttr_NameLength_ERROR();
+			}
+			else
+			{
+				strcpy(key_attr.value.StrValue, column_value.StrValue);
+			}
+			break;
+
+		case Column_Type::D:
+			key_attr.type = column_type;
+			key_attr.value.DoubleValue = column_value.DoubleValue;
+			break;
+		default:
+			break;
+		}
+
+		return key_attr;
+	}
 };
 
 /***********************************************************************************

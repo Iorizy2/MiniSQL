@@ -4,6 +4,7 @@
 namespace SQLError
 {
 	static std::fstream log_file;
+
 }
 
 void SQLError::DispatchError(const BaseError &error)
@@ -80,6 +81,19 @@ void SQLError::KEY_INSERT_ERROR::PrintError() const
 void SQLError::BPLUSTREE_DEGREE_TOOBIG_ERROR::PrintError() const
 {
 	std::string error_info = "(BPLUSTREE_DEGREE_TOOBIG) A page of file can not contain a tree node!";
+
+	// 输出异常
+	std::cout << error_info;
+
+	// 写入日志
+	log_file.open("log", std::ios::out | std::ios::app);
+	log_file << error_info << std::endl;
+	log_file.close();
+}
+
+void SQLError::KeyAttr_NameLength_ERROR::PrintError() const
+{
+	std::string error_info = "(BPLUSTREE_DEGREE_TOOBIG) KeyAttr name length flowover,it may be happen in where you set the record's key!";
 
 	// 输出异常
 	std::cout << error_info;

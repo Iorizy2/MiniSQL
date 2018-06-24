@@ -553,7 +553,7 @@ void BTNode::PrintSelf()
 
 	for (int i = 0; i < count_valid_key; i++)
 	{
-		cout << "index: "<<i<<" key: " << key[i].x << "\t" << "child addr: " << children[i].filePageID << " " << children[i].offSet << endl;
+		cout << "index: "<<i<<" key: " << key[i] << "\t" << "child addr: " << children[i].filePageID << " " << children[i].offSet << endl;
 	}
 
 }
