@@ -182,7 +182,7 @@ class MemFile
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(const void* const source_record, size_t sz_record);                        // 返回记录所添加的位置
-	FileAddr DeleteRecord(FileAddr *address_delete, size_t record_sz);               // 返回删除的位置
+	FileAddr DeleteRecord(FileAddr *address_delete, size_t);               // 返回删除的位置
 	bool UpdateRecord(FileAddr *address_delete, void *record_data, size_t record_sz);
 	
 private:

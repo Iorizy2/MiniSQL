@@ -173,7 +173,7 @@ public:
 	FileAddr InsertRecord(const std::string dbf_name, const RecordHead &rd);
 
 	// 删除记录，返回删除的记录所在数据文件的地址
-	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t record_size = 0);
+	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t);
 
 	// 更新整条记录
 	bool UpdateRecord(const std::string dbf_name, const RecordHead &rd, FileAddr fd);   

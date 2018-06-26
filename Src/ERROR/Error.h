@@ -35,11 +35,13 @@ namespace SQLError
 	class BaseError
 	{
 	public:
-		virtual void PrintError()const = 0;
-		//virtual void WriteToLog()const = 0;
+		virtual void PrintError()const;
+		virtual void WriteToLog();
+	protected:
+		std::string ErrorInfo;
+		std::string ErrorPos;
 		
 	};
-
 	// 错误处理函数
 	void DispatchError(const SQLError::BaseError &error);
 
@@ -54,49 +56,49 @@ namespace SQLError
 	class LSEEK_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		LSEEK_ERROR();
 	};
 
 	// 文件读错误
 	class READ_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		READ_ERROR();
 	};
 
 	// 文件写错误
 	class WRITE_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		WRITE_ERROR();
 	};
 
 	// 文件名转换错误
 	class FILENAME_CONVERT_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		FILENAME_CONVERT_ERROR();
 	};
 
 	// 索引文件插入关键字失败
 	class KEY_INSERT_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		KEY_INSERT_ERROR();
 	};
 
 	// B+树的度偏大
 	class BPLUSTREE_DEGREE_TOOBIG_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		BPLUSTREE_DEGREE_TOOBIG_ERROR();
 	};
 
 	// 关键字名字长度超过限制
 	class KeyAttr_NameLength_ERROR :public BaseError
 	{
 	public:
-		void PrintError() const override;
+		KeyAttr_NameLength_ERROR();
 	};
 }
 
