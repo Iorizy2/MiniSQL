@@ -75,7 +75,8 @@ union Column_Value
 class Column_Cell
 {
 public:
-	Column_Cell()=default;
+	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
+
 	size_t size()const;
 	void* data()const;
 	~Column_Cell();

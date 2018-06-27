@@ -181,6 +181,7 @@ std::tuple<unsigned long, char*> Record::GetRecordData(const RecordHead &rd)
 	// 记录数据的副本
 	unsigned long data_size = rd.size();
 	char *rd_data = (char*)malloc(data_size);
+	memset(rd_data, 0, data_size);
 	auto pcolumn = rd.GetFirstColumn();
 
 	unsigned long offset = 0;

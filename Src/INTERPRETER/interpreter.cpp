@@ -174,6 +174,59 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str)
 	if(sen_str[col_value_left_bracket]!="("|| StrToLower(sen_str[col_name_right_bracket+1])!="values")
 		throw SQLError::CMD_FORMAT_ERROR("key's count is not match value's count or values that not value");
 
+	// 检查是否有字符串因包含空格字符而被误判为两个有意字串
+	for (auto iter = sen_str.begin() + col_name_left_bracket+1; *iter != ")";)
+	{
+		//std::cout << *iter << std::endl;
+		//std::cout << *(iter+1) << std::endl;
+		if (*(iter + 1) == ",")
+		{
+			iter+=2;
+		}
+		else if (*(iter + 1) == ")")
+		{
+			iter++;
+		}
+		else
+		{
+			*iter += (" "+*(iter + 1));
+			sen_str.erase(iter + 1);
+		}
+	}
+	col_value_left_bracket = 0;
+	auto iter = sen_str.begin() + 4;
+	while (*iter != "(")iter++;
+	if(iter==sen_str.end())
+		throw SQLError::CMD_FORMAT_ERROR("");
+	for (iter++; *iter != ")";)
+	{
+		//std::cout << *iter << std::endl;
+		//std::cout << *(iter + 1) << std::endl;
+		if (*(iter + 1) == ",")
+		{
+			iter += 2;
+		}
+		else if (*(iter + 1) == ")")
+		{
+			iter++;
+		}
+		else
+		{
+			*iter += (" " + *(iter + 1));
+			sen_str.erase(iter + 1);
+		}
+	}
+
+	for (int j = 3; j < sen_str.size() - 1; j++)
+	{
+		if (sen_str[j] == ")")
+		{
+			col_name_right_bracket = j;
+			col_value_left_bracket = j + 2;
+			break;
+		}
+	}
+	col_value_right_bracket = sen_str.size() - 2;
 	for (int p = col_name_left_bracket + 1, q = col_value_left_bracket + 1; q <= col_value_right_bracket - 1; p+=2, q+=2)
 	{
 		tb_insert_info.insert_info.push_back({ sen_str[p], sen_str[q] });
