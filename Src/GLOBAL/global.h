@@ -18,9 +18,17 @@
 #include "../Src/ERROR/error.h"
 #include <string>
 
+/***********************************************************************************
+*
+*    定义记录各个字段的类型
+*    字段类型 I---int  C---字符串  D---Doouble
+*
+***********************************************************************************/
 
+enum class Column_Type { I, C, D };
 
-
+// 数据类型的字符串形式转换为枚举类型
+Column_Type StrConvertToEnumType(std::string str_type);
 
 /********************************************************  Buffer Module  ***************************************************************/
 
@@ -49,5 +57,10 @@ constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child 
 std::string IdxToDbf(std::string idx_name);
 // file name convert .dbf to .idx 
 std::string DbfToIdx(std::string idx_name);
+
+// str to int
+int StrToInt(std::string str);
+
+std::string StrToLower(std::string str);
 
 #endif

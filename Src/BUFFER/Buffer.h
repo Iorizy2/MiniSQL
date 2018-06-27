@@ -128,11 +128,13 @@ public:
 *   不变式：调用者保证需要被载入的物理文件都存在，且加载的页面不越界
 *
 **********************************************************/
+class TB_Insert_Info;
 class Clock
 {
 	friend class MemFile;
 	friend class BUFFER;
 	friend class BTree;
+	friend void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/);
 #ifndef NDEBUG
 	friend void TestModule();
 #endif

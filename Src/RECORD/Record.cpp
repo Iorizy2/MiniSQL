@@ -111,7 +111,7 @@ void* Column_Cell::data() const
 		return (void*)&column_value.IntValue;
 		break;
 	case Column_Type::C:
-		return column_value.StrValue;
+		return column_value.StrValue+3; // 前三个字节保存的字符串定义的长度，不需要保存
 		break;
 	case Column_Type::D:
 		return (void*)&column_value.DoubleValue;

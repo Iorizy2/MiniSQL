@@ -19,6 +19,18 @@ namespace SQLError
 		log_file.close();
 	}
 
+	CMD_FORMAT_ERROR::CMD_FORMAT_ERROR(const std::string s)
+	{
+		ErrorInfo = "Command format error!The command is not exist!";
+		error_info = s;
+	}
+
+	void CMD_FORMAT_ERROR::PrintError() const
+	{
+		//  ‰≥ˆ“Ï≥£
+		std::cout << ErrorInfo << " " << error_info;
+	}
+
 }
 
 void SQLError::DispatchError(const BaseError &error)

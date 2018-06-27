@@ -4,6 +4,8 @@
 #include "BUFFER/Buffer.h"
 #include "BPLUSTREE/bptree.h"
 #include "RECORD/Record.h"
+#include "INTERPRETER/interpreter.h"
+#include "include/MiniSql.h"
 //#define NDEBUG 
 using namespace std;
 
@@ -19,8 +21,25 @@ int main()
 #ifndef NDEBUG
 	try
 	{
-		TestModule();
+		//TestModule();
 		//throw SQLError::LSEEK_ERROR();
+
+		// 解释有意字串
+		/*std::string cmd = "create table test1(id int,ISBN char(16),Name char(20))";
+		SensefulStr SenStr(cmd);
+		auto sen_str = SenStr.GetSensefulStr();
+		for (auto str : sen_str)
+			cout << str << endl;
+
+		TB_Create_Info tb_info = CreateTableInfo(sen_str);
+		CreateTable(tb_info);*/
+
+		// 插入记录
+		std::string cmd_insert = "insert into test1(id, ISBN, Name)values(33,CUST13,this name);";
+		SensefulStr SenStr(cmd_insert);
+		auto sen_str = SenStr.GetSensefulStr();
+		auto tb_insert_info = CreateInsertInfo(sen_str);
+		//InsertRecord(tb_insert_info);
 	}
 	catch (SQLError::BaseError &e)
 	{
@@ -60,8 +79,9 @@ void TestModule()
 	// 创建数据文件
 	buffer.CreateFile(dbf_name.c_str());
 	// 创建索引文件
-	string column_name = "";
-	BTree tree(idx_name, 'i', record_info, column_name);
+	char _RecordTypeInfo[RecordColumnCount];
+	char _RecordColumnName[RecordColumnCount / 4 * ColumnNameLength];
+	BTree tree(idx_name, 'i', _RecordTypeInfo, _RecordColumnName);
 
 	Record record;
 	unsigned int record_sz = 0;  // 记录大小

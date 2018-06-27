@@ -100,6 +100,16 @@ namespace SQLError
 	public:
 		KeyAttr_NameLength_ERROR();
 	};
+
+	// --------------------------------------½âÊÍÆ÷Ä£¿é------------------------------------
+	class CMD_FORMAT_ERROR :public BaseError
+	{
+	public:
+		CMD_FORMAT_ERROR(const std::string s = std::string(""));
+		virtual void PrintError()const;
+	protected:
+		std::string error_info;
+	};
 }
 
 

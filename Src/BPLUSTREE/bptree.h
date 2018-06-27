@@ -32,7 +32,7 @@ class IndexHeadNode
 public:
 	FileAddr    root;                                    // the address of the root
 	FileAddr    MostLeftNode;                            // the address of the most left node
-	char        KeyType;                                 // 关键字类型
+	int         KeyTypeIndex;                            // 关键字字段的位置
 	char        RecordTypeInfo[RecordColumnCount];          // 记录字段类型信息，
 	char        RecordColumnName[RecordColumnCount/4* ColumnNameLength];
 };
@@ -57,7 +57,8 @@ class BTree
 {
 public:
 	// 参数：索引文件名称， 关键字类型， 记录各个类型信息数组， 记录各个字段名称信息数组
-	BTree(const std::string idx_name, const char _KeyType, const std::string _RecordTypeInfo, const std::string _RecordColumnName);          // 创建索引文件的B+树
+	BTree(std::string idx_name);
+	BTree(const std::string idx_name, int KeyTypeIndex, char (&_RecordTypeInfo)[RecordColumnCount], char (&_RecordColumnName)[RecordColumnCount / 4 * ColumnNameLength]);          // 创建索引文件的B+树
 	~BTree() { }
 	FileAddr Search(KeyAttr search_key);                                        // 查找关键字是否已经存在
 	bool Insert(KeyAttr k, FileAddr k_fd);                                      // 插入关键字k
@@ -65,6 +66,7 @@ public:
 	FileAddr Delete(KeyAttr k);                                                 // 返回该关键字记录在数据文件中的地址
 	void PrintBTreeStruct();                                                    // 层序打印所有结点信息
 	void PrintAllLeafNode();
+	IndexHeadNode *GetPtrIndexHeadNode();
 private:
 	FileAddr DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);              // x的下标为i的结点为叶子结点
 	FileAddr DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);               // x的下标为i的结点为叶子结点

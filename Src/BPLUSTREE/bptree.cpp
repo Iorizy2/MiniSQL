@@ -1,6 +1,7 @@
 #include "bptree.h"
 
-BTree::BTree(const std::string idx_name, const char _KeyType, const std::string _RecordTypeInfo, const std::string _RecordColumnName)
+BTree::BTree(const std::string idx_name, int KeyTypeIndex, char(&_RecordTypeInfo)[RecordColumnCount],
+	char(&_RecordColumnName)[RecordColumnCount / 4 * ColumnNameLength])
 	:str_idx_name(idx_name)
 {
 	auto &buffer = GetGlobalFileBuffer();
@@ -24,15 +25,24 @@ BTree::BTree(const std::string idx_name, const char _KeyType, const std::string 
 		// 初始化其他索引文件头信息
 		idx_head.root = root_node_fd;
 		idx_head.MostLeftNode = root_node_fd;
-		idx_head.KeyType = _KeyType;
-		strcpy(idx_head.RecordTypeInfo, _RecordTypeInfo.c_str());
-		strcpy(idx_head.RecordColumnName, _RecordColumnName.c_str());
+		idx_head.KeyTypeIndex = KeyTypeIndex;
+		//strcpy(idx_head.RecordTypeInfo, _RecordTypeInfo.c_str());
+		memcpy(idx_head.RecordTypeInfo, _RecordTypeInfo, RecordColumnCount);
+		//strcpy(idx_head.RecordColumnName, _RecordColumnName.c_str());
+		memcpy(idx_head.RecordColumnName, _RecordColumnName, RecordColumnCount / 4 * ColumnNameLength);
+	
 
 		// 将结点的地址写入文件头的预留空间区
 		memcpy(buffer[str_idx_name.c_str()]->GetFileFirstPage()->GetFileCond()->reserve, &idx_head, sizeof(idx_head));
 
 	}
 	file_id = pMemFile->fileId;
+}
+
+BTree::BTree(std::string idx_name)
+{
+	str_idx_name = idx_name;
+	file_id = GetGlobalFileBuffer()[idx_name.c_str()]->fileId;
 }
 
 FileAddr BTree::DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key)
@@ -478,6 +488,12 @@ void BTree::PrintAllLeafNode()
 		std::cout << pNode->key[i];
 	}
 	std::cout << std::endl << n << std::endl;
+}
+
+IndexHeadNode * BTree::GetPtrIndexHeadNode()
+{
+	auto phead = (IndexHeadNode*)GetGlobalFileBuffer()[str_idx_name.c_str()]->GetFileFirstPage()->GetFileCond()->reserve;
+	return phead;
 }
 
 FileAddr BTree::SearchInnerNode(KeyAttr search_key, FileAddr node_fd)
