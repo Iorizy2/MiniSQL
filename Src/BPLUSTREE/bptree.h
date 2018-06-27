@@ -55,6 +55,8 @@ public:
 
 class BTree
 {
+	friend std::vector<RecordHead> ShowTable(std::string table_name, std::string path);
+	friend RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path);
 public:
 	// 参数：索引文件名称， 关键字类型， 记录各个类型信息数组， 记录各个字段名称信息数组
 	BTree(std::string idx_name);

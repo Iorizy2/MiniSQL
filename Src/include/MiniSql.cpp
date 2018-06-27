@@ -206,3 +206,72 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 	key = *p;
 	tree.Insert(key, fd);
 }
+
+std::vector<RecordHead> ShowTable(std::string table_name, std::string path /*= std::string("./")*/)
+{
+	std::string idx_file = path + table_name + ".idx";
+	std::string dbf_file = path + table_name + ".dbf";
+	BTree tree(idx_file);
+	std::vector<RecordHead> vec_record_head;
+
+	auto data_fd = tree.GetPtrIndexHeadNode()->MostLeftNode;
+	while (data_fd.offSet != 0)
+	{
+		auto tmp = GetDbfRecord(table_name, data_fd, path);
+		vec_record_head.push_back(tmp);
+		auto pNode = tree.FileAddrToMemPtr(data_fd);
+		data_fd = pNode->next;
+	}
+
+	return vec_record_head;
+}
+
+RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*= std::string("./")*/)
+{
+	std::string idx_file = path + table_name + ".idx";
+	std::string dbf_file = path + table_name + ".dbf";
+	BTree tree(idx_file);
+	
+	RecordHead record_head;
+	// 获取结点内存地址
+	char* pRecTypeInfo = tree.GetPtrIndexHeadNode()->RecordTypeInfo;
+	std::cout << pRecTypeInfo << std::endl;
+	auto pdata = (char*)GetGlobalFileBuffer()[dbf_file.c_str()]->ReadRecord(&fd);
+	pdata += sizeof(FileAddr);  // 每条记录头部默认添加该记录的地址值
+
+	while (*pRecTypeInfo != '\0')
+	{
+		Column_Cell cc;
+		switch (*pRecTypeInfo)
+		{
+		case 'I':
+			cc.column_type = Column_Type::I;
+			cc.column_value.IntValue = *(int*)pdata;
+			pdata += sizeof(int);
+			record_head.AddColumnCell(cc);
+			break;
+
+		case 'D':
+			cc.column_type = Column_Type::D;
+			cc.column_value.DoubleValue = *(double*)pdata;
+			pdata += sizeof(double);
+			record_head.AddColumnCell(cc);
+			break;
+
+		case 'C':
+			cc.column_type = Column_Type::C;
+			// 读取字符串长度
+			int sz = 0;
+			sz = (*(pRecTypeInfo + 1) - '0') * 100 + (*(pRecTypeInfo + 2) - '0') * 10 + (*(pRecTypeInfo + 3) - '0');
+			auto pchar = (char*)malloc(sz);
+			memcpy(pchar, pdata, sz);
+			cc.column_value.StrValue = pchar;
+			pdata += sz;
+			record_head.AddColumnCell(cc);
+			break;
+		}
+		pRecTypeInfo++;
+	}
+	
+	return record_head;
+}

@@ -35,11 +35,13 @@ int main()
 		CreateTable(tb_info);*/
 
 		// 插入记录
-		std::string cmd_insert = "insert into test1(id, ISBN, Name)values(89,hello1,test1 ver1!!);";
+		/*std::string cmd_insert = "insert into test1(id, ISBN, Name)values(89,hello1,test1 ver1!!);";
 		SensefulStr SenStr(cmd_insert);
 		auto sen_str = SenStr.GetSensefulStr();
 		auto tb_insert_info = CreateInsertInfo(sen_str);
-		InsertRecord(tb_insert_info);
+		InsertRecord(tb_insert_info);*/
+
+		auto p = ShowTable("test1", "./");
 	}
 	catch (SQLError::BaseError &e)
 	{

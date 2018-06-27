@@ -76,6 +76,11 @@ class Column_Cell
 {
 public:
 	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
+	Column_Cell(const Column_Cell& rhs); // 拷贝构造
+	Column_Cell& operator=(const Column_Cell&rhs); // 拷贝赋值
+
+	Column_Cell(Column_Cell&& rhs); // 移动构造
+	Column_Cell& operator=(Column_Cell&&rhs); // 移动赋值
 
 	size_t size()const;
 	void* data()const;
@@ -85,7 +90,7 @@ public:
 	std::string columu_name;
 	Column_Value column_value;
 	Column_Cell *next;
-	Column_Cell& operator=(const Column_Cell&rhs);
+	
 
 	// 类型转换
 	operator KeyAttr()const
@@ -134,6 +139,7 @@ class RecordHead
 {
 public:
 	RecordHead();
+	RecordHead& operator=(const RecordHead&rhs);  // 拷贝赋值
 	~RecordHead();
 	void AddColumnCell(const Column_Cell &cc);
 
