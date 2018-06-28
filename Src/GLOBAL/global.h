@@ -48,9 +48,11 @@ enum class CmdType
 class PrintWindow
 {
 public:
+	void CreateTable(bool is_created);
 	void CreateDB(bool is_created);
 	void DropDB(bool is_dropped);
-	void SHOWDB(std::vector<std::string> db_names);
+	void ShowDB(std::vector<std::string> db_names);
+	void UseDB(bool isUsed);
 };
 
 

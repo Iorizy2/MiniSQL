@@ -277,6 +277,7 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 	switch (cmd_type)
 	{
 	case CmdType::TABLE_CREATE:
+		print_window.CreateTable(CreateTable(CreateTableInfo(sen_str), cp.GetCurrentPath()));
 		break;
 	case CmdType::TABLE_DROP:
 		break;
@@ -290,6 +291,7 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 	case CmdType::TABLE_DELETE:
 		break;
+
 	case CmdType::DB_CREATE:
 		print_window.CreateDB(CreateDatabase(CreateDbInfo(sen_str), cp));
 		break;
@@ -299,10 +301,11 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	case CmdType::DB_SHOW:
-		print_window.SHOWDB(ShowDatabase(cp));
+		print_window.ShowDB(ShowDatabase(cp));
 		break;
 
 	case CmdType::DB_USE:
+		print_window.UseDB(UseDatabase(UseDbInfo(sen_str), cp));
 		break;
 
 	default:

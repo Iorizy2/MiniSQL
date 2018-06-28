@@ -208,6 +208,18 @@ std::string CatalogPosition::SetCurrentPath(std::string cur)
 	return current_catalog;
 }
 
+void PrintWindow::CreateTable(bool is_created)
+{
+	if (is_created)
+	{
+		std::cout << "创建成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "创建失败" << std::endl;
+	}
+}
+
 void PrintWindow::CreateDB(bool is_created)
 {
 	if (is_created)
@@ -232,8 +244,20 @@ void PrintWindow::DropDB(bool is_dropped)
 	}
 }
 
-void PrintWindow::SHOWDB(std::vector<std::string> db_names)
+void PrintWindow::ShowDB(std::vector<std::string> db_names)
 {
 	for (auto e : db_names)
 		std::cout << e << std::endl;
+}
+
+void PrintWindow::UseDB(bool isUsed)
+{
+	if (isUsed)
+	{
+		std::cout << "选择数据库成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "选择数据库失败" << std::endl;
+	}
 }

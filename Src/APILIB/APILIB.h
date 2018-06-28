@@ -21,7 +21,7 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp);
 
 
 // 创建表 eg. create table test1(id int,score double,Name char(20) primary);
-void CreateTable(TB_Create_Info tb_create_info, std::string path = std::string("./"));
+bool CreateTable(TB_Create_Info tb_create_info, std::string path = std::string("./"));
 
 // 插入记录 eg. insert into test1(id, score, Name)values(10, 1.5, bcd);
 void InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string("./"));

@@ -120,8 +120,10 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp)
 	}
 }
 
-void CreateTable(TB_Create_Info tb_create_info, std::string path)
+bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 {
+	// TODO 检查创建信息以及当前目录是否在数据库中
+
 	// 获取表名
 	std::string table_name = tb_create_info.table_name;
 
@@ -176,6 +178,7 @@ void CreateTable(TB_Create_Info tb_create_info, std::string path)
 	// 创建数据文件
 	std::string dbf_file = path + table_name + ".dbf";
 	GetGlobalFileBuffer().CreateFile(dbf_file.c_str());
+	return true;
 }
 
 void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)
