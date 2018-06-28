@@ -1,4 +1,4 @@
-#include "MiniSql.h"
+#include "MiniSqlAPI.h"
 
 void CreateTable(TB_Create_Info tb_create_info, std::string path)
 {
@@ -143,7 +143,7 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			{
 
 				cc.column_type = Column_Type::D;
-				cc.column_value.IntValue = stod(tb_insert_info.insert_info[k].column_value);
+				cc.column_value.DoubleValue = stod(tb_insert_info.insert_info[k].column_value);
 			}
 			else
 			{
@@ -217,9 +217,15 @@ std::vector<RecordHead> ShowTable(std::string table_name, std::string path /*= s
 	auto data_fd = tree.GetPtrIndexHeadNode()->MostLeftNode;
 	while (data_fd.offSet != 0)
 	{
-		auto tmp = GetDbfRecord(table_name, data_fd, path);
-		vec_record_head.push_back(tmp);
 		auto pNode = tree.FileAddrToMemPtr(data_fd);
+
+		for (int i = 0; i < pNode->count_valid_key; i++)
+		{
+			auto tmp = GetDbfRecord(table_name, pNode->children[i], path);
+			vec_record_head.push_back(tmp);
+		}
+		
+		
 		data_fd = pNode->next;
 	}
 
@@ -235,7 +241,7 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 	RecordHead record_head;
 	// 获取结点内存地址
 	char* pRecTypeInfo = tree.GetPtrIndexHeadNode()->RecordTypeInfo;
-	std::cout << pRecTypeInfo << std::endl;
+	//std::cout << pRecTypeInfo << std::endl;
 	auto pdata = (char*)GetGlobalFileBuffer()[dbf_file.c_str()]->ReadRecord(&fd);
 	pdata += sizeof(FileAddr);  // 每条记录头部默认添加该记录的地址值
 

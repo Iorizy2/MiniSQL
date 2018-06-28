@@ -69,6 +69,7 @@ union Column_Value
 *
 *    定义每个字段的单元数据
 *    字段单元记录了该字段的数据类型、数据的值、以及该字段的下一个字段指针
+*    注意拷贝和赋值操作
 *
 ***********************************************************************************/
 
@@ -76,6 +77,7 @@ class Column_Cell
 {
 public:
 	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
+
 	Column_Cell(const Column_Cell& rhs); // 拷贝构造
 	Column_Cell& operator=(const Column_Cell&rhs); // 拷贝赋值
 
@@ -96,7 +98,7 @@ public:
 	operator KeyAttr()const
 	{
 		KeyAttr key_attr;
-
+		memset(&key_attr, 0, sizeof(KeyAttr));
 		switch (column_type)
 		{
 		case Column_Type::I:
@@ -139,6 +141,7 @@ class RecordHead
 {
 public:
 	RecordHead();
+	RecordHead(const RecordHead &rhs); // 拷贝构造
 	RecordHead& operator=(const RecordHead&rhs);  // 拷贝赋值
 	~RecordHead();
 	void AddColumnCell(const Column_Cell &cc);

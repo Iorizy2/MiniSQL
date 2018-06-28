@@ -16,6 +16,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 #include "../Src/ERROR/error.h"
+#include <vector>
 #include <string>
 
 /***********************************************************************************
@@ -51,6 +52,59 @@ constexpr int MaxKeyCount = 2 * bptree_t;            // the max number of keys i
 constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child in a b+tree node
 
 /****************************************************************************************************************************************/
+
+
+/************************************************************************
+*    类名：有意字串类
+*    功能：将命令字符串解析为有意字串
+*	 有意字串定义：有意字串即指一个以回车或空格或标志符来分割的有独立含义的字符
+*                 串,标识符主要有逗号、括号、比较运算符、分号等。标识符也算作
+*                 有意字串
+************************************************************************/
+class SensefulStr
+{
+public:
+	SensefulStr(std::string srcstr = "");
+	void SetSrcStr(std::string senstr);
+	std::vector<std::string> GetSensefulStr()const;
+private:
+	void Parse();
+	std::string src_str;  // 原始命令字符串
+	std::vector<std::string> sen_str; // 解析后的又一字串
+};
+
+
+/************************************************************************
+*    表创建信息
+************************************************************************/
+struct TB_Create_Info
+{
+	using ColumnInfo = struct ColumnInfo
+	{
+		std::string name;
+		Column_Type type;
+		bool isPrimary;       // 是否主键
+		int length;           // 数据大小，只用于字符串字段
+	};
+
+	std::string table_name;
+	std::vector<ColumnInfo> columns_info;  //字段信息向量
+
+};
+
+/************************************************************************
+*    表插入信息
+************************************************************************/
+struct TB_Insert_Info
+{
+	using InsertInfo = struct {
+		std::string column_name;
+		std::string column_value;
+	};
+
+	std::string table_name;
+	std::vector<InsertInfo> insert_info;
+};
 
 
 // file name convert .idx to .dbf 

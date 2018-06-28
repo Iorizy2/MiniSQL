@@ -5,7 +5,7 @@
 #include "BPLUSTREE/bptree.h"
 #include "RECORD/Record.h"
 #include "INTERPRETER/interpreter.h"
-#include "include/MiniSql.h"
+#include "include/MiniSqlAPI.h"
 //#define NDEBUG 
 using namespace std;
 
@@ -17,7 +17,7 @@ void TestModule();
 
 int main()
 {
-	IsPod();
+	//IsPod();
 #ifndef NDEBUG
 	try
 	{
@@ -25,7 +25,7 @@ int main()
 		//throw SQLError::LSEEK_ERROR();
 
 		// 解释有意字串
-		/*std::string cmd = "create table test1(id int,ISBN char(16),Name char(20))";
+		/*std::string cmd = "create table test1(id int,score double,Name char(20) primary)";
 		SensefulStr SenStr(cmd);
 		auto sen_str = SenStr.GetSensefulStr();
 		for (auto str : sen_str)
@@ -35,13 +35,39 @@ int main()
 		CreateTable(tb_info);*/
 
 		// 插入记录
-		/*std::string cmd_insert = "insert into test1(id, ISBN, Name)values(89,hello1,test1 ver1!!);";
+		std::string cmd_insert = "insert into test1(id, score, Name)values(10, 1.5, bcd);";
 		SensefulStr SenStr(cmd_insert);
 		auto sen_str = SenStr.GetSensefulStr();
 		auto tb_insert_info = CreateInsertInfo(sen_str);
-		InsertRecord(tb_insert_info);*/
+		InsertRecord(tb_insert_info);
 
-		auto p = ShowTable("test1", "./");
+		// 打印所有记录
+		auto Records = ShowTable("test1", "./");
+		std::cout << "All records:" << std::endl;
+		for (int i = 0; i < Records.size(); i++)
+		{
+			const RecordHead &tmp_rec = Records[i];
+			const Column_Cell *pHead = tmp_rec.GetFirstColumn();
+			while (pHead)
+			{
+				switch (pHead->column_type)
+				{
+				case Column_Type::I:
+					cout << pHead->column_value.IntValue << "\t\t";
+					break;
+
+				case Column_Type::D:
+					cout << pHead->column_value.DoubleValue << "\t\t";
+					break;
+
+				case Column_Type::C:
+					cout << pHead->column_value.StrValue << "\t\t";
+					break;
+				}
+				pHead = pHead->next;
+			}
+			std::cout << std::endl;	
+		}
 	}
 	catch (SQLError::BaseError &e)
 	{
@@ -60,6 +86,7 @@ void IsPod()
 	cout << std::is_pod<FILECOND>::value << endl;
 	cout << std::is_pod<BTNode>::value << endl;
 	cout << std::is_pod<Column_Value>::value << endl;
+	cout << std::is_pod<KeyAttr>::value << endl;
 }
 #ifndef NDEBUG
 void TestModule()

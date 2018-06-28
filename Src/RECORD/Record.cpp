@@ -29,8 +29,22 @@ RecordHead::RecordHead()
 
 }
 
+RecordHead::RecordHead(const RecordHead &rhs)
+{
+	//std::cout << "RecordHead 拷贝构造" << std::endl;
+	auto &tmp = const_cast<RecordHead&>(rhs);
+
+	phead = tmp.phead;
+	tmp.phead = nullptr;
+	pLast = tmp.pLast;
+	tmp.pLast = nullptr;
+	data = tmp.data;
+	tmp.data = nullptr;
+
+}
 RecordHead& RecordHead::operator=(const RecordHead&rhs)
 {
+	//std::cout << "RecordHead 拷贝赋值" << std::endl;
 	auto &tmp = const_cast<RecordHead&>(rhs);
 
 	phead = tmp.phead;
@@ -92,12 +106,12 @@ void RecordHead::AddColumnCell(const Column_Cell &cc)
 
 Column_Cell::Column_Cell(const Column_Cell& rhs)
 {
-	std::cout << "Column_Cell 拷贝构造" << std::endl;
+	//std::cout << "Column_Cell 拷贝构造" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
 	column_value = rhs.column_value;
 
-	// 如果是指针类型，则指保留一个指针副本
+	// 如果是指针类型
 
 	if (rhs.column_type == Column_Type::C)
 	{
@@ -108,7 +122,7 @@ Column_Cell::Column_Cell(const Column_Cell& rhs)
 
 Column_Cell::Column_Cell(Column_Cell&& rhs)
 {
-	std::cout << "Column_Cell 移动构造" << std::endl;
+	//std::cout << "Column_Cell 移动构造" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
 	column_value = rhs.column_value;
@@ -122,7 +136,7 @@ Column_Cell::Column_Cell(Column_Cell&& rhs)
 
 Column_Cell& Column_Cell::operator=(Column_Cell&&rhs)
 {
-	std::cout << "Column_Cell 移动赋值" << std::endl;
+	//std::cout << "Column_Cell 移动赋值" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
 	column_value = rhs.column_value;
@@ -197,7 +211,7 @@ Column_Cell::~Column_Cell()
 
 Column_Cell& Column_Cell::operator=(const Column_Cell&rhs)
 {
-	std::cout << "Column_Cell 拷贝赋值" << std::endl;
+	//std::cout << "Column_Cell 拷贝赋值" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
 	column_value = rhs.column_value;
