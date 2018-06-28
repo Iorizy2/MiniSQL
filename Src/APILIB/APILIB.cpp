@@ -1,4 +1,124 @@
-#include "MiniSqlAPI.h"
+#include "APILIB.h"
+
+bool CreateDatabase(std::string db_name, CatalogPosition &cp)
+{
+	std::string tmp_path = cp.GetRootPath() + db_name;
+
+	if (_access(tmp_path.c_str(), 0) == -1)  //判断数据库是否存在
+	{
+		tmp_path = cp.GetRootPath() + db_name;
+		_mkdir(tmp_path.c_str());
+		return true;
+	}
+	else
+	{
+		std::cout << "数据库已经存在" << std::endl;
+		return false;
+	}
+}
+
+bool DropDatabase(std::string db_name, CatalogPosition &cp)
+{
+	std::string tmp_path = cp.GetRootPath() + db_name;
+
+	if (_access(tmp_path.c_str(), 0) == -1)  //判断数据库是否存在
+	{
+		std::cout << "数据库不存在" << std::endl;
+		return false;
+	}
+	else
+	{
+		tmp_path = cp.GetRootPath() + db_name;
+		// 删除目录下文件
+		auto t = tmp_path + "/";
+		DelFilesInFolder(t);
+		// 删除目录
+		_rmdir(tmp_path.c_str());
+
+		return true;
+	}
+
+	return false;
+}
+
+void DelFilesInFolder(std::string folderPath)
+{
+	_finddata_t FileInfo;
+	std::string strfind = folderPath + "*";
+	long Handle = _findfirst(strfind.c_str(), &FileInfo);
+
+	if (Handle == -1L)
+	{
+		std::cerr << "can not match the folder path" << std::endl;
+		return;
+	}
+	do {
+		//判断是否有子目录  
+		if (FileInfo.attrib & _A_SUBDIR)
+		{
+			//这个语句很重要  
+			if ((strcmp(FileInfo.name, ".") != 0) && (strcmp(FileInfo.name, "..") != 0))
+			{
+				std::string newPath = folderPath + FileInfo.name;
+				newPath += "/";
+				DelFilesInFolder(newPath);
+				// 删除该文件夹
+				_rmdir(newPath.c_str());
+			}
+		}
+		else
+		{
+			//fout << folderPath << FileInfo.name << " ";
+			// 删除文件
+			auto file = folderPath + FileInfo.name;
+			remove(file.c_str());
+			std::cout << std::endl;
+		}
+	} while (_findnext(Handle, &FileInfo) == 0);
+
+	_findclose(Handle);
+}
+
+std::vector<std::string> ShowDatabase(CatalogPosition &cp)
+{
+	_finddata_t FileInfo;
+	std::string path = cp.GetRootPath() + "*.*";
+	int k;
+	long HANDLE;
+	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
+	std::vector<std::string> dbs;
+
+	while (k != -1)
+	{
+		// 如果是普通文件夹则输出
+		if (FileInfo.attrib&_A_SUBDIR && strcmp(FileInfo.name, ".") != 0 && strcmp(FileInfo.name, "..") != 0)
+		{
+			dbs.push_back(FileInfo.name);
+			//std::cout << FileInfo.name << std::endl;
+		}
+
+		k = _findnext(HANDLE, &FileInfo);
+	}
+	_findclose(HANDLE);
+
+	return dbs;
+}
+
+bool UseDatabase(std::string db_name, CatalogPosition &cp)
+{
+	// 先判断数据库是否存在
+	std::string tmp_path = cp.GetRootPath() + db_name;
+
+	if (_access(tmp_path.c_str(), 0) == -1)  //判断数据库是否存在
+	{
+		return false;
+	}
+	else
+	{
+		cp.SetCurrentPath(cp.GetRootPath() + db_name + "/");
+		return true;
+	}
+}
 
 void CreateTable(TB_Create_Info tb_create_info, std::string path)
 {
@@ -13,7 +133,7 @@ void CreateTable(TB_Create_Info tb_create_info, std::string path)
 		{
 			KeyTypeIndex = j;
 			break;
-		}		
+		}
 	}
 
 	//获取字段信息
@@ -60,7 +180,7 @@ void CreateTable(TB_Create_Info tb_create_info, std::string path)
 
 void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)
 {
-	std::string idx_file = path + tb_insert_info.table_name+".idx";
+	std::string idx_file = path + tb_insert_info.table_name + ".idx";
 	std::string dbf_file = path + tb_insert_info.table_name + ".dbf";
 	BTree tree(idx_file);
 	auto phead = tree.GetPtrIndexHeadNode();
@@ -97,7 +217,7 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 		if (phead->RecordTypeInfo[i] == 'I')
 		{
 			//找到对应的字段名称
-			char *pColumnName = phead->RecordColumnName+column_id*ColumnNameLength;
+			char *pColumnName = phead->RecordColumnName + column_id*ColumnNameLength;
 			//在插入记录里寻找该字段的值
 			int k = -1;
 			for (int j = 0; j < tb_insert_info.insert_info.size(); j++)
@@ -111,7 +231,7 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 			if (k != -1)
 			{
-				
+
 				cc.column_type = Column_Type::I;
 				cc.column_value.IntValue = stoi(tb_insert_info.insert_info[k].column_value);
 			}
@@ -174,11 +294,11 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			{
 				cc.column_type = Column_Type::C;
 				int sz = (phead->RecordTypeInfo[i + 1] - '0') * 100 + (phead->RecordTypeInfo[i + 2] - '0') * 10 + (phead->RecordTypeInfo[i + 3] - '0');
-				char*pChar = (char*)malloc(sz+3); // 多申请三个字节用来保存用户定义的字符串长度值
-				memcpy(pChar, &(phead->RecordTypeInfo[i+1]),3);
+				char*pChar = (char*)malloc(sz + 3); // 多申请三个字节用来保存用户定义的字符串长度值
+				memcpy(pChar, &(phead->RecordTypeInfo[i + 1]), 3);
 				pChar += 3;
 				strcpy(pChar, tb_insert_info.insert_info[k].column_value.c_str());
-				cc.column_value.StrValue = pChar-3;
+				cc.column_value.StrValue = pChar - 3;
 			}
 			else
 			{
@@ -191,10 +311,10 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 		}
 
 	}
-    
+
 	// 插入数据文件
 	Record record;
-	auto fd = record.InsertRecord(dbf_file,record_head);
+	auto fd = record.InsertRecord(dbf_file, record_head);
 	// 插入索引
 	int key_index = 0;
 	auto p = record_head.GetFirstColumn();
@@ -224,8 +344,8 @@ std::vector<RecordHead> ShowTable(std::string table_name, std::string path /*= s
 			auto tmp = GetDbfRecord(table_name, pNode->children[i], path);
 			vec_record_head.push_back(tmp);
 		}
-		
-		
+
+
 		data_fd = pNode->next;
 	}
 
@@ -237,7 +357,7 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 	std::string idx_file = path + table_name + ".idx";
 	std::string dbf_file = path + table_name + ".dbf";
 	BTree tree(idx_file);
-	
+
 	RecordHead record_head;
 	// 获取结点内存地址
 	char* pRecTypeInfo = tree.GetPtrIndexHeadNode()->RecordTypeInfo;
@@ -278,6 +398,6 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 		}
 		pRecTypeInfo++;
 	}
-	
+
 	return record_head;
 }

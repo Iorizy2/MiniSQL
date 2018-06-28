@@ -4,6 +4,21 @@
 #include "../GLOBAL/global.h"
 #include "../BPLUSTREE/bptree.h"
 #include "../RECORD/Record.h"
+//#include "../INTERPRETER/interpreter.h"
+
+// 创建数据库
+bool CreateDatabase(std::string database_name, CatalogPosition &cp);
+
+// Drop数据库
+bool DropDatabase(std::string database_name, CatalogPosition &cp);
+void DelFilesInFolder(std::string folderPath);  // 删除目录下的所有文件及文件夹
+
+												// 返回数据库名称向量
+std::vector<std::string> ShowDatabase(CatalogPosition &cp);
+
+// 选择数据库
+bool UseDatabase(std::string db_name, CatalogPosition &cp);
+
 
 // 创建表 eg. create table test1(id int,score double,Name char(20) primary);
 void CreateTable(TB_Create_Info tb_create_info, std::string path = std::string("./"));

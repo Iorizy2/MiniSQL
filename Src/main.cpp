@@ -5,79 +5,70 @@
 #include "BPLUSTREE/bptree.h"
 #include "RECORD/Record.h"
 #include "INTERPRETER/interpreter.h"
-#include "include/MiniSqlAPI.h"
+#include "APILIB/APILIB.h"
+
+#include<direct.h>
 //#define NDEBUG 
 using namespace std;
-
+const std::string PROMPT = "MiniSQL:";
 // 判断POD数据
 void IsPod();
 #ifndef NDEBUG
 void TestModule();
+void InterPreterTest();
 #endif
+// 读取用户的输入，以 ";"结束
+std::string GetCommand();
+
+
 
 int main()
 {
-	//IsPod();
-#ifndef NDEBUG
-	try
+	SensefulStr senstr;
+	PrintWindow print_window;
+
+	cout << PROMPT << "initialize..." << endl;
+	while (true)
 	{
-		//TestModule();
-		//throw SQLError::LSEEK_ERROR();
-
-		// 解释有意字串
-		/*std::string cmd = "create table test1(id int,score double,Name char(20) primary)";
-		SensefulStr SenStr(cmd);
-		auto sen_str = SenStr.GetSensefulStr();
-		for (auto str : sen_str)
-			cout << str << endl;
-
-		TB_Create_Info tb_info = CreateTableInfo(sen_str);
-		CreateTable(tb_info);*/
-
-		// 插入记录
-		std::string cmd_insert = "insert into test1(id, score, Name)values(10, 1.5, bcd);";
-		SensefulStr SenStr(cmd_insert);
-		auto sen_str = SenStr.GetSensefulStr();
-		auto tb_insert_info = CreateInsertInfo(sen_str);
-		InsertRecord(tb_insert_info);
-
-		// 打印所有记录
-		auto Records = ShowTable("test1", "./");
-		std::cout << "All records:" << std::endl;
-		for (int i = 0; i < Records.size(); i++)
+		try
 		{
-			const RecordHead &tmp_rec = Records[i];
-			const Column_Cell *pHead = tmp_rec.GetFirstColumn();
-			while (pHead)
-			{
-				switch (pHead->column_type)
-				{
-				case Column_Type::I:
-					cout << pHead->column_value.IntValue << "\t\t";
-					break;
-
-				case Column_Type::D:
-					cout << pHead->column_value.DoubleValue << "\t\t";
-					break;
-
-				case Column_Type::C:
-					cout << pHead->column_value.StrValue << "\t\t";
-					break;
-				}
-				pHead = pHead->next;
-			}
-			std::cout << std::endl;	
+			std::string cmd = GetCommand();
+			senstr.SetSrcStr(cmd);
+			auto cmd_type = GetOpType(senstr.GetSensefulStr());
+			Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+		}
+		catch (SQLError::BaseError &e)
+		{
+			SQLError::DispatchError(e);
+			cout << endl;
 		}
 	}
-	catch (SQLError::BaseError &e)
-	{
-		SQLError::DispatchError(e);
-		cout << endl;
-	}
-#endif
+
+
 
 	system("pause");
 }
+
+std::string GetCommand()
+{
+	std::string res;
+	std::string tmp;
+	int n = 0;
+	do	{
+		if (n == 0) {
+			cout << PROMPT;
+		}
+		else {
+			cout << "        ";
+		}
+		n++;
+		getline(cin, tmp);
+		res += tmp;
+	} while (tmp[tmp.size() - 1] != ';');
+	return res;
+}
+
+
 
 void IsPod()
 {
@@ -89,6 +80,34 @@ void IsPod()
 	cout << std::is_pod<KeyAttr>::value << endl;
 }
 #ifndef NDEBUG
+
+void InterPreterTest()
+{
+	std::string cmd;
+	auto &cp = GetCp();
+	SensefulStr Senstr;
+
+	// 创建数据库
+	cmd = "create database xxx ;";
+	Senstr.SetSrcStr(cmd);
+	auto db_name = CreateDbInfo(Senstr.GetSensefulStr());
+	CreateDatabase(db_name, cp);
+
+	// 删除数据库
+	/*cmd = "delete database fff ;";
+	Senstr.SetSrcStr(cmd);
+	db_name = CreateDbInfo(Senstr.GetSensefulStr());
+	DropDatabase(db_name, cp);*/
+
+	// 使用数据库
+	cmd = "use database xxx ;";
+	Senstr.SetSrcStr(cmd);
+	db_name = UseDbInfo(Senstr.GetSensefulStr());
+	UseDatabase(db_name, cp);
+	cout << cp.GetCurrentPath() << endl;
+}
+
+
 void TestModule()
 {
 	using std::string;

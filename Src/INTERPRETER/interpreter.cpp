@@ -2,23 +2,48 @@
 
 
 
-void GenerateParameterObj(std::vector<std::string> sen_str)
+std::string CreateDbInfo(std::vector<std::string> sen_str)
 {
-	auto tmp = sen_str.front();
-	for (auto &c : tmp)
-		tolower(c);
+	if ( (sen_str.size()<4) 
+		|| (StrToLower(sen_str[0]) != "create") 
+		|| (StrToLower(sen_str[1]) != "database") 
+		|| (StrToLower(sen_str[3]) != ";")
+		)
+		throw SQLError::CMD_FORMAT_ERROR();
+	return sen_str[2];
+}
 
-	if (tmp == "create")
-	{
-		auto second = sen_str[1];
-		for (auto &c : second)
-			tolower(c);
+std::string DeleteDbInfo(std::vector<std::string> sen_str)
+{
+	if ((sen_str.size() < 4)
+		|| (StrToLower(sen_str[0]) != "drop")
+		|| (StrToLower(sen_str[1]) != "database")
+		|| (StrToLower(sen_str[3]) != ";")
+		)
+		throw SQLError::CMD_FORMAT_ERROR();
+	return sen_str[2];
+}
 
-		if (second == "table")
-		{
-			CreateTableInfo(sen_str);
-		}
-	}
+std::string UseDbInfo(std::vector<std::string> sen_str)
+{
+	if ((sen_str.size() < 4)
+		|| (StrToLower(sen_str[0]) != "use")
+		|| (StrToLower(sen_str[1]) != "database")
+		|| (StrToLower(sen_str[3]) != ";")
+		)
+		throw SQLError::CMD_FORMAT_ERROR();
+	return sen_str[2];
+}
+
+std::string ShowDbInfo(std::vector<std::string> sen_str)
+{
+	if ((sen_str.size() < 3)
+		|| (StrToLower(sen_str[0]) != "show")
+		|| (StrToLower(sen_str[1]) != "databases")
+		|| (StrToLower(sen_str[2]) != ";")
+		)
+		throw SQLError::CMD_FORMAT_ERROR();
+	return std::string();
 }
 
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str)
@@ -177,3 +202,111 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str)
 #endif
 	return tb_insert_info;
 }
+
+
+CmdType GetOpType(std::vector<std::string> sen_str)
+{
+	for (auto&e : sen_str)
+		StrToLower(e);
+
+	if (sen_str[0] == "create"&&sen_str[1] == "table")
+	{
+		return CmdType::TABLE_CREATE;
+	}
+		
+
+	if (sen_str[0] == "create"&&sen_str[1] == "database")
+	{
+		return CmdType::DB_CREATE;
+	}
+		
+
+	if (sen_str[0] == "drop"&&sen_str[1] == "table")
+	{
+		return CmdType::TABLE_DROP;
+	}
+		
+
+	if (sen_str[0] == "drop"&&sen_str[1] == "database")
+	{
+		return CmdType::DB_DROP;
+	}
+
+	if (sen_str[0] == "show"&&sen_str[1] == "table")
+	{
+		return CmdType::TABLE_SHOW;
+	}
+
+	if (sen_str[0] == "show"&&sen_str[1] == "databases")
+	{
+		return CmdType::DB_SHOW;
+	}
+
+	if (sen_str[0] == "use")
+	{
+		return CmdType::DB_USE;
+	}
+
+	if (sen_str[0] == "select")
+	{
+		return CmdType::TABLE_SELECT;
+	}
+
+	if (sen_str[0] == "insert")
+	{
+		return CmdType::TABLE_INSERT;
+	}
+
+	if (sen_str[0] == "update")
+	{
+		return CmdType::TABLE_UPDATE;
+	}
+
+	if (sen_str[0] == "delete")
+	{
+		return CmdType::TABLE_DELETE;
+	}
+		
+
+}
+
+void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window)
+{
+	auto &cp = GetCp();
+	
+	switch (cmd_type)
+	{
+	case CmdType::TABLE_CREATE:
+		break;
+	case CmdType::TABLE_DROP:
+		break;
+	case CmdType::TABLE_SHOW:
+		break;
+	case CmdType::TABLE_SELECT:
+		break;
+	case CmdType::TABLE_INSERT:
+		break;
+	case CmdType::TABLE_UPDATE:
+		break;
+	case CmdType::TABLE_DELETE:
+		break;
+	case CmdType::DB_CREATE:
+		print_window.CreateDB(CreateDatabase(CreateDbInfo(sen_str), cp));
+		break;
+
+	case CmdType::DB_DROP:
+		print_window.DropDB(DropDatabase(DeleteDbInfo(sen_str), cp));
+		break;
+
+	case CmdType::DB_SHOW:
+		print_window.SHOWDB(ShowDatabase(cp));
+		break;
+
+	case CmdType::DB_USE:
+		break;
+
+	default:
+		break;
+	}
+}
+

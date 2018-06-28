@@ -6,9 +6,10 @@ SensefulStr::SensefulStr(std::string srcstr /*= ""*/)
 	Parse();
 }
 
-void SensefulStr::SetSrcStr(std::string senstr)
+void SensefulStr::SetSrcStr(std::string _srcstr)
 {
-	src_str = senstr;
+	src_str = _srcstr;
+	sen_str.clear();
 	Parse();
 }
 
@@ -131,4 +132,108 @@ std::string StrToLower(std::string str)
 	for (auto &c : str)
 		tolower(c);
 	return str;
+}
+
+CatalogPosition& GetCp()
+{
+	static CatalogPosition cp;
+	return cp;
+}
+
+bool CatalogPosition::isInSpeDb = false;
+
+CatalogPosition::CatalogPosition()
+	:root("./DB/"), current_catalog("./DB/")
+{
+	// 如果当前目录下没有 DB 文件见则创建
+	std::string tmp_path = "./DB";
+
+	if (_access(tmp_path.c_str(), 0) == -1)
+	{
+		_mkdir(tmp_path.c_str());
+	}
+}
+
+bool CatalogPosition::ResetRootCatalog(std::string root_new)
+{
+	if (root_new[root_new.size() - 1] == '/')
+	{
+		root = root_new;
+		current_catalog = root;
+		isInSpeDb = false;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void CatalogPosition::SwitchToDatabase()
+{
+	current_catalog = root;
+	isInSpeDb = false;
+}
+
+bool CatalogPosition::SwitchToDatabase(std::string db_name)
+{
+	std::string tmp_path = root + db_name;
+
+	if (_access(tmp_path.c_str(), 0) == -1)  //判断数据库是否存在
+	{
+		return false;
+	}
+	else
+	{
+		current_catalog = root + db_name + "/";
+		isInSpeDb = true;
+		return true;
+	}
+
+}
+
+std::string CatalogPosition::GetCurrentPath() const
+{
+	return current_catalog;
+}
+
+std::string CatalogPosition::GetRootPath() const
+{
+	return root;
+}
+
+std::string CatalogPosition::SetCurrentPath(std::string cur)
+{
+	current_catalog = cur;
+	return current_catalog;
+}
+
+void PrintWindow::CreateDB(bool is_created)
+{
+	if (is_created)
+	{
+		std::cout << "创建成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "创建失败" << std::endl;
+	}
+}
+
+void PrintWindow::DropDB(bool is_dropped)
+{
+	if (is_dropped)
+	{
+		std::cout << "删除数据库成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "删除数据库失败" << std::endl;
+	}
+}
+
+void PrintWindow::SHOWDB(std::vector<std::string> db_names)
+{
+	for (auto e : db_names)
+		std::cout << e << std::endl;
 }

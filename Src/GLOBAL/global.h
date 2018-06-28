@@ -18,6 +18,14 @@
 #include "../Src/ERROR/error.h"
 #include <vector>
 #include <string>
+#include <direct.h>
+
+extern "C"
+{
+#include <io.h>
+#include <fcntl.h>
+#include <stdlib.h>
+}
 
 /***********************************************************************************
 *
@@ -30,6 +38,21 @@ enum class Column_Type { I, C, D };
 
 // 数据类型的字符串形式转换为枚举类型
 Column_Type StrConvertToEnumType(std::string str_type);
+enum class CmdType
+{
+	TABLE_CREATE, TABLE_DROP, TABLE_SHOW, TABLE_SELECT, TABLE_INSERT, TABLE_UPDATE, TABLE_DELETE,
+	DB_CREATE, DB_DROP, DB_SHOW, DB_USE
+};
+
+// 打印命令行窗口，使底层实现和GUI分离，便于扩展
+class PrintWindow
+{
+public:
+	void CreateDB(bool is_created);
+	void DropDB(bool is_dropped);
+	void SHOWDB(std::vector<std::string> db_names);
+};
+
 
 /********************************************************  Buffer Module  ***************************************************************/
 
@@ -105,6 +128,30 @@ struct TB_Insert_Info
 	std::string table_name;
 	std::vector<InsertInfo> insert_info;
 };
+
+
+// 目录定位和切换 用于数据库和表的使用
+class CatalogPosition
+{
+	friend bool UseDatabase(std::string db_name, CatalogPosition &cp);
+public:
+	CatalogPosition();
+	bool ResetRootCatalog(std::string root_new);  // 重置根目录
+
+	void SwitchToDatabase();// 转到数据库列表目录下
+
+
+	bool SwitchToDatabase(std::string db_name);// 转到具体的数据库下
+
+	std::string GetCurrentPath()const;
+	std::string GetRootPath()const;
+	std::string SetCurrentPath(std::string cur);
+private:
+	static bool isInSpeDb;          //是否在某个具体的数据库目录下
+	std::string root; // 根目录，数据库文件的保存位置
+	std::string current_catalog;
+};
+
 
 
 // file name convert .idx to .dbf 
