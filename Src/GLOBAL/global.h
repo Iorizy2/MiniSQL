@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <direct.h>
+#include <algorithm>
 
 extern "C"
 {
@@ -49,6 +50,7 @@ class PrintWindow
 {
 public:
 	void CreateTable(bool is_created);
+	void ShowAllTable(std::vector<std::string> sen_str,std::string path);
 	void CreateDB(bool is_created);
 	void DropDB(bool is_dropped);
 	void ShowDB(std::vector<std::string> db_names);
@@ -148,12 +150,13 @@ public:
 	std::string GetCurrentPath()const;
 	std::string GetRootPath()const;
 	std::string SetCurrentPath(std::string cur);
+	bool GetIsInSpeDb() { return isInSpeDb; }
 private:
 	static bool isInSpeDb;          //是否在某个具体的数据库目录下
 	std::string root; // 根目录，数据库文件的保存位置
 	std::string current_catalog;
 };
-
+CatalogPosition& GetCp();
 
 
 // file name convert .idx to .dbf 

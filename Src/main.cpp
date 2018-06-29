@@ -44,8 +44,6 @@ int main()
 		}
 	}
 
-
-
 	system("pause");
 }
 

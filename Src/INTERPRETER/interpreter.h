@@ -25,7 +25,7 @@
 #include "../APILIB/APILIB.h"
 
 
-CatalogPosition& GetCp();
+
 
 // 创建数据库,返回要创建的名称
 std::string CreateDbInfo(std::vector<std::string> sen_str);
@@ -40,6 +40,7 @@ std::string UseDbInfo(std::vector<std::string> sen_str);
 std::string ShowDbInfo(std::vector<std::string> sen_str);
 
 // 生成表相关信息
+bool CreateShowTableInfo(std::vector<std::string> sen_str);
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str);
 TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
 

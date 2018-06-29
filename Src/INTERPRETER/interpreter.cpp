@@ -46,6 +46,20 @@ std::string ShowDbInfo(std::vector<std::string> sen_str)
 	return std::string();
 }
 
+
+bool CreateShowTableInfo(std::vector<std::string> sen_str)
+{
+	
+	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
+	{
+		return false;
+	}	
+	else
+	{
+		return true;
+	}
+}
+
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str)
 {
 	TB_Create_Info tb_create_info;
@@ -232,7 +246,7 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 		return CmdType::DB_DROP;
 	}
 
-	if (sen_str[0] == "show"&&sen_str[1] == "table")
+	if (sen_str[0] == "show"&&sen_str[1] == "tables")
 	{
 		return CmdType::TABLE_SHOW;
 	}
@@ -266,7 +280,8 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 	{
 		return CmdType::TABLE_DELETE;
 	}
-		
+
+	throw SQLError::CMD_FORMAT_ERROR();
 
 }
 
@@ -282,6 +297,8 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 	case CmdType::TABLE_DROP:        // 删除表
 		break;
 	case CmdType::TABLE_SHOW:        // 列出当前数据库下所有表
+		print_window.ShowAllTable(sen_str, cp.GetCurrentPath());
+
 		break;
 	case CmdType::TABLE_SELECT:      // 选择表的特定记录
 		break;

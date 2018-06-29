@@ -116,6 +116,7 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp)
 	else
 	{
 		cp.SetCurrentPath(cp.GetRootPath() + db_name + "/");
+		cp.isInSpeDb = true;
 		return true;
 	}
 }
@@ -179,6 +180,35 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 	std::string dbf_file = path + table_name + ".dbf";
 	GetGlobalFileBuffer().CreateFile(dbf_file.c_str());
 	return true;
+}
+
+std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("./")*/)
+{
+	std::vector<std::string> dbs;
+	if (!b)
+		return dbs;
+
+	_finddata_t FileInfo;
+	path += "*.*";
+	int k;
+	long HANDLE;
+	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
+	
+
+	while (k != -1)
+	{
+		// 如果是普通文件夹则输出
+		if (!(FileInfo.attrib&_A_SUBDIR) && strcmp(FileInfo.name, ".") != 0 && strcmp(FileInfo.name, "..") != 0)
+		{
+			dbs.push_back(FileInfo.name);
+			//std::cout << FileInfo.name << std::endl;
+		}
+
+		k = _findnext(HANDLE, &FileInfo);
+	}
+	_findclose(HANDLE);
+
+	return dbs;
 }
 
 void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)

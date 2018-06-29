@@ -28,7 +28,7 @@ namespace SQLError
 	void CMD_FORMAT_ERROR::PrintError() const
 	{
 		//  ‰≥ˆ“Ï≥£
-		std::cout << ErrorInfo << " " << error_info;
+		std::cout << error_info << ErrorInfo;
 	}
 
 }
