@@ -93,19 +93,13 @@ enum class CmdType
 };
 
 // 条件查找类
-enum Operator_Type { B, BE, L, LE, E, NE, BETWEEN, ALL };
-struct CondtionInfo                    //查找的范围信息
+enum Operator_Type { B, BE, L, LE, E, NE };
+struct CompareCell                     //一个比较单元
 {			
-	CondtionInfo()
-	{
-		memset(&min, 0, sizeof(KeyAttr));
-		memset(&max, 0, sizeof(KeyAttr));
-		OperType = B;
-	}
-
-	Operator_Type	OperType;	        //关系运算符
-	KeyAttr		    min;				//按照顺序链接的属性的范围下限
-	KeyAttr		    max;				//按照顺序链接的属性的范围上限
+public:
+	Operator_Type	OperType;	        //比较关系关系运算符
+	KeyAttr		    min;				
+	KeyAttr		    max;				
 	
 };
 
