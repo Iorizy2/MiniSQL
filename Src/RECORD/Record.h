@@ -26,33 +26,6 @@
 #include "../Src/ERROR/Error.h"
 
 
-
-
-/***********************************************************************************
-*
-*    定义索引文件关键字属性
-*
-***********************************************************************************/
-class KeyAttr
-{
-public:
-	using Key_Value = union {
-		int   		        IntValue;		 //整形值
-		double 		        DoubleValue;     //浮点型值
-		char                StrValue[ColumnNameLength];	     //字符串指针 
-	};
-	Column_Type type;
-	Key_Value value;
-
-	bool operator<(const KeyAttr &rhs);
-	bool operator>(const KeyAttr &rhs);
-	bool operator==(const KeyAttr &rhs);
-	bool operator<=(const KeyAttr &rhs);
-	bool operator>=(const KeyAttr &rhs);
-	bool operator!=(const KeyAttr &rhs);
-};
-std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
-
 /***********************************************************************************
 *
 *    联合的数据结构定义 字段的值

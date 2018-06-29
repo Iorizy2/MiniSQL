@@ -29,7 +29,7 @@ bool DropTable(std::string table_name, std::string path = std::string("./"));
 std::vector<std::string> ShowAllTable(bool b, std::string path = std::string("./"));
 
 // 插入记录 eg. insert into test1(id, score, Name)values(10, 1.5, bcd);
-void InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string("./"));
+bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string("./"));
 
 // 打印整张表
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path = std::string("./"));

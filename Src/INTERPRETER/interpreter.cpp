@@ -125,6 +125,11 @@ TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str)
 				continue;
 			}
 		}
+		else if (sen_str[i + 2] == ")")
+		{
+			i += 3;
+			continue;
+		}
 	}
 
 	return tb_create_info;
@@ -291,6 +296,11 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 		return CmdType::TABLE_DELETE;
 	}
 
+	if (sen_str[0] == "quit")
+	{
+		return CmdType::QUIT;
+	}
+
 	throw SQLError::CMD_FORMAT_ERROR();
 
 }
@@ -315,8 +325,11 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 
 	case CmdType::TABLE_SELECT:      // 选择表的特定记录
 		break;
+
 	case CmdType::TABLE_INSERT:      // 插入新的记录
+		print_window.InsertRecord(InsertRecord(CreateInsertInfo(sen_str), cp.GetCurrentPath()));
 		break;
+
 	case CmdType::TABLE_UPDATE:      // 更新表的记录
 		break;
 	case CmdType::TABLE_DELETE:      // 删除表的记录

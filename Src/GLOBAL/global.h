@@ -37,28 +37,6 @@ extern "C"
 
 enum class Column_Type { I, C, D };
 
-// 数据类型的字符串形式转换为枚举类型
-Column_Type StrConvertToEnumType(std::string str_type);
-enum class CmdType
-{
-	TABLE_CREATE, TABLE_DROP, TABLE_SHOW, TABLE_SELECT, TABLE_INSERT, TABLE_UPDATE, TABLE_DELETE,
-	DB_CREATE, DB_DROP, DB_SHOW, DB_USE
-};
-
-// 打印命令行窗口，使底层实现和GUI分离，便于扩展
-class PrintWindow
-{
-public:
-	void CreateTable(bool is_created);
-	void ShowAllTable(std::vector<std::string> sen_str,std::string path);
-	void DropTable(bool is_dropped);
-	void CreateDB(bool is_created);
-	void DropDB(bool is_dropped);
-	void ShowDB(std::vector<std::string> db_names);
-	void UseDB(bool isUsed);
-};
-
-
 /********************************************************  Buffer Module  ***************************************************************/
 
 constexpr int FILE_PAGESIZE = 8192;	// 内存页(==文件页)大小
@@ -74,10 +52,78 @@ constexpr int MAX_FILENAME_LEN = 256;	// 文件名（包含路径）最大长度
 /********************************************************  B+tree Module  ***************************************************************/
 
 constexpr int RecordColumnCount = 12 * 4;  // 记录字段数量限制,假设所有字段都是字符数组，一个字符数组字段需要4个字符->CXXX
-constexpr int ColumnNameLength = 20;     // 单个字段名称长度限制
+constexpr int ColumnNameLength = 16;     // 单个字段名称长度限制
 constexpr int bptree_t = 3;                         // B+tree's degree, bptree_t >= 2
 constexpr int MaxKeyCount = 2 * bptree_t;            // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;          // the max number of child in a b+tree node
+
+/***********************************************************************************
+*
+*    定义索引文件关键字属性
+*
+***********************************************************************************/
+class KeyAttr
+{
+public:
+	using Key_Value = union {
+		char                StrValue[ColumnNameLength];	     //字符串指针 
+		int   		        IntValue;		 //整形值
+		double 		        DoubleValue;     //浮点型值	
+	};
+	Column_Type type;
+	Key_Value value;
+
+	bool operator<(const KeyAttr &rhs);
+	bool operator>(const KeyAttr &rhs);
+	bool operator==(const KeyAttr &rhs);
+	bool operator<=(const KeyAttr &rhs);
+	bool operator>=(const KeyAttr &rhs);
+	bool operator!=(const KeyAttr &rhs);
+};
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
+
+// 数据类型的字符串形式转换为枚举类型
+Column_Type StrConvertToEnumType(std::string str_type);
+enum class CmdType
+{
+	TABLE_CREATE, TABLE_DROP, TABLE_SHOW, TABLE_SELECT, TABLE_INSERT, TABLE_UPDATE, TABLE_DELETE,
+	DB_CREATE, DB_DROP, DB_SHOW, DB_USE,
+	QUIT
+
+};
+
+// 条件查找类
+enum Operator_Type { B, BE, L, LE, E, NE, BETWEEN, ALL };
+struct CondtionInfo                    //查找的范围信息
+{			
+	CondtionInfo()
+	{
+		memset(&min, 0, sizeof(KeyAttr));
+		memset(&max, 0, sizeof(KeyAttr));
+		OperType = B;
+	}
+
+	Operator_Type	OperType;	        //关系运算符
+	KeyAttr		    min;				//按照顺序链接的属性的范围下限
+	KeyAttr		    max;				//按照顺序链接的属性的范围上限
+	
+};
+
+// 打印命令行窗口，使底层实现和GUI分离，便于扩展
+class PrintWindow
+{
+public:
+	void CreateTable(bool is_created);
+	void ShowAllTable(std::vector<std::string> sen_str,std::string path);
+	void DropTable(bool is_dropped);
+	void InsertRecord(bool is_inserted);
+	void CreateDB(bool is_created);
+	void DropDB(bool is_dropped);
+	void ShowDB(std::vector<std::string> db_names);
+	void UseDB(bool isUsed);
+};
+
+
 
 /****************************************************************************************************************************************/
 

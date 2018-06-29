@@ -280,6 +280,18 @@ void PrintWindow::DropTable(bool is_dropped)
 	}
 }
 
+void PrintWindow::InsertRecord(bool is_inserted)
+{
+	if (is_inserted)
+	{
+		std::cout << "插入成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "插入失败" << std::endl;
+	}
+}
+
 void PrintWindow::CreateDB(bool is_created)
 {
 	if (is_created)
@@ -320,4 +332,141 @@ void PrintWindow::UseDB(bool isUsed)
 	{
 		std::cout << "选择数据库失败" << std::endl;
 	}
+}
+
+
+bool KeyAttr::operator<(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue < rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 < s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue < rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue > rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 > s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue > rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this < rhs);
+}
+
+bool KeyAttr::operator!=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this == rhs);
+}
+
+bool KeyAttr::operator<=(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this > rhs);
+}
+
+bool KeyAttr::operator==(const KeyAttr &rhs)
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = (this->value.IntValue == rhs.value.IntValue);
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = (s1 == s2);
+		break;
+
+	case Column_Type::D:
+		res = (this->value.DoubleValue == rhs.value.DoubleValue);
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
+{
+	switch (key.type)
+	{
+	case Column_Type::I:
+		os << key.value.IntValue << " ";
+		break;
+
+	case Column_Type::C:
+		os << key.value.StrValue << " ";
+		break;
+
+	case Column_Type::D:
+		os << key.value.DoubleValue << " ";
+		break;
+	default:
+		break;
+	}
+
+	return os;
 }

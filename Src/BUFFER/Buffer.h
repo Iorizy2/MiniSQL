@@ -134,7 +134,7 @@ class Clock
 	friend class MemFile;
 	friend class BUFFER;
 	friend class BTree;
-	friend void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/);
+	friend bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/);
 #ifndef NDEBUG
 	friend void TestModule();
 #endif

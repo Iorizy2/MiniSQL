@@ -26,7 +26,7 @@ int main()
 {
 	SensefulStr senstr;
 	PrintWindow print_window;
-
+	IsPod();
 	cout << PROMPT << "initialize..." << endl;
 	while (true)
 	{
@@ -35,6 +35,9 @@ int main()
 			std::string cmd = GetCommand();
 			senstr.SetSrcStr(cmd);
 			auto cmd_type = GetOpType(senstr.GetSensefulStr());
+
+			if (cmd_type == CmdType::QUIT)break;
+
 			Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
 		}
 		catch (SQLError::BaseError &e)
@@ -75,7 +78,8 @@ void IsPod()
 	cout << std::is_pod<FILECOND>::value << endl;
 	cout << std::is_pod<BTNode>::value << endl;
 	cout << std::is_pod<Column_Value>::value << endl;
-	cout << std::is_pod<KeyAttr>::value << endl;
+	cout << std::is_pod<KeyAttr>::value << endl; 
+    cout << std::is_pod<CondtionInfo>::value << endl;
 }
 #ifndef NDEBUG
 

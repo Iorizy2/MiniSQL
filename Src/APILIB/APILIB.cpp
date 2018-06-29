@@ -235,8 +235,11 @@ std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("
 	return dbs;
 }
 
-void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)
+bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)
 {
+	if (!GetCp().GetIsInSpeDb())  // 如果不在具体数据库目录下，则不能插入记录
+		return false;
+
 	std::string idx_file = path + tb_insert_info.table_name + ".idx";
 	std::string dbf_file = path + tb_insert_info.table_name + ".dbf";
 	BTree tree(idx_file);
@@ -382,6 +385,7 @@ void InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 	}
 	key = *p;
 	tree.Insert(key, fd);
+	return true;
 }
 
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path /*= std::string("./")*/)
