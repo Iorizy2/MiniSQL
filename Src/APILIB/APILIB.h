@@ -23,6 +23,8 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp);
 // 创建表 eg. create table test1(id int,score double,Name char(20) primary);
 bool CreateTable(TB_Create_Info tb_create_info, std::string path = std::string("./"));
 
+// 删除表
+bool DropTable(std::string table_name, std::string path = std::string("./"));
 // 显示数据库下的表项
 std::vector<std::string> ShowAllTable(bool b, std::string path = std::string("./"));
 

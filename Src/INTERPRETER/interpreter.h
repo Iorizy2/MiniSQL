@@ -43,7 +43,7 @@ std::string ShowDbInfo(std::vector<std::string> sen_str);
 bool CreateShowTableInfo(std::vector<std::string> sen_str);
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str);
 TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
-
+std::string DropTableInfo(std::vector<std::string> sen_str);
 // 返回有意字串的操作类型,同时做类型检查
 CmdType GetOpType(std::vector<std::string> sen_str);
 

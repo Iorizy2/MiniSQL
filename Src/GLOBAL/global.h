@@ -51,6 +51,7 @@ class PrintWindow
 public:
 	void CreateTable(bool is_created);
 	void ShowAllTable(std::vector<std::string> sen_str,std::string path);
+	void DropTable(bool is_dropped);
 	void CreateDB(bool is_created);
 	void DropDB(bool is_dropped);
 	void ShowDB(std::vector<std::string> db_names);

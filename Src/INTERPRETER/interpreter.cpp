@@ -46,6 +46,16 @@ std::string ShowDbInfo(std::vector<std::string> sen_str)
 	return std::string();
 }
 
+std::string DropTableInfo(std::vector<std::string> sen_str)
+{
+	if ((sen_str.size() < 4)
+		|| (StrToLower(sen_str[0]) != "drop")
+		|| (StrToLower(sen_str[1]) != "table")
+		|| (StrToLower(sen_str[3]) != ";")
+		)
+		throw SQLError::CMD_FORMAT_ERROR();
+	return sen_str[2];
+}
 
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
 {
@@ -294,12 +304,15 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 	case CmdType::TABLE_CREATE:      // 创建表
 		print_window.CreateTable(CreateTable(CreateTableInfo(sen_str), cp.GetCurrentPath()));
 		break;
+
 	case CmdType::TABLE_DROP:        // 删除表
+		print_window.DropTable(DropTable(DropTableInfo(sen_str), cp.GetCurrentPath()));
 		break;
+
 	case CmdType::TABLE_SHOW:        // 列出当前数据库下所有表
 		print_window.ShowAllTable(sen_str, cp.GetCurrentPath());
-
 		break;
+
 	case CmdType::TABLE_SELECT:      // 选择表的特定记录
 		break;
 	case CmdType::TABLE_INSERT:      // 插入新的记录

@@ -182,6 +182,30 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 	return true;
 }
 
+bool DropTable(std::string table_name, std::string path /*= std::string("./")*/)
+{
+	std::string tmp_path = path + table_name;
+	std::string idx = tmp_path + ".idx";
+	std::string dbf = tmp_path + ".dbf";
+
+	if (!GetCp().GetIsInSpeDb())
+		return false;
+
+	if (_access(idx.c_str(), 0) == -1|| _access(dbf.c_str(), 0) == -1)  //判断表是否存在
+	{
+		return false;
+	}
+	else
+	{
+		// 删除表文件
+		remove(idx.c_str());
+		remove(dbf.c_str());
+		return true;
+	}
+
+	return false;
+}
+
 std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("./")*/)
 {
 	std::vector<std::string> dbs;

@@ -268,6 +268,18 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str,std::string path
 		std::cout << e << std::endl;
 }
 
+void PrintWindow::DropTable(bool is_dropped)
+{
+	if (is_dropped)
+	{
+		std::cout << "删除表成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "删除表失败，表不存在或者没有使用数据库" << std::endl;
+	}
+}
+
 void PrintWindow::CreateDB(bool is_created)
 {
 	if (is_created)
