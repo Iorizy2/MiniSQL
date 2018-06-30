@@ -27,18 +27,6 @@ void InterPreterTest();
 // 读取用户的输入，以 ";"结束
 std::string GetCommand();
 
-unsigned long fib(unsigned long n)
-{
-	if (n <= 2)
-	{
-		return 1;
-	}
-	else
-	{
-		return fib(n - 1) + fib(n - 2);
-	}
-}
-
 int main()
 {
 	SensefulStr senstr;
@@ -336,3 +324,4 @@ void TestModule()
 	tree.PrintAllLeafNode();
 }
 #endif
+

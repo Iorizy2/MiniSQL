@@ -93,19 +93,34 @@ enum class CmdType
 
 };
 
-// 打印命令行窗口，使底层实现和GUI分离，便于扩展
-class PrintWindow
+/*********************************************************
+*             文件地址,定位文件中的位置
+**********************************************************/
+class FileAddr
 {
+	friend class FILECOND;
 public:
-	void CreateTable(bool is_created);
-	void ShowAllTable(std::vector<std::string> sen_str,std::string path);
-	void DropTable(bool is_dropped);
-	void InsertRecord(bool is_inserted);
-	void CreateDB(bool is_created);
-	void DropDB(bool is_dropped);
-	void ShowDB(std::vector<std::string> db_names);
-	void UseDB(bool isUsed);
+	void SetFileAddr(const unsigned long _filePageID, const unsigned int  _offSet);
+	void ShiftOffset(const int OFFSET);
+
+	unsigned long filePageID;     // 文件页编号
+	unsigned int  offSet;         // 页内偏移量
+
+	bool operator==(const FileAddr &rhs) const
+	{
+		return (this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
+	bool operator!=(const FileAddr &rhs) const
+	{
+		return !(this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
+	bool operator<(const FileAddr &rhs)const
+	{
+		return (this->filePageID < rhs.filePageID) || ((this->filePageID == rhs.filePageID) && (this->offSet < rhs.offSet));
+	}
 };
+
+
 
 
 

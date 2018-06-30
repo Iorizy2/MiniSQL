@@ -394,8 +394,8 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 	auto &cp = GetCp();
 	TB_Select_Info tb_select_info;
 	std::vector<FileAddr> fds;
-	RecordHead record_head;
-	auto pcolumn = record_head.GetFirstColumn();
+	
+
 	switch (cmd_type)
 	{
 	case CmdType::TABLE_CREATE:      // 创建表
@@ -411,32 +411,11 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	case CmdType::TABLE_SELECT:      // 选择表的特定记录
-		tb_select_info = TableSelectInfo(sen_str);
-		fds = RangeSearch(tb_select_info.vec_cmp_cell[0], tb_select_info.table_name, cp.GetCurrentPath());
-		for (int i = 0; i < fds.size(); i++)
-		{
-			record_head = GetDbfRecord(tb_select_info.table_name, fds[i], cp.GetCurrentPath());
-			pcolumn = record_head.GetFirstColumn();
-			while (pcolumn)
-			{
-				switch (pcolumn->column_type)
-				{
-				case Column_Type::I:
-					std::cout << pcolumn->column_value.IntValue << "\t";
-					break;
-				case Column_Type::D:
-					std::cout << pcolumn->column_value.DoubleValue << "\t";
-					break;
-				case Column_Type::C:
-					std::cout << pcolumn->column_value.StrValue << "\t";
-					break;
-				default:
-					break;
-				}
-				pcolumn = pcolumn->next;
-			}
-			std::cout << std::endl;
-		}
+
+
+
+		
+		print_window.SelectTable(SelectTable(TableSelectInfo(sen_str), cp.GetCurrentPath()));
 		
 		break;
 
@@ -558,4 +537,165 @@ bool CompareCell::operator()(const Column_Cell &cc)
 		break;
 	}
 	return false;
+}
+
+
+void PrintWindow::CreateTable(bool is_created)
+{
+	if (is_created)
+	{
+		std::cout << "创建成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "创建失败" << std::endl;
+	}
+}
+
+
+
+void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string path)
+{
+	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
+	{
+		throw SQLError::CMD_FORMAT_ERROR("Not use database or ");
+	}
+
+	std::vector<std::string> tables;
+
+	_finddata_t FileInfo;
+	path += "*.*";
+	int k;
+	long HANDLE;
+	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
+
+
+	while (k != -1)
+	{
+		// 如果是普通文件夹则输出
+		if (!(FileInfo.attrib&_A_SUBDIR) && strcmp(FileInfo.name, ".") != 0 && strcmp(FileInfo.name, "..") != 0)
+		{
+			// 只检查后缀.idx的文件
+			std::string tmp_file(FileInfo.name);
+			int index = tmp_file.size() - 1;
+
+
+			if (tmp_file.size() < 4 || tmp_file[index] != 'x' || tmp_file[index - 1] != 'd' || tmp_file[index - 2] != 'i' || tmp_file[index - 3] != '.')
+			{
+				;
+			}
+			else
+			{
+				tables.push_back(std::string(tmp_file.begin(), tmp_file.begin() + tmp_file.size() - 4));
+			}
+		}
+
+		k = _findnext(HANDLE, &FileInfo);
+	}
+	_findclose(HANDLE);
+
+	// 排序
+	std::sort(tables.begin(), tables.end());
+	for (auto e : tables)
+		std::cout << e << std::endl;
+}
+
+void PrintWindow::DropTable(bool is_dropped)
+{
+	if (is_dropped)
+	{
+		std::cout << "删除表成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "删除表失败，表不存在或者没有使用数据库" << std::endl;
+	}
+}
+
+
+void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
+{
+	RecordHead record_head;
+	auto fds = select_table_print_info.fds;
+	auto table_name = select_table_print_info.table_name;
+	auto pcolumn = record_head.GetFirstColumn();
+	
+	for (int i = 0; i < fds.size(); i++)
+	{
+		record_head = GetDbfRecord(table_name, fds[i], GetCp().GetCurrentPath());
+		pcolumn = record_head.GetFirstColumn();
+		while (pcolumn)
+		{
+			switch (pcolumn->column_type)
+			{
+			case Column_Type::I:
+				std::cout << pcolumn->column_value.IntValue << "\t";
+				break;
+			case Column_Type::D:
+				std::cout << pcolumn->column_value.DoubleValue << "\t";
+				break;
+			case Column_Type::C:
+				std::cout << pcolumn->column_value.StrValue << "\t";
+				break;
+			default:
+				break;
+			}
+			pcolumn = pcolumn->next;
+		}
+		std::cout << std::endl;
+	}
+}
+
+void PrintWindow::InsertRecord(bool is_inserted)
+{
+	if (is_inserted)
+	{
+		std::cout << "插入成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "插入失败" << std::endl;
+	}
+}
+
+void PrintWindow::CreateDB(bool is_created)
+{
+	if (is_created)
+	{
+		std::cout << "创建成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "创建失败" << std::endl;
+	}
+}
+
+void PrintWindow::DropDB(bool is_dropped)
+{
+	if (is_dropped)
+	{
+		std::cout << "删除数据库成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "删除数据库失败" << std::endl;
+	}
+}
+
+void PrintWindow::ShowDB(std::vector<std::string> db_names)
+{
+	for (auto e : db_names)
+		std::cout << e << std::endl;
+}
+
+void PrintWindow::UseDB(bool isUsed)
+{
+	if (isUsed)
+	{
+		std::cout << "选择数据库成功" << std::endl;
+	}
+	else
+	{
+		std::cout << "选择数据库失败" << std::endl;
+	}
 }

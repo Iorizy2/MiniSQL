@@ -23,7 +23,21 @@
 #include <vector>
 #include "../RECORD/Record.h"
 #include "../APILIB/APILIB.h"
-
+// 打印命令行窗口，使底层实现和GUI分离，便于扩展
+//class SelectPrintInfo;
+class PrintWindow
+{
+public:
+	void CreateTable(bool is_created);
+	void ShowAllTable(std::vector<std::string> sen_str, std::string path);
+	void DropTable(bool is_dropped);
+	void SelectTable(SelectPrintInfo select_table_print_info);
+	void InsertRecord(bool is_inserted);
+	void CreateDB(bool is_created);
+	void DropDB(bool is_dropped);
+	void ShowDB(std::vector<std::string> db_names);
+	void UseDB(bool isUsed);
+};
 
 
 

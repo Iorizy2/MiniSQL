@@ -1,5 +1,6 @@
 #include "APILIB.h"
-
+#include <algorithm>
+#include <iterator>
 bool CreateDatabase(std::string db_name, CatalogPosition &cp)
 {
 	std::string tmp_path = cp.GetRootPath() + db_name;
@@ -225,7 +226,6 @@ std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("
 		if (!(FileInfo.attrib&_A_SUBDIR) && strcmp(FileInfo.name, ".") != 0 && strcmp(FileInfo.name, "..") != 0)
 		{
 			dbs.push_back(FileInfo.name);
-			//std::cout << FileInfo.name << std::endl;
 		}
 
 		k = _findnext(HANDLE, &FileInfo);
@@ -386,6 +386,48 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 	key = *p;
 	tree.Insert(key, fd);
 	return true;
+}
+
+SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= std::string("./")*/)
+{
+	std::vector<FileAddr> res;
+	std::vector<FileAddr> fds;
+
+	// 如果是主键查找且查找操作是 等于
+
+
+
+
+	// 否则
+	for (int i = 0; i < tb_select_info.vec_cmp_cell.size(); i++)
+	{
+		// 查找满足单个字段的记录
+		fds = RangeSearch(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
+
+		// 新的结果和之前的结果求交集
+		if (res.empty())
+		{
+			res = fds;
+		}
+		else
+		{
+			std::vector<FileAddr> v;
+			sort(fds.begin(), fds.end());
+			sort(res.begin(), res.end());
+			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
+			res = v;
+		}
+		
+	}
+	//fds = RangeSearch(tb_select_info.vec_cmp_cell[0], tb_select_info.table_name, GetCp().GetCurrentPath());
+
+
+
+	SelectPrintInfo spi;
+	spi.table_name = tb_select_info.table_name;
+	spi.name_selected_column = tb_select_info.name_selected_column;
+	spi.fds = res;
+	return spi;
 }
 
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path /*= std::string("./")*/)

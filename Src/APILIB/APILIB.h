@@ -4,9 +4,25 @@
 #include "../GLOBAL/global.h"
 #include "../BPLUSTREE/bptree.h"
 #include "../RECORD/Record.h"
-#include "../INTERPRETER/interpreter.h"
+//#include "../INTERPRETER/interpreter.h"
 
-
+// 条件查找类
+enum Operator_Type { B, BE, L, LE, E, NE };
+Operator_Type GetOperatorType(std::string s);
+class CompareCell                     //一个字段比较单元
+{
+public:
+	CompareCell(Operator_Type t, Column_Cell cc) :OperType(t), cmp_value(cc) {}
+	bool CompareCell::operator()(const Column_Cell &cc);
+	Operator_Type	OperType;	        //比较关系关系运算符
+	Column_Cell		cmp_value;
+};
+struct SelectPrintInfo
+{
+	std::string table_name;
+	std::vector<std::string> name_selected_column;
+	std::vector<FileAddr> fds;
+};
 
 // 创建数据库
 bool CreateDatabase(std::string database_name, CatalogPosition &cp);
@@ -33,26 +49,15 @@ std::vector<std::string> ShowAllTable(bool b, std::string path = std::string("./
 // 插入记录 eg. insert into test1(id, score, Name)values(10, 1.5, bcd);
 bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string("./"));
 
+// 选择记录
+SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path = std::string("./"));
+
 // 打印整张表
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path = std::string("./"));
 
 // 取出指定地址的数据
 RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path = std::string("./"));
 
-
-
-
-// 条件查找类
-enum Operator_Type { B, BE, L, LE, E, NE };
-Operator_Type GetOperatorType(std::string s);
-class CompareCell                     //一个字段比较单元
-{
-public:
-	CompareCell(Operator_Type t, Column_Cell cc) :OperType(t), cmp_value(cc) {}
-	bool CompareCell::operator()(const Column_Cell &cc);
-	Operator_Type	OperType;	        //比较关系关系运算符
-	Column_Cell		cmp_value;
-};
 
 // 返回给定名表中各个字段名称以及对应类型
 std::vector<std::pair<std::string,Column_Type>> GetColumnAndTypeFromTable(std::string table_name, std::string table_path);

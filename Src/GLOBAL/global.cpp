@@ -210,132 +210,6 @@ std::string CatalogPosition::SetCurrentPath(std::string cur)
 	return current_catalog;
 }
 
-void PrintWindow::CreateTable(bool is_created)
-{
-	if (is_created)
-	{
-		std::cout << "创建成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "创建失败" << std::endl;
-	}
-}
-
-
-
-void PrintWindow::ShowAllTable(std::vector<std::string> sen_str,std::string path)
-{
-	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
-	{
-		throw SQLError::CMD_FORMAT_ERROR("Not use database or ");
-	}
-
-	std::vector<std::string> tables;
-	
-	_finddata_t FileInfo;
-	path += "*.*";
-	int k;
-	long HANDLE;
-	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
-
-
-	while (k != -1)
-	{
-		// 如果是普通文件夹则输出
-		if (!(FileInfo.attrib&_A_SUBDIR) && strcmp(FileInfo.name, ".") != 0 && strcmp(FileInfo.name, "..") != 0)
-		{
-			// 只检查后缀.idx的文件
-			std::string tmp_file(FileInfo.name);
-			int index = tmp_file.size() - 1;
-
-			
-			if (tmp_file.size() < 4 || tmp_file[index] != 'x' || tmp_file[index - 1] != 'd' || tmp_file[index - 2] != 'i' || tmp_file[index - 3] != '.')
-			{
-				;
-			}
-			else
-			{
-				tables.push_back(std::string(tmp_file.begin(), tmp_file.begin()+ tmp_file.size()-4));
-			}
-		}
-
-		k = _findnext(HANDLE, &FileInfo);
-	}
-	_findclose(HANDLE);
-
-	// 排序
-	std::sort(tables.begin(), tables.end());
-	for (auto e : tables)
-		std::cout << e << std::endl;
-}
-
-void PrintWindow::DropTable(bool is_dropped)
-{
-	if (is_dropped)
-	{
-		std::cout << "删除表成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "删除表失败，表不存在或者没有使用数据库" << std::endl;
-	}
-}
-
-void PrintWindow::InsertRecord(bool is_inserted)
-{
-	if (is_inserted)
-	{
-		std::cout << "插入成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "插入失败" << std::endl;
-	}
-}
-
-void PrintWindow::CreateDB(bool is_created)
-{
-	if (is_created)
-	{
-		std::cout << "创建成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "创建失败" << std::endl;
-	}
-}
-
-void PrintWindow::DropDB(bool is_dropped)
-{
-	if (is_dropped)
-	{
-		std::cout << "删除数据库成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "删除数据库失败" << std::endl;
-	}
-}
-
-void PrintWindow::ShowDB(std::vector<std::string> db_names)
-{
-	for (auto e : db_names)
-		std::cout << e << std::endl;
-}
-
-void PrintWindow::UseDB(bool isUsed)
-{
-	if (isUsed)
-	{
-		std::cout << "选择数据库成功" << std::endl;
-	}
-	else
-	{
-		std::cout << "选择数据库失败" << std::endl;
-	}
-}
-
 
 bool KeyAttr::operator<(const KeyAttr &rhs)
 {
@@ -473,3 +347,12 @@ std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 	return os;
 }
 
+void FileAddr::SetFileAddr(const unsigned long _filePageID /*= 0*/, const unsigned int _offSet /*= 0*/)
+{
+	filePageID = _filePageID;
+	offSet = _offSet;
+}
+void FileAddr::ShiftOffset(const int OFFSET)
+{
+	this->offSet += OFFSET;
+}

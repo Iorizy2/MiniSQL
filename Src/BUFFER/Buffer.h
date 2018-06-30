@@ -37,28 +37,7 @@ Clock* GetGlobalClock();
 BUFFER& GetGlobalFileBuffer();
 const unsigned int FILECOND_RESERVE_SPACE = 512;  // 文件头预留空间
 
-/*********************************************************
-*             文件地址,定位文件中的位置
-**********************************************************/
-class FileAddr
-{
-	friend class FILECOND;
-public:
-	void SetFileAddr(const unsigned long _filePageID, const unsigned int  _offSet);
-	void ShiftOffset(const int OFFSET);
 
-	unsigned long filePageID;     // 文件页编号
-	unsigned int  offSet;         // 页内偏移量
-	
-	bool operator==(const FileAddr &rhs) const
-	{
-		return (this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
-	}
-	bool operator!=(const FileAddr &rhs) const
-	{
-		return !(this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
-	}
-};
 
 
 /*********************************************************
@@ -128,7 +107,7 @@ public:
 *   不变式：调用者保证需要被载入的物理文件都存在，且加载的页面不越界
 *
 **********************************************************/
-class TB_Insert_Info;
+struct TB_Insert_Info;
 class Clock
 {
 	friend class MemFile;

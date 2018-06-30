@@ -527,16 +527,9 @@ MemFile* BUFFER::operator[](const char *fileName)
 	return GetMemFile(fileName);
 }
 
-void FileAddr::SetFileAddr(const unsigned long _filePageID /*= 0*/, const unsigned int _offSet /*= 0*/)
-{
-	filePageID = _filePageID;
-	offSet = _offSet;
-}
 
-void FileAddr::ShiftOffset(const int OFFSET)
-{
-	this->offSet += OFFSET;
-}
+
+
 
 #ifndef NDEBUG
 std::string IntToStr(int i)
