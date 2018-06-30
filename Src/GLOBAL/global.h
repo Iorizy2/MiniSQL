@@ -16,6 +16,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 #include "../Src/ERROR/error.h"
+//#include <../BPLUSTREE/bptree.h>
 #include <vector>
 #include <string>
 #include <direct.h>
@@ -92,17 +93,6 @@ enum class CmdType
 
 };
 
-// 条件查找类
-enum Operator_Type { B, BE, L, LE, E, NE };
-struct CompareCell                     //一个比较单元
-{			
-public:
-	Operator_Type	OperType;	        //比较关系关系运算符
-	KeyAttr		    min;				
-	KeyAttr		    max;				
-	
-};
-
 // 打印命令行窗口，使底层实现和GUI分离，便于扩展
 class PrintWindow
 {
@@ -174,6 +164,12 @@ struct TB_Insert_Info
 	std::vector<InsertInfo> insert_info;
 };
 
+struct TB_Select_Info
+{
+	std::string table_name;                        // 选择的表名
+	std::vector<std::string> name_selected_column; // 选择的字段名字
+	//std::vector<CompareCell> vec_cmp_cell;         // 选择条件
+};
 
 // 目录定位和切换 用于数据库和表的使用
 class CatalogPosition

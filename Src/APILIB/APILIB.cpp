@@ -462,3 +462,137 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 
 	return record_head;
 }
+
+
+Operator_Type GetOperatorType(std::string s)
+{
+	s = StrToLower(s);
+	if (s == "b")
+	{
+		return Operator_Type::B;
+	}
+	else if (s == "be")
+	{
+		return Operator_Type::BE;
+	}
+	else if (s == "l")
+	{
+		return Operator_Type::L;
+	}
+	else if (s == "le")
+	{
+		return Operator_Type::LE;
+	}
+	else if (s == "e")
+	{
+		return Operator_Type::E;
+	}
+	else if (s == "ne")
+	{
+		return Operator_Type::NE;
+	}
+	else
+	{
+		return Operator_Type::B;
+	}
+}
+
+std::vector<std::pair<std::string, Column_Type>> GetColumnAndTypeFromTable(std::string table_name, std::string table_path)
+{
+	std::string idx_file = table_path + table_name + ".idx";
+	std::string dbf_file = table_path + table_name + ".dbf";
+	BTree tree(idx_file);
+
+	auto phead = tree.GetPtrIndexHeadNode();
+
+	// 记录各个字段类型
+	std::vector<Column_Type> tb_types;
+	int sz_col = 0;// 字段个数
+	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
+	{
+		if (phead->RecordTypeInfo[i] == 'I')
+		{
+			tb_types.push_back(Column_Type::I);
+			sz_col++;
+		}
+		else if (phead->RecordTypeInfo[i] == 'D')
+		{
+			tb_types.push_back(Column_Type::D);
+			sz_col++;
+		}
+		else if (phead->RecordTypeInfo[i] == 'C')
+		{
+			tb_types.push_back(Column_Type::C);
+			sz_col++;
+		}
+
+	}
+
+	// 记录各个字段名称
+	std::vector<std::string> tb_names;
+	char *pColumnName = phead->RecordColumnName;
+	for (int j = 0; j < sz_col; j++)
+	{
+		tb_names.push_back(pColumnName);
+		pColumnName += ColumnNameLength;
+	}
+
+	std::vector<std::pair<std::string, Column_Type>> res;
+	for (int i = 0; i < tb_names.size(); i++)
+	{
+		res.push_back({ tb_names[i], tb_types[i] });
+	}
+	return res;
+}
+
+
+Column_Type GetType(std::string name, std::vector<std::pair<std::string, Column_Type>> vec)
+{
+	for (int i = 0; i < vec.size(); i++)
+	{
+		if (vec[i].first == name)
+		{
+			return vec[i].second;
+		}
+	}
+
+	return Column_Type::I;
+}
+
+std::vector<FileAddr> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path)
+{
+	// 保存查找结果
+	std::vector<FileAddr> res;
+	// 索引文件名
+	std::string file_idx = path + table_name + ".idx";
+
+	// 读取索引 信息
+	BTree tree(file_idx);
+	auto phead = tree.GetPtrIndexHeadNode();
+
+	// 第一个数据结点地址
+	auto node_fd = phead->MostLeftNode;
+
+	while (node_fd.offSet!=0)
+	{
+		//取出结点内记录
+		auto pNode = tree.FileAddrToMemPtr(node_fd);
+		for (int i = 0; i < pNode->count_valid_key; i++)
+		{
+			RecordHead record = GetDbfRecord(table_name, pNode->children[i], path);
+			// 查找比较的字段
+			auto pColumn = record.GetFirstColumn();
+			while (pColumn->columu_name != compare_cell.cmp_value.columu_name)pColumn = pColumn->next;
+			bool isSearched = compare_cell(*pColumn);
+			if (isSearched)  // 满足条件
+			{
+				res.push_back(node_fd);
+			}
+		}
+		// 下一个数据结点
+		node_fd = tree.FileAddrToMemPtr(node_fd)->next;
+	}
+
+	return res;
+}
+

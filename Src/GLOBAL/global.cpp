@@ -134,6 +134,8 @@ std::string StrToLower(std::string str)
 	return str;
 }
 
+
+
 CatalogPosition& GetCp()
 {
 	static CatalogPosition cp;

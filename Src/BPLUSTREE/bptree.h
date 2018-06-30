@@ -69,6 +69,7 @@ public:
 	void PrintBTreeStruct();                                                    // 层序打印所有结点信息
 	void PrintAllLeafNode();
 	IndexHeadNode *GetPtrIndexHeadNode();
+	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                 // 文件地址转换为内存指针
 private:
 	FileAddr DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);              // x的下标为i的结点为叶子结点
 	FileAddr DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);               // x的下标为i的结点为叶子结点
@@ -77,7 +78,7 @@ private:
 	FileAddr Search(KeyAttr search_key, FileAddr node_fd);                      // 判断关键字是否存在
 	FileAddr SearchInnerNode(KeyAttr search_key, FileAddr node_fd);             // 在内部节点查找
 	FileAddr SearchLeafNode(KeyAttr search_key, FileAddr node_fd);              // 在叶子结点查找
-	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                 // 文件地址转换为内存指针
+	
 	
 private:
 	int file_id;

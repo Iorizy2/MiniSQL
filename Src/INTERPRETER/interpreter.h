@@ -38,12 +38,13 @@ std::string UseDbInfo(std::vector<std::string> sen_str);
 
 // 显示数据库
 std::string ShowDbInfo(std::vector<std::string> sen_str);
-
 // 生成表相关信息
 bool CreateShowTableInfo(std::vector<std::string> sen_str);
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str);
 TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
 std::string DropTableInfo(std::vector<std::string> sen_str);
+TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str);  //生成select操作所需的信息
+
 // 返回有意字串的操作类型,同时做类型检查
 CmdType GetOpType(std::vector<std::string> sen_str);
 

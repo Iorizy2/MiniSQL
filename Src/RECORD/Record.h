@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include "../Src/GLOBAL/global.h"
 #include "../Src/BUFFER/Buffer.h"
 #include "../Src/ERROR/Error.h"
 
@@ -65,7 +64,7 @@ public:
 	std::string columu_name;
 	Column_Value column_value;
 	Column_Cell *next;
-	
+
 
 	// ÀàÐÍ×ª»»
 	operator KeyAttr()const
@@ -127,6 +126,7 @@ private:
 	Column_Cell *pLast;
 	void *data;
 };
+
 
 
 

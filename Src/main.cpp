@@ -1,18 +1,25 @@
 ﻿#include <iostream>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
+#include "GLOBAL/global.h"
 #include "ERROR/Error.h"
 #include "BUFFER/Buffer.h"
 #include "BPLUSTREE/bptree.h"
 #include "RECORD/Record.h"
 #include "INTERPRETER/interpreter.h"
 #include "APILIB/APILIB.h"
-
+#include <time.h>
 #include<direct.h>
 //#define NDEBUG 
 using namespace std;
 const std::string PROMPT = "MiniSQL:";
 // 判断POD数据
 void IsPod();
+void MySleep(unsigned int n); // 程序睡眠
+
+
+
 #ifndef NDEBUG
 void TestModule();
 void InterPreterTest();
@@ -20,13 +27,23 @@ void InterPreterTest();
 // 读取用户的输入，以 ";"结束
 std::string GetCommand();
 
-
+unsigned long fib(unsigned long n)
+{
+	if (n <= 2)
+	{
+		return 1;
+	}
+	else
+	{
+		return fib(n - 1) + fib(n - 2);
+	}
+}
 
 int main()
 {
 	SensefulStr senstr;
 	PrintWindow print_window;
-	IsPod();
+	//IsPod();
 	cout << PROMPT << "initialize..." << endl;
 	while (true)
 	{
@@ -45,8 +62,10 @@ int main()
 			SQLError::DispatchError(e);
 			cout << endl;
 		}
+		
 	}
-
+	cout << "bye." << endl;
+	//MySleep(1);
 	system("pause");
 }
 
@@ -79,7 +98,17 @@ void IsPod()
 	cout << std::is_pod<BTNode>::value << endl;
 	cout << std::is_pod<Column_Value>::value << endl;
 	cout << std::is_pod<KeyAttr>::value << endl; 
-    cout << std::is_pod<CondtionInfo>::value << endl;
+    //cout << std::is_pod<CondtionInfo>::value << endl;
+}
+
+void MySleep(unsigned int n)
+{
+	auto t1 = time(0);
+	time_t t2 = t1;
+	while ((t2 - t1) < 1)
+	{
+		t2 = time(0);
+	}
 }
 #ifndef NDEBUG
 
@@ -290,7 +319,6 @@ void TestModule()
 			tree.PrintBTreeStruct();
 			std::cout << std::endl;
 		}
-
 
 		if (c == 'q')
 		{

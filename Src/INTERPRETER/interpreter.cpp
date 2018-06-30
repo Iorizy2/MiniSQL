@@ -57,6 +57,70 @@ std::string DropTableInfo(std::vector<std::string> sen_str)
 	return sen_str[2];
 }
 
+TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
+{
+	TB_Select_Info tb_select_info;
+	// 选择的字段名称
+	if (StrToLower(sen_str[0]) != "select")
+		throw SQLError::CMD_FORMAT_ERROR();
+	int name_L_index = 1;
+	int name_R_index = 0;
+	for (int i = 0; i < sen_str.size(); i++)
+	{
+		if (StrToLower(sen_str[i]) == "from")
+		{
+			name_R_index = i-1;
+			break;
+		}
+	}
+	if(!name_R_index)
+		throw SQLError::CMD_FORMAT_ERROR();
+	for (int i = name_L_index; i <= name_R_index; i++)
+	{
+		tb_select_info.name_selected_column.push_back(sen_str[i]);
+	}
+	if(sen_str.size()-1 < (name_R_index+2))
+		throw SQLError::CMD_FORMAT_ERROR();
+	tb_select_info.table_name = sen_str[name_R_index + 2];
+
+	int name_where_index = name_R_index + 3;
+	if (sen_str.size() - 1 < name_where_index)
+		return tb_select_info;
+
+	auto mpair = GetColumnAndTypeFromTable(tb_select_info.table_name, GetCp().GetCurrentPath());
+	// 打包查找条件
+	for (int i = name_where_index + 1; i < sen_str.size(); i++)
+	{
+		Column_Cell column_cell;
+		column_cell.columu_name = sen_str[i];
+		Column_Type tmp = GetType(sen_str[i], mpair);
+		char*pChar = nullptr;
+		switch (tmp)
+		{
+		case Column_Type::I:
+			column_cell.column_type = Column_Type::I;
+			column_cell.column_value.IntValue = stoi(sen_str[i + 2]);
+			break;
+
+		case Column_Type::C:
+			column_cell.column_type = Column_Type::I;
+			pChar = (char*)malloc(sen_str[i + 2].size() + 1);
+			strcpy(pChar, sen_str[i + 2].c_str());
+			column_cell.column_value.StrValue = pChar;
+			break;
+
+		case Column_Type::D:
+			column_cell.column_type = Column_Type::D;
+			column_cell.column_value.IntValue = stod(sen_str[i + 2]);
+			break;
+		default:
+			break;
+		}
+		CompareCell cmp_cell(GetOperatorType(sen_str[i+1]), column_cell);
+		//tb_select_info.
+	}
+}
+
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
 {
 	
@@ -296,6 +360,11 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 		return CmdType::TABLE_DELETE;
 	}
 
+	if (sen_str[0] == "delete")
+	{
+		return CmdType::TABLE_SELECT;
+	}
+
 	if (sen_str[0] == "quit")
 	{
 		return CmdType::QUIT;
@@ -352,7 +421,96 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	default:
+		throw SQLError::CMD_FORMAT_ERROR();
 		break;
 	}
 }
 
+bool CompareCell::operator()(const Column_Cell &cc)
+{
+	switch (cmp_value.column_type)
+	{
+	case Column_Type::I:
+		switch (OperType)
+		{
+		case B:
+			return cc.column_value.IntValue > cmp_value.column_value.IntValue;
+			break;
+		case BE:
+			return cc.column_value.IntValue >= cmp_value.column_value.IntValue;
+			break;
+		case L:
+			return cc.column_value.IntValue < cmp_value.column_value.IntValue;
+			break;
+		case LE:
+			return cc.column_value.IntValue <= cmp_value.column_value.IntValue;
+			break;
+		case E:
+			return cc.column_value.IntValue == cmp_value.column_value.IntValue;
+			break;
+		case NE:
+			return cc.column_value.IntValue != cmp_value.column_value.IntValue;
+			break;
+		default:
+			return false;
+			break;
+		}
+		break;
+	case Column_Type::D:
+		switch (OperType)
+		{
+		case B:
+			return cc.column_value.DoubleValue > cmp_value.column_value.DoubleValue;
+			break;
+		case BE:
+			return cc.column_value.DoubleValue >= cmp_value.column_value.DoubleValue;
+			break;
+		case L:
+			return cc.column_value.DoubleValue < cmp_value.column_value.DoubleValue;
+			break;
+		case LE:
+			return cc.column_value.DoubleValue <= cmp_value.column_value.DoubleValue;
+			break;
+		case E:
+			return cc.column_value.DoubleValue == cmp_value.column_value.DoubleValue;
+			break;
+		case NE:
+			return cc.column_value.DoubleValue != cmp_value.column_value.DoubleValue;
+			break;
+		default:
+			return false;
+			break;
+		}
+		break;
+	case Column_Type::C:
+		switch (OperType)
+		{
+		case B:
+			return std::string(cc.column_value.StrValue) > std::string(cmp_value.column_value.StrValue);
+			break;
+		case BE:
+			return std::string(cc.column_value.StrValue) >= std::string(cmp_value.column_value.StrValue);
+			break;
+		case L:
+			return std::string(cc.column_value.StrValue) < std::string(cmp_value.column_value.StrValue);
+			break;
+		case LE:
+			return std::string(cc.column_value.StrValue) <= std::string(cmp_value.column_value.StrValue);
+			break;
+		case E:
+			return std::string(cc.column_value.StrValue) == std::string(cmp_value.column_value.StrValue);
+			break;
+		case NE:
+			return std::string(cc.column_value.StrValue) != std::string(cmp_value.column_value.StrValue);
+			break;
+		default:
+			return false;
+			break;
+		}
+		break;
+	default:
+		return false;
+		break;
+	}
+	return false;
+}
