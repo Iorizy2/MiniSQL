@@ -103,7 +103,7 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 			break;
 
 		case Column_Type::C:
-			column_cell.column_type = Column_Type::I;
+			column_cell.column_type = Column_Type::C;
 			pChar = (char*)malloc(sen_str[i + 2].size() + 1);
 			strcpy(pChar, sen_str[i + 2].c_str());
 			column_cell.column_value.StrValue = pChar;
