@@ -89,7 +89,7 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 
 	auto mpair = GetColumnAndTypeFromTable(tb_select_info.table_name, GetCp().GetCurrentPath());
 	// 打包查找条件
-	for (int i = name_where_index + 1; i < sen_str.size(); i++)
+	for (int i = name_where_index + 1; i < sen_str.size();)
 	{
 		Column_Cell column_cell;
 		column_cell.columu_name = sen_str[i];
@@ -117,8 +117,23 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 			break;
 		}
 		CompareCell cmp_cell(GetOperatorType(sen_str[i+1]), column_cell);
-		//tb_select_info.
+		tb_select_info.vec_cmp_cell.push_back(cmp_cell);
+
+		// 下一个查找条件
+		if (StrToLower(sen_str[i + 3]) == "and")
+		{
+			i += 4;
+		}
+		else if (StrToLower(sen_str[i + 3]) == ";")
+		{
+			break;
+		}
+		else
+		{
+			throw SQLError::CMD_FORMAT_ERROR();
+		}
 	}
+	return tb_select_info;
 }
 
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
@@ -377,7 +392,10 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window)
 {
 	auto &cp = GetCp();
-	
+	TB_Select_Info tb_select_info;
+	std::vector<FileAddr> fds;
+	RecordHead record_head;
+	auto pcolumn = record_head.GetFirstColumn();
 	switch (cmd_type)
 	{
 	case CmdType::TABLE_CREATE:      // 创建表
@@ -393,6 +411,33 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	case CmdType::TABLE_SELECT:      // 选择表的特定记录
+		tb_select_info = TableSelectInfo(sen_str);
+		fds = RangeSearch(tb_select_info.vec_cmp_cell[0], tb_select_info.table_name, cp.GetCurrentPath());
+		for (int i = 0; i < fds.size(); i++)
+		{
+			record_head = GetDbfRecord(tb_select_info.table_name, fds[i], cp.GetCurrentPath());
+			pcolumn = record_head.GetFirstColumn();
+			while (pcolumn)
+			{
+				switch (pcolumn->column_type)
+				{
+				case Column_Type::I:
+					std::cout << pcolumn->column_value.IntValue << "\t";
+					break;
+				case Column_Type::D:
+					std::cout << pcolumn->column_value.DoubleValue << "\t";
+					break;
+				case Column_Type::C:
+					std::cout << pcolumn->column_value.StrValue << "\t";
+					break;
+				default:
+					break;
+				}
+				pcolumn = pcolumn->next;
+			}
+			std::cout << std::endl;
+		}
+		
 		break;
 
 	case CmdType::TABLE_INSERT:      // 插入新的记录

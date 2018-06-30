@@ -40,7 +40,7 @@ void SensefulStr::Parse()
 			continue;
 		}
 
-		else if (src_str[i] == ',' || src_str[i] == '(' || src_str[i] == ')' || src_str[i] == '=')
+		else if (src_str[i] == ',' || src_str[i] == '(' || src_str[i] == ')')// || src_str[i] == '=')
 		{
 			if (!token.empty())
 				sen_str.push_back(token);

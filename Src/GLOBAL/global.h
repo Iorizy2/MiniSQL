@@ -164,11 +164,12 @@ struct TB_Insert_Info
 	std::vector<InsertInfo> insert_info;
 };
 
+class CompareCell;
 struct TB_Select_Info
 {
 	std::string table_name;                        // 选择的表名
 	std::vector<std::string> name_selected_column; // 选择的字段名字
-	//std::vector<CompareCell> vec_cmp_cell;         // 选择条件
+	std::vector<CompareCell> vec_cmp_cell;         // 选择条件
 };
 
 // 目录定位和切换 用于数据库和表的使用

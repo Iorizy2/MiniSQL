@@ -426,6 +426,8 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 	auto pdata = (char*)GetGlobalFileBuffer()[dbf_file.c_str()]->ReadRecord(&fd);
 	pdata += sizeof(FileAddr);  // 每条记录头部默认添加该记录的地址值
 
+	auto vec_name_type = GetColumnAndTypeFromTable(table_name, path);
+	int index = 0;
 	while (*pRecTypeInfo != '\0')
 	{
 		Column_Cell cc;
@@ -433,20 +435,25 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 		{
 		case 'I':
 			cc.column_type = Column_Type::I;
+			cc.columu_name = vec_name_type[index].first;
 			cc.column_value.IntValue = *(int*)pdata;
 			pdata += sizeof(int);
 			record_head.AddColumnCell(cc);
+			index++;
 			break;
 
 		case 'D':
 			cc.column_type = Column_Type::D;
+			cc.columu_name = vec_name_type[index].first;
 			cc.column_value.DoubleValue = *(double*)pdata;
 			pdata += sizeof(double);
 			record_head.AddColumnCell(cc);
+			index++;
 			break;
 
 		case 'C':
 			cc.column_type = Column_Type::C;
+			cc.columu_name = vec_name_type[index].first;
 			// 读取字符串长度
 			int sz = 0;
 			sz = (*(pRecTypeInfo + 1) - '0') * 100 + (*(pRecTypeInfo + 2) - '0') * 10 + (*(pRecTypeInfo + 3) - '0');
@@ -455,6 +462,7 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 			cc.column_value.StrValue = pchar;
 			pdata += sz;
 			record_head.AddColumnCell(cc);
+			index++;
 			break;
 		}
 		pRecTypeInfo++;
@@ -467,27 +475,27 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 Operator_Type GetOperatorType(std::string s)
 {
 	s = StrToLower(s);
-	if (s == "b")
+	if (s == ">")
 	{
 		return Operator_Type::B;
 	}
-	else if (s == "be")
+	else if (s == ">=")
 	{
 		return Operator_Type::BE;
 	}
-	else if (s == "l")
+	else if (s == "<")
 	{
 		return Operator_Type::L;
 	}
-	else if (s == "le")
+	else if (s == "<=")
 	{
 		return Operator_Type::LE;
 	}
-	else if (s == "e")
+	else if (s == "=")
 	{
 		return Operator_Type::E;
 	}
-	else if (s == "ne")
+	else if (s == "!=")
 	{
 		return Operator_Type::NE;
 	}
@@ -580,13 +588,14 @@ std::vector<FileAddr> RangeSearch(CompareCell compare_cell, std::string table_na
 		for (int i = 0; i < pNode->count_valid_key; i++)
 		{
 			RecordHead record = GetDbfRecord(table_name, pNode->children[i], path);
+
 			// 查找比较的字段
 			auto pColumn = record.GetFirstColumn();
-			while (pColumn->columu_name != compare_cell.cmp_value.columu_name)pColumn = pColumn->next;
+			while (pColumn && pColumn->columu_name != compare_cell.cmp_value.columu_name)pColumn = pColumn->next;
 			bool isSearched = compare_cell(*pColumn);
 			if (isSearched)  // 满足条件
 			{
-				res.push_back(node_fd);
+				res.push_back(pNode->children[i]);
 			}
 		}
 		// 下一个数据结点
