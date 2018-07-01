@@ -59,6 +59,7 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
 std::string DropTableInfo(std::vector<std::string> sen_str);
 TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str);  //生成select操作所需的信息
 TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str);
+TB_Delete_Info TableDeleteInfo(std::vector<std::string> sen_str);
 //TB_Update_Info
 // 返回有意字串的操作类型,同时做类型检查
 CmdType GetOpType(std::vector<std::string> sen_str);

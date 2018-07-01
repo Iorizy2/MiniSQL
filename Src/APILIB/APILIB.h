@@ -56,8 +56,10 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string(
 SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path = std::string("./"));
 
 // 更新记录 
-bool UpdateTable(TB_Update_Info, std::string path = std::string("./"));
+bool UpdateTable(TB_Update_Info tb_update_info, std::string path = std::string("./"));
 
+// 删除记录
+bool DeleteTable(TB_Delete_Info tb_delete_info, std::string path = std::string("./"));
 // 打印整张表
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path = std::string("./"));
 

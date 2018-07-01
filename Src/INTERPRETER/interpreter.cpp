@@ -91,33 +91,8 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 	// 打包查找条件
 	for (int i = name_where_index + 1; i < sen_str.size();)
 	{
-		/*Column_Cell column_cell;
-		column_cell.columu_name = sen_str[i];
-		Column_Type tmp = GetType(sen_str[i], mpair);
-		char*pChar = nullptr;
-		switch (tmp)
-		{
-		case Column_Type::I:
-			column_cell.column_type = Column_Type::I;
-			column_cell.column_value.IntValue = stoi(sen_str[i + 2]);
+		if (StrToLower(sen_str[i]) == ";")
 			break;
-
-		case Column_Type::C:
-			column_cell.column_type = Column_Type::C;
-			pChar = (char*)malloc(sen_str[i + 2].size() + 1);
-			strcpy(pChar, sen_str[i + 2].c_str());
-			column_cell.column_value.StrValue = pChar;
-			break;
-
-		case Column_Type::D:
-			column_cell.column_type = Column_Type::D;
-			column_cell.column_value.IntValue = stod(sen_str[i + 2]);
-			break;
-		default:
-			break;
-		}
-		CompareCell cmp_cell(GetOperatorType(sen_str[i+1]), column_cell);*/
-
 	    CompareCell cmp_cell = CreateCmpCell(sen_str[i], GetType(sen_str[i], mpair), GetOperatorType(sen_str[i + 1]), sen_str[i + 2]);
 		tb_select_info.vec_cmp_cell.push_back(cmp_cell);
 
@@ -180,6 +155,25 @@ TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str)
 	}
 	tb_update_info.table_name = sen_str[UPDATE + 1];
 	return tb_update_info;
+}
+
+TB_Delete_Info TableDeleteInfo(std::vector<std::string> sen_str)
+{
+	TB_Delete_Info tb_delete_info;
+	tb_delete_info.table_name = sen_str[2];
+
+	for (int i = 4; i < sen_str.size(); )
+	{
+		if (sen_str[i] == ";")
+			break;
+		TB_Delete_Info::Expr expr;
+		expr.field = sen_str[i];
+		expr.op = sen_str[i + 1];
+		expr.value = sen_str[i + 2];
+		tb_delete_info.expr.push_back(expr);
+		i += 4;
+	}
+	return tb_delete_info;
 }
 
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
@@ -725,6 +719,7 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 
 
 	case CmdType::TABLE_DELETE:      // 删除表的记录
+		DeleteTable(TableDeleteInfo(sen_str), cp.GetCurrentPath());
 		break;
 
 	case CmdType::DB_CREATE:         // 创建数据库

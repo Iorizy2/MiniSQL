@@ -426,30 +426,53 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= 
 {
 	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	std::vector<std::pair<KeyAttr, FileAddr>> fds;
-
-	for (int i = 0; i < tb_select_info.vec_cmp_cell.size(); i++)
+	if (tb_select_info.vec_cmp_cell.empty())  // 查找所有记录
 	{
-		// 查找满足单个字段的记录
-		fds = Search(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
-		// 新的结果和之前的结果求交集
-		if (res.empty())
+		// 索引文件名
+		std::string file_idx = path + tb_select_info.table_name + ".idx";
+
+		// 读取索引 信息
+		BTree tree(file_idx);
+		auto phead = tree.GetPtrIndexHeadNode();
+
+		// 第一个数据结点地址
+		auto node_fd = phead->MostLeftNode;
+
+		while (node_fd.offSet != 0)
 		{
-			res = fds;
+			//取出结点内记录
+			auto pNode = tree.FileAddrToMemPtr(node_fd);
+			for (int i = 0; i < pNode->count_valid_key; i++)
+			{
+				res.push_back({ pNode->key[i], pNode->children[i] });
+			}
+			// 下一个数据结点
+			node_fd = tree.FileAddrToMemPtr(node_fd)->next;
 		}
-		else
-		{
-			std::vector<std::pair<KeyAttr, FileAddr>> v;
-			sort(fds.begin(), fds.end());
-			sort(res.begin(), res.end());
-			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
-			res = v;
-		}
-		
 	}
-	//fds = RangeSearch(tb_select_info.vec_cmp_cell[0], tb_select_info.table_name, GetCp().GetCurrentPath());
+	else
+	{
+		for (int i = 0; i < tb_select_info.vec_cmp_cell.size(); i++)
+		{
+			// 查找满足单个字段的记录
+			fds = Search(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
+			// 新的结果和之前的结果求交集
+			if (res.empty())
+			{
+				res = fds;
+			}
+			else
+			{
+				std::vector<std::pair<KeyAttr, FileAddr>> v;
+				sort(fds.begin(), fds.end());
+				sort(res.begin(), res.end());
+				set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
+				res = v;
+			}
 
-
-
+		}
+	}
+	
 	SelectPrintInfo spi;
 	spi.table_name = tb_select_info.table_name;
 	spi.name_selected_column = tb_select_info.name_selected_column;
@@ -499,10 +522,6 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 		col_name.push_back(pColumnName);
 		pColumnName += ColumnNameLength;
 	}
-
-
-
-
 
 	// 将更新操作的expr条件封装成查找条件
 	std::vector<CompareCell> cmp_cells;
@@ -633,6 +652,58 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 			tree.Insert(new_key, res[i].second);
 		}
 	}
+	return true;
+}
+
+bool DeleteTable(TB_Delete_Info tb_delete_info, std::string path /*= std::string("./")*/)
+{
+	std::string file_idx = path + tb_delete_info.table_name + ".idx";
+	std::string file_dbf = path + tb_delete_info.table_name + ".dbf";
+
+	// 将更新操作的expr条件封装成查找条件
+	std::vector<CompareCell> cmp_cells;
+	auto fields_name = GetColumnAndTypeFromTable(tb_delete_info.table_name, GetCp().GetCurrentPath());
+
+	for (int i = 0; i < tb_delete_info.expr.size(); i++)
+	{
+		CompareCell cmp_cell = CreateCmpCell(tb_delete_info.expr[i].field, GetType(tb_delete_info.expr[i].field, fields_name)
+			, GetOperatorType(tb_delete_info.expr[i].op), tb_delete_info.expr[i].value);
+		cmp_cells.push_back(cmp_cell);
+	}
+
+	// 查找满足更新条件的字段
+	std::vector<std::pair<KeyAttr, FileAddr>> res;
+	std::vector<std::pair<KeyAttr, FileAddr>> fds;
+	// 否则
+	for (int i = 0; i < cmp_cells.size(); i++)
+	{
+		// 查找满足单个字段的记录
+		fds = Search(cmp_cells[i], tb_delete_info.table_name, GetCp().GetCurrentPath());
+		// 新的结果和之前的结果求交集
+		if (res.empty())
+		{
+			res = fds;
+		}
+		else
+		{
+			std::vector<std::pair<KeyAttr, FileAddr>> v;
+			sort(fds.begin(), fds.end());
+			sort(res.begin(), res.end());
+			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
+			res = v;
+		}
+
+	}
+
+	// 删除所有删除的结果
+	BTree tree(file_idx);
+	Record record;
+	for (int i = 0; i < res.size(); i++)
+	{
+		tree.Delete(res[i].first);
+		record.DeleteRecord(file_dbf, res[i].second, 0);
+	}
+	
 	return true;
 }
 

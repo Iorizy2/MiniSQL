@@ -206,6 +206,17 @@ struct TB_Update_Info
 	std::vector<NewValue> field_value;  // 字段——值 向量
 	std::vector<Expr> expr;             // 跟新的字段条件
 };
+
+struct TB_Delete_Info
+{
+	using Expr = struct {
+		std::string field;
+		std::string op;
+		std::string value;
+	};
+	std::string table_name;
+	std::vector<Expr> expr;             // 删除的字段条件
+};
 // 目录定位和切换 用于数据库和表的使用
 class CatalogPosition
 {
