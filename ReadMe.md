@@ -66,10 +66,10 @@
 - 条件查找记录
 
   ```
-  SEARCH table_name where contion_expr;
+  SELECT * FROM table_name where contion_expr;
   ```
+  
 
-- 添加字段
 
 
 

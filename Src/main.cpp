@@ -111,7 +111,7 @@ void InitMiniSQL()
 	std::cout << "|                                                               |" << std::endl;
 	std::cout << "|Contact: ReFantasy.cn                                          |" << std::endl;
 	std::cout << "|                                                               |" << std::endl;
-	std::cout << "|Copyright(c) by ReFantasy.All rights reserved.                 |" << std::endl;
+	std::cout << "|Copyright(c) by TDL/ReFantasy.All rights reserved.             |" << std::endl;
 	std::cout << "+---------------------------------------------------------------+" << std::endl;
 }
 
@@ -141,6 +141,7 @@ void RunMiniSQL()
 		{
 			SQLError::DispatchError(e);
 			cout << endl;
+			continue;
 		}
 
 	}

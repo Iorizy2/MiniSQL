@@ -658,6 +658,8 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 	auto table_name = select_table_print_info.table_name;
 	auto pcolumn = record_head.GetFirstColumn();
 
+	if (select_table_print_info.name_selected_column.size() == 1 && select_table_print_info.name_selected_column[0] == "*")
+		select_table_print_info.name_selected_column = col_name;
 	// 第一遍 只计算输出长度
 	
 	for (int i = 0; i < fds.size(); i++)
@@ -668,9 +670,9 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 		while (pcolumn)
 		{
 			int isPrint = false;
-			for (int i = 0; i < col_name.size(); i++)
+			for (int i = 0; i <select_table_print_info.name_selected_column.size(); i++)
 			{
-				if (col_name[i] == pcolumn->columu_name)
+				if (select_table_print_info.name_selected_column[i] == pcolumn->columu_name)
 				{
 					isPrint = true;
 					break;
@@ -733,9 +735,9 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 		while (pcolumn)
 		{
 			int isPrint = false;
-			for (int i = 0; i < col_name.size(); i++)
+			for (int i = 0; i < select_table_print_info.name_selected_column.size(); i++)
 			{
-				if (col_name[i] == pcolumn->columu_name)
+				if (select_table_print_info.name_selected_column[i] == pcolumn->columu_name)
 				{
 					isPrint = true;
 					break;
