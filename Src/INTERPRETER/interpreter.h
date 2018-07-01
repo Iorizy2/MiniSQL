@@ -21,10 +21,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <iomanip>
 #include "../RECORD/Record.h"
 #include "../APILIB/APILIB.h"
 // 打印命令行窗口，使底层实现和GUI分离，便于扩展
-//class SelectPrintInfo;
+#define PRINTLENGTH 63
 class PrintWindow
 {
 public:
@@ -37,6 +38,10 @@ public:
 	void DropDB(bool is_dropped);
 	void ShowDB(std::vector<std::string> db_names);
 	void UseDB(bool isUsed);
+private:
+	void Print(int len, std::string s); // 打印 |xxxx        | 其中竖线内长度为 len
+	int GetColumnLength(std::string name,std::vector<std::string> col_name, std::vector<int> col_len);
+	
 };
 
 

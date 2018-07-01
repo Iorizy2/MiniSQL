@@ -524,11 +524,11 @@ void PrintWindow::CreateTable(bool is_created)
 {
 	if (is_created)
 	{
-		std::cout << "创建成功" << std::endl;
+		std::cout << "table create succeed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "创建失败" << std::endl;
+		std::cout << "table create failed!" << std::endl;
 	}
 }
 
@@ -536,6 +536,15 @@ void PrintWindow::CreateTable(bool is_created)
 
 void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string path)
 {
+	std::cout << "There are all the tables !" << std::endl;
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	Print(PRINTLENGTH, "table");
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	
+	
+
+
+
 	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
 	{
 		throw SQLError::CMD_FORMAT_ERROR("Not use database or ");
@@ -577,24 +586,66 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string pat
 	// 排序
 	std::sort(tables.begin(), tables.end());
 	for (auto e : tables)
-		std::cout << e << std::endl;
+		Print(PRINTLENGTH, e);
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
 }
 
 void PrintWindow::DropTable(bool is_dropped)
 {
 	if (is_dropped)
 	{
-		std::cout << "删除表成功" << std::endl;
+		std::cout << "Drop table succeed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "删除表失败，表不存在或者没有使用数据库" << std::endl;
+		std::cout << "Drop table succeed!" << std::endl;
 	}
 }
 
 
 void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 {
+	std::string idx_file = GetCp().GetCurrentPath() + select_table_print_info.table_name + ".idx";
+	std::string dbf_file = GetCp().GetCurrentPath() + select_table_print_info.table_name + ".dbf";
+	BTree tree(idx_file);
+	auto phead = tree.GetPtrIndexHeadNode();
+	std::vector<std::string> col_name;
+	std::vector<std::string> out_col_name;
+	std::vector<int> col_len;
+	int n_output_col = 0;  // 输出的字段个数
+	int total_length = 0;  // 记录的总长度
+
+	int sz_col = 0;// 字段个数
+	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
+	{
+		if (phead->RecordTypeInfo[i] == 'I')
+		{
+			col_len.push_back(sizeof(int)+10);
+			sz_col++;
+		}
+		if (phead->RecordTypeInfo[i] == 'D')
+		{
+			col_len.push_back(sizeof(double)+16);
+			sz_col++;
+		}
+		if (phead->RecordTypeInfo[i] == 'C')
+		{
+			int len = (phead->RecordTypeInfo[i + 1] - '0') * 100 + (phead->RecordTypeInfo[i + 2] - '0') * 10 + (phead->RecordTypeInfo[i + 3] - '0');
+			col_len.push_back(len);
+			sz_col++;
+		}
+	}
+	char *pColumnName = phead->RecordColumnName;
+	for (int j = 0; j < sz_col; j++)
+	{
+		col_name.push_back(pColumnName);
+		pColumnName += ColumnNameLength;
+	}
+
+
+
+	
+
 	RecordHead record_head;
 	std::vector<FileAddr> fds;
 	for (int i = 0; i < select_table_print_info.key_fd.size(); i++)
@@ -602,31 +653,124 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 	
 	auto table_name = select_table_print_info.table_name;
 	auto pcolumn = record_head.GetFirstColumn();
+
+	// 第一遍 只计算输出长度
 	
 	for (int i = 0; i < fds.size(); i++)
 	{
 		record_head = GetDbfRecord(table_name, fds[i], GetCp().GetCurrentPath());
 		pcolumn = record_head.GetFirstColumn();
+		if (i != 0)break;
 		while (pcolumn)
 		{
-			switch (pcolumn->column_type)
+			int isPrint = false;
+			for (int i = 0; i < col_name.size(); i++)
 			{
-			case Column_Type::I:
-				std::cout << pcolumn->column_value.IntValue << "\t";
-				break;
-			case Column_Type::D:
-				std::cout << pcolumn->column_value.DoubleValue << "\t";
-				break;
-			case Column_Type::C:
-				std::cout << pcolumn->column_value.StrValue << "\t";
-				break;
-			default:
-				break;
+				if (col_name[i] == pcolumn->columu_name)
+				{
+					isPrint = true;
+					break;
+				}
 			}
+			if (isPrint)
+			{
+				switch (pcolumn->column_type)
+				{
+				case Column_Type::I:
+					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					if (i == 0)n_output_col++;
+					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
+					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.IntValue;
+					break;
+				case Column_Type::D:
+					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					if (i == 0)n_output_col++;
+					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
+					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.DoubleValue;
+					break;
+				case Column_Type::C:
+					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					if (i == 0)n_output_col++;
+					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
+					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.StrValue;
+					break;
+				default:
+					break;
+				}
+			}
+			
 			pcolumn = pcolumn->next;
 		}
+		//std::cout << "|";
+		//std::cout << std::endl;
+	}
+	// 输出头部
+	std::cout << "+";
+	for (int i = 0; i < total_length + n_output_col - 1; i++)
+		std::cout << "-";
+	std::cout << "+" << std::endl;
+	// 输出各个字段名称
+	for (auto e : out_col_name)
+	{
+		std::cout << "|" << std::left << std::setw(GetColumnLength(e, col_name, col_len)) << e;
+	}
+	std::cout << "|" << std::endl;
+	std::cout << "+";
+	for (int i = 0; i < total_length + n_output_col - 1; i++)
+		std::cout << "-";
+	std::cout << "+" << std::endl;
+
+	// 第二遍 真正输出
+	for (int i = 0; i < fds.size(); i++)
+	{
+		record_head = GetDbfRecord(table_name, fds[i], GetCp().GetCurrentPath());
+		pcolumn = record_head.GetFirstColumn();
+
+		while (pcolumn)
+		{
+			int isPrint = false;
+			for (int i = 0; i < col_name.size(); i++)
+			{
+				if (col_name[i] == pcolumn->columu_name)
+				{
+					isPrint = true;
+					break;
+				}
+			}
+			if (isPrint)
+			{
+				switch (pcolumn->column_type)
+				{
+				case Column_Type::I:
+					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					//if (i == 0)n_output_col++;
+					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.IntValue;
+					break;
+				case Column_Type::D:
+					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					//if (i == 0)n_output_col++;
+					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.DoubleValue;
+					break;
+				case Column_Type::C:
+					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
+					//if (i == 0)n_output_col++;
+					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.StrValue;
+					break;
+				default:
+					break;
+				}
+			}
+
+			pcolumn = pcolumn->next;
+		}
+		std::cout << "|";
 		std::cout << std::endl;
 	}
+	// 输出最后一行
+	std::cout << "+";
+	for (int i = 0; i < total_length + n_output_col - 1; i++)
+		std::cout << "-";
+	std::cout << "+" << std::endl;
 }
 
 void PrintWindow::InsertRecord(bool is_inserted)
@@ -667,22 +811,51 @@ void PrintWindow::DropDB(bool is_dropped)
 
 void PrintWindow::ShowDB(std::vector<std::string> db_names)
 {
+	std::cout << "There are all the databases !" << std::endl;
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	Print(PRINTLENGTH, "Database");
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
 	for (auto e : db_names)
-		std::cout << e << std::endl;
+	{
+		Print(PRINTLENGTH, e);
+	}
+	std::cout << "+---------------------------------------------------------------+" << std::endl;
 }
 
 void PrintWindow::UseDB(bool isUsed)
 {
 	if (isUsed)
 	{
-		std::cout << "选择数据库成功" << std::endl;
+		std::cout << "databae changed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "选择数据库失败" << std::endl;
+		std::cout << "database absent" << std::endl;
 	}
 }
 
+
+void PrintWindow::Print(int len, std::string s)
+{
+	std::cout << "|";
+	std::cout << s;
+	for (int i = 0; i < (PRINTLENGTH - s.size()); i++)std::cout << " ";
+	std::cout << "|";
+	std::cout << std::endl;
+
+}
+
+int PrintWindow::GetColumnLength(std::string name, std::vector<std::string> col_name, std::vector<int> col_len)
+{
+	for (int j = 0; j < col_name.size(); j++)
+	{
+		if (name == col_name[j])
+		{
+			return col_len[j]>col_name[j].size()? col_len[j]:col_name[j].size();
+		}
+	}
+	return 0;
+}
 
 void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window)
 {
