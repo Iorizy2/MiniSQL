@@ -141,7 +141,7 @@ public:
 	void AddColumnCell(const Column_Cell &cc);
 
 	size_t size()const;  // 返回整条记录的大小
-	const Column_Cell* GetFirstColumn()const;
+    Column_Cell* GetFirstColumn()const;
 	
 private:
 	Column_Cell *phead;  // 指向记录的第一个字段

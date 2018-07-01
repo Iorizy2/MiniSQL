@@ -91,7 +91,7 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 	// 打包查找条件
 	for (int i = name_where_index + 1; i < sen_str.size();)
 	{
-		Column_Cell column_cell;
+		/*Column_Cell column_cell;
 		column_cell.columu_name = sen_str[i];
 		Column_Type tmp = GetType(sen_str[i], mpair);
 		char*pChar = nullptr;
@@ -116,7 +116,9 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 		default:
 			break;
 		}
-		CompareCell cmp_cell(GetOperatorType(sen_str[i+1]), column_cell);
+		CompareCell cmp_cell(GetOperatorType(sen_str[i+1]), column_cell);*/
+
+	    CompareCell cmp_cell = CreateCmpCell(sen_str[i], GetType(sen_str[i], mpair), GetOperatorType(sen_str[i + 1]), sen_str[i + 2]);
 		tb_select_info.vec_cmp_cell.push_back(cmp_cell);
 
 		// 下一个查找条件
@@ -134,6 +136,50 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 		}
 	}
 	return tb_select_info;
+}
+
+TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str)
+{
+	// TODO 语法检擦
+
+	TB_Update_Info tb_update_info;
+	int UPDATE = 0;
+	int SET = 2;
+	int WHERE = 0;
+	for (int i = 0; i < sen_str.size(); i++)
+	{
+		if (StrToLower(sen_str[i]) == "where")
+		{
+			WHERE = i;
+			break;
+		}
+	}
+
+	// 新的字段值
+	for (int j = SET + 1; j != WHERE;)
+	{
+		TB_Update_Info::NewValue new_value;
+		new_value.field = sen_str[j];
+		new_value.value = sen_str[j + 2];
+		tb_update_info.field_value.push_back(new_value);
+		if (sen_str[j + 3] == ",")
+			j += 4;
+		else
+			j += 3;
+	}
+
+	// 需要更新的字段条件
+	for (int j = WHERE + 1; j < sen_str.size();)
+	{
+		TB_Update_Info::Expr expr;
+		expr.field = sen_str[j];
+		expr.op = sen_str[j + 1];
+		expr.value = sen_str[j + 2];
+		tb_update_info.expr.push_back(expr);
+		j += 4;
+	}
+	tb_update_info.table_name = sen_str[UPDATE + 1];
+	return tb_update_info;
 }
 
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
@@ -674,7 +720,10 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	case CmdType::TABLE_UPDATE:      // 更新表的记录
+		UpdateTable(TableUpdateInfo(sen_str), cp.GetCurrentPath());
 		break;
+
+
 	case CmdType::TABLE_DELETE:      // 删除表的记录
 		break;
 

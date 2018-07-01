@@ -190,6 +190,22 @@ struct TB_Select_Info
 	std::vector<CompareCell> vec_cmp_cell;         // 选择条件
 };
 
+struct TB_Update_Info
+{
+	using NewValue = struct {
+		std::string field;
+		std::string value;
+	};
+	using Expr = struct {
+		std::string field;
+		std::string op;
+		std::string value;
+	};
+
+	std::string table_name;
+	std::vector<NewValue> field_value;  // 字段——值 向量
+	std::vector<Expr> expr;             // 跟新的字段条件
+};
 // 目录定位和切换 用于数据库和表的使用
 class CatalogPosition
 {
@@ -224,5 +240,5 @@ std::string DbfToIdx(std::string idx_name);
 int StrToInt(std::string str);
 
 std::string StrToLower(std::string str);
-
+std::string IntToStr3(unsigned int x); // 小于1000的正数转为三个字符的字符串
 #endif

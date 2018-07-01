@@ -26,6 +26,7 @@ struct SelectPrintInfo
 	
 };
 
+
 // 创建数据库
 bool CreateDatabase(std::string database_name, CatalogPosition &cp);
 
@@ -54,6 +55,9 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path = std::string(
 // 选择记录
 SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path = std::string("./"));
 
+// 更新记录 
+bool UpdateTable(TB_Update_Info, std::string path = std::string("./"));
+
 // 打印整张表
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path = std::string("./"));
 
@@ -70,4 +74,7 @@ std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::
 std::vector<std::pair<KeyAttr, FileAddr>> KeySearch(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));  //主键查找
 std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));  // 遍历查找
 
+
+// 比较的字段名称，比较的字段类型，比较关系，比较的值
+CompareCell CreateCmpCell(std::string column_name, Column_Type column_type, Operator_Type Optype, std::string value);
 #endif //__MiniSql_H__

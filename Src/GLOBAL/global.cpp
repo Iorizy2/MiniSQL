@@ -136,6 +136,15 @@ std::string StrToLower(std::string str)
 
 
 
+std::string IntToStr3(unsigned int x)
+{
+	std::string str = "000";
+	str[2] = (x % 10) + '0';
+	str[0] = (x / 100) + '0';
+	str[1] = (x % 100)/10 + '0';
+	return str;
+}
+
 CatalogPosition& GetCp()
 {
 	static CatalogPosition cp;

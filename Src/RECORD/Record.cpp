@@ -49,7 +49,7 @@ size_t RecordHead::size() const
 	return sz;
 }
 
-const Column_Cell* RecordHead::GetFirstColumn()const
+ Column_Cell* RecordHead::GetFirstColumn()const
 {
 	return phead;
 }
