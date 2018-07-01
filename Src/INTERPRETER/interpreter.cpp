@@ -424,6 +424,10 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 	{
 		return CmdType::QUIT;
 	}
+	if (sen_str[0] == "help")
+	{
+		return CmdType::HELP;
+	}
 
 	throw SQLError::CMD_FORMAT_ERROR();
 
@@ -777,11 +781,11 @@ void PrintWindow::InsertRecord(bool is_inserted)
 {
 	if (is_inserted)
 	{
-		std::cout << "插入成功" << std::endl;
+		std::cout << "Insert succeed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "插入失败" << std::endl;
+		std::cout << "Insert succeed!" << std::endl;
 	}
 }
 
@@ -789,11 +793,11 @@ void PrintWindow::CreateDB(bool is_created)
 {
 	if (is_created)
 	{
-		std::cout << "创建成功" << std::endl;
+		std::cout << "Create succeed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "创建失败" << std::endl;
+		std::cout << "Create failed!" << std::endl;
 	}
 }
 
@@ -801,11 +805,11 @@ void PrintWindow::DropDB(bool is_dropped)
 {
 	if (is_dropped)
 	{
-		std::cout << "删除数据库成功" << std::endl;
+		std::cout << "Drop database succeed!" << std::endl;
 	}
 	else
 	{
-		std::cout << "删除数据库失败" << std::endl;
+		std::cout << "Drop database failed!" << std::endl;
 	}
 }
 
@@ -834,6 +838,30 @@ void PrintWindow::UseDB(bool isUsed)
 	}
 }
 
+
+void PrintWindow::UpdateTable(bool isUpdated)
+{
+	if (isUpdated)
+	{
+		std::cout << "Update succeed!" << std::endl;
+	}
+	else
+	{
+		std::cout << "Update failed" << std::endl;
+	}
+}
+
+void PrintWindow::DeleteTable(bool isDeleted)
+{
+	if (isDeleted)
+	{
+		std::cout << "Delete succeed!" << std::endl;
+	}
+	else
+	{
+		std::cout << "Delete failed" << std::endl;
+	}
+}
 
 void PrintWindow::Print(int len, std::string s)
 {
@@ -887,12 +915,12 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		break;
 
 	case CmdType::TABLE_UPDATE:      // 更新表的记录
-		UpdateTable(TableUpdateInfo(sen_str), cp.GetCurrentPath());
+		print_window.UpdateTable(UpdateTable(TableUpdateInfo(sen_str), cp.GetCurrentPath()));
 		break;
 
 
 	case CmdType::TABLE_DELETE:      // 删除表的记录
-		DeleteTable(TableDeleteInfo(sen_str), cp.GetCurrentPath());
+		print_window.DeleteTable(DeleteTable(TableDeleteInfo(sen_str), cp.GetCurrentPath()));
 		break;
 
 	case CmdType::DB_CREATE:         // 创建数据库

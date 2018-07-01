@@ -20,9 +20,10 @@ void MySleep(unsigned int n); // 程序睡眠
 
 // 读取用户的输入，以 ";"结束
 std::string GetCommand();
-
+void Help();
 void InitMiniSQL();
 void RunMiniSQL();
+
 int main()
 {
 	// 初始化
@@ -76,6 +77,28 @@ void IsPod()
 }
 
 
+void Help()
+{
+	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
+	std::cout << "|A simple example to create a student databae named STU                                       |" << std::endl;
+	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
+	std::cout << "|Create database :create database STU;                                                        |" << std::endl;
+	std::cout << "|Use database    :use database STU;                                                           |" << std::endl;
+	std::cout << "|Show database   :show databases;                                                             |" << std::endl;
+	std::cout << "|Create Table    :create table student(id int primary, socre double, name char(20));          |" << std::endl;
+	std::cout << "|Insert Record(1):insert into student(id,score,name)values(1,95.5,ZhangSan);                  |" << std::endl;
+	std::cout << "|Insert Record(2):insert into student(id,name)values(2,LiSi); Note:LiSi has no score          |" << std::endl; 
+	std::cout << "|UPDATE Table    :update student set score = 96.5 where name = LiSi;                          |" << std::endl;
+	std::cout << "|Delete Table    :delete from student where id = 1; Note: ZhangSan is deleted                 |" << std::endl;
+	std::cout << "|Select Table(1) :select * from student where id = 2;                                         |" << std::endl;
+	std::cout << "|Select Table(2) :select * from student where id > 1 and score < 98;                          |" << std::endl;
+	std::cout << "|Select Table(3) :select id,score from student where id > 1 and score < 98;                   |" << std::endl;
+	std::cout << "|Drop database   :drop database STU;                                                          |" << std::endl;
+	std::cout << "|Quit   :quit;                                                                                |" << std::endl;
+	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
+}
+
+
 void InitMiniSQL()
 {
 	std::cout << "                  WELCOME TO USE MY MINISQL!" << std::endl;
@@ -106,6 +129,11 @@ void RunMiniSQL()
 			auto cmd_type = GetOpType(senstr.GetSensefulStr());
 
 			if (cmd_type == CmdType::QUIT)break;
+			if (cmd_type == CmdType::HELP)
+			{
+				Help();
+				continue;
+			}
 
 			Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
 		}
