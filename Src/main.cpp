@@ -60,7 +60,7 @@ void MySleep(unsigned int n)
 {
 	auto t1 = time(0);
 	time_t t2 = t1;
-	while ((t2 - t1) < 1)
+	while ((t2 - t1) < n)
 	{
 		t2 = time(0);
 	}
