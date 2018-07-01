@@ -15,13 +15,15 @@
 ****************************************************************************************************************************************/
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
-#include "../Src/ERROR/error.h"
-//#include <../BPLUSTREE/bptree.h>
+ 
 #include <vector>
 #include <string>
 #include <direct.h>
 #include <algorithm>
 
+//#define NDEBUG
+
+#include "../Src/ERROR/error.h"
 extern "C"
 {
 #include <io.h>
@@ -74,12 +76,13 @@ public:
 	Column_Type type;
 	Key_Value value;
 
-	bool operator<(const KeyAttr &rhs);
-	bool operator>(const KeyAttr &rhs);
-	bool operator==(const KeyAttr &rhs);
-	bool operator<=(const KeyAttr &rhs);
-	bool operator>=(const KeyAttr &rhs);
-	bool operator!=(const KeyAttr &rhs);
+	bool operator<(const KeyAttr &rhs)const;
+	bool operator>(const KeyAttr &rhs)const;
+	bool operator==(const KeyAttr &rhs)const;
+	bool operator<=(const KeyAttr &rhs)const;
+	bool operator>=(const KeyAttr &rhs)const;
+	bool operator!=(const KeyAttr &rhs)const;
+
 };
 std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 

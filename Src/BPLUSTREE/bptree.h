@@ -30,9 +30,9 @@
 class IndexHeadNode
 {
 public:
-	FileAddr    root;                                    // the address of the root
-	FileAddr    MostLeftNode;                            // the address of the most left node
-	int         KeyTypeIndex;                            // 关键字字段的位置
+	FileAddr    root;                                       // the address of the root
+	FileAddr    MostLeftNode;                               // the address of the most left node
+	int         KeyTypeIndex;                               // 关键字字段的位置
 	char        RecordTypeInfo[RecordColumnCount];          // 记录字段类型信息，
 	char        RecordColumnName[RecordColumnCount/4* ColumnNameLength];
 };

@@ -49,7 +49,29 @@ class Column_Cell
 {
 public:
 	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
+	Column_Cell(KeyAttr key)
+	{
+		int len = 0;
+		column_type = key.type;
+		switch (key.type)
+		{
+		case Column_Type::I:
+			column_value.IntValue = key.value.IntValue;
+			break;
 
+		case Column_Type::C:
+			len = strlen(key.value.StrValue) + 1;
+			column_value.StrValue = (char*)malloc(len);
+		    strcpy(column_value.StrValue, key.value.StrValue);
+			break;
+
+		case Column_Type::D:
+			column_value.DoubleValue = key.value.DoubleValue;
+			break;
+		default:
+			break;
+		}
+	}
 	Column_Cell(const Column_Cell& rhs); // øΩ±¥ππ‘Ï
 	Column_Cell& operator=(const Column_Cell&rhs); // øΩ±¥∏≥÷µ
 

@@ -390,20 +390,17 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= std::string("./")*/)
 {
-	std::vector<FileAddr> res;
-	std::vector<FileAddr> fds;
+	std::vector<std::pair<KeyAttr, FileAddr>> res;
+	std::vector<std::pair<KeyAttr, FileAddr>> fds;
 
 	// 如果是主键查找且查找操作是 等于
-
-
-
 
 	// 否则
 	for (int i = 0; i < tb_select_info.vec_cmp_cell.size(); i++)
 	{
 		// 查找满足单个字段的记录
-		fds = RangeSearch(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
-
+		//fds = RangeSearch(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
+		fds = Search(tb_select_info.vec_cmp_cell[i], tb_select_info.table_name, GetCp().GetCurrentPath());
 		// 新的结果和之前的结果求交集
 		if (res.empty())
 		{
@@ -411,7 +408,7 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= 
 		}
 		else
 		{
-			std::vector<FileAddr> v;
+			std::vector<std::pair<KeyAttr, FileAddr>> v;
 			sort(fds.begin(), fds.end());
 			sort(res.begin(), res.end());
 			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
@@ -426,7 +423,7 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= 
 	SelectPrintInfo spi;
 	spi.table_name = tb_select_info.table_name;
 	spi.name_selected_column = tb_select_info.name_selected_column;
-	spi.fds = res;
+	spi.key_fd = res;
 	return spi;
 }
 
@@ -609,10 +606,108 @@ Column_Type GetType(std::string name, std::vector<std::pair<std::string, Column_
 	return Column_Type::I;
 }
 
-std::vector<FileAddr> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path)
+std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::string table_name, std::string path /*= std::string("./")*/)
 {
 	// 保存查找结果
-	std::vector<FileAddr> res;
+	std::vector<std::pair<KeyAttr, FileAddr>> res;
+	// 索引文件名
+	std::string file_idx = path + table_name + ".idx";
+
+	// 读取索引 信息
+	BTree tree(file_idx);
+	auto phead = tree.GetPtrIndexHeadNode();
+
+	// 判断待查找的字段是否是主键字段
+	bool bKeyComumn = false;
+	int sz_col = 0;// 字段个数
+	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
+		if (phead->RecordTypeInfo[i] == 'I' || phead->RecordTypeInfo[i] == 'C' || phead->RecordTypeInfo[i] == 'D')sz_col++;
+	char *pColumnName = phead->RecordColumnName;
+	for (int j = 0; j < sz_col; j++)
+	{
+		if (compare_cell.cmp_value.columu_name == pColumnName)
+		{
+			bKeyComumn = true;
+			break;
+		}
+		pColumnName += ColumnNameLength;
+	}
+
+	if (bKeyComumn)
+	{
+#ifndef NDEBUG
+		std::cout << "主键查找" << std::endl;
+#endif
+		res = KeySearch(compare_cell, table_name, path);
+	}
+	else
+	{
+#ifndef NDEBUG
+		std::cout << "遍历查找" << std::endl;
+#endif
+		res = RangeSearch(compare_cell, table_name, path);
+	}
+
+	return res;
+}
+
+std::vector<std::pair<KeyAttr, FileAddr>> KeySearch(CompareCell compare_cell, std::string table_name, std::string path /*= std::string("./")*/)
+{
+	// 保存查找结果
+	std::vector<std::pair<KeyAttr, FileAddr>> res;
+	// 索引文件名
+	std::string file_idx = path + table_name + ".idx";
+
+	// 读取索引 信息
+	BTree tree(file_idx);
+	auto phead = tree.GetPtrIndexHeadNode();
+
+	// 如果是查找相等的值
+	if (compare_cell.OperType == Operator_Type::E)
+	{
+#ifndef NDEBUG
+		std::cout << "主键B+树查找" << std::endl;
+#endif
+		auto fd = tree.Search(compare_cell.cmp_value);
+		if (fd.offSet!=0)
+		{
+			res.push_back({ compare_cell.cmp_value , fd });
+		}
+	}
+	else  // 可优化::关键字二分查找
+	{
+#ifndef NDEBUG
+		std::cout << "主键索引遍历查找" << std::endl;
+#endif
+		// 第一个数据结点地址
+		auto node_fd = phead->MostLeftNode;
+
+		while (node_fd.offSet != 0)
+		{
+			//取出结点内记录
+			auto pNode = tree.FileAddrToMemPtr(node_fd);
+			for (int i = 0; i < pNode->count_valid_key; i++)
+			{
+				// 查找比较的字段
+				Column_Cell cc(pNode->key[i]);
+				bool isSearched = compare_cell(cc);
+				if (isSearched)  // 满足条件
+				{
+					res.push_back({ pNode->key[i] ,pNode->children[i] });
+				}
+			}
+			// 下一个数据结点
+			node_fd = tree.FileAddrToMemPtr(node_fd)->next;
+		}
+	}
+
+	return res;
+}
+
+std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path)
+{
+	// 保存查找结果
+	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	// 索引文件名
 	std::string file_idx = path + table_name + ".idx";
 
@@ -637,7 +732,7 @@ std::vector<FileAddr> RangeSearch(CompareCell compare_cell, std::string table_na
 			bool isSearched = compare_cell(*pColumn);
 			if (isSearched)  // 满足条件
 			{
-				res.push_back(pNode->children[i]);
+				res.push_back({ pNode->key[i] ,pNode->children[i] });
 			}
 		}
 		// 下一个数据结点

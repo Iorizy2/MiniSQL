@@ -211,7 +211,7 @@ std::string CatalogPosition::SetCurrentPath(std::string cur)
 }
 
 
-bool KeyAttr::operator<(const KeyAttr &rhs)
+bool KeyAttr::operator<(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;
@@ -241,7 +241,7 @@ bool KeyAttr::operator<(const KeyAttr &rhs)
 	return res;
 }
 
-bool KeyAttr::operator>(const KeyAttr &rhs)
+bool KeyAttr::operator>(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;
@@ -271,7 +271,7 @@ bool KeyAttr::operator>(const KeyAttr &rhs)
 	return res;
 }
 
-bool KeyAttr::operator>=(const KeyAttr &rhs)
+bool KeyAttr::operator>=(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;
@@ -279,7 +279,7 @@ bool KeyAttr::operator>=(const KeyAttr &rhs)
 	return !(*this < rhs);
 }
 
-bool KeyAttr::operator!=(const KeyAttr &rhs)
+bool KeyAttr::operator!=(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;
@@ -287,7 +287,7 @@ bool KeyAttr::operator!=(const KeyAttr &rhs)
 	return !(*this == rhs);
 }
 
-bool KeyAttr::operator<=(const KeyAttr &rhs)
+bool KeyAttr::operator<=(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;
@@ -295,7 +295,7 @@ bool KeyAttr::operator<=(const KeyAttr &rhs)
 	return !(*this > rhs);
 }
 
-bool KeyAttr::operator==(const KeyAttr &rhs)
+bool KeyAttr::operator==(const KeyAttr &rhs)const
 {
 	if (this->type != rhs.type)
 		return false;

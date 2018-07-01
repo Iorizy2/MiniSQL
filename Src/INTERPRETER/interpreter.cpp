@@ -389,66 +389,6 @@ CmdType GetOpType(std::vector<std::string> sen_str)
 
 }
 
-void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window)
-{
-	auto &cp = GetCp();
-	TB_Select_Info tb_select_info;
-	std::vector<FileAddr> fds;
-	
-
-	switch (cmd_type)
-	{
-	case CmdType::TABLE_CREATE:      // 创建表
-		print_window.CreateTable(CreateTable(CreateTableInfo(sen_str), cp.GetCurrentPath()));
-		break;
-
-	case CmdType::TABLE_DROP:        // 删除表
-		print_window.DropTable(DropTable(DropTableInfo(sen_str), cp.GetCurrentPath()));
-		break;
-
-	case CmdType::TABLE_SHOW:        // 列出当前数据库下所有表
-		print_window.ShowAllTable(sen_str, cp.GetCurrentPath());
-		break;
-
-	case CmdType::TABLE_SELECT:      // 选择表的特定记录
-
-
-
-		
-		print_window.SelectTable(SelectTable(TableSelectInfo(sen_str), cp.GetCurrentPath()));
-		
-		break;
-
-	case CmdType::TABLE_INSERT:      // 插入新的记录
-		print_window.InsertRecord(InsertRecord(CreateInsertInfo(sen_str), cp.GetCurrentPath()));
-		break;
-
-	case CmdType::TABLE_UPDATE:      // 更新表的记录
-		break;
-	case CmdType::TABLE_DELETE:      // 删除表的记录
-		break;
-
-	case CmdType::DB_CREATE:         // 创建数据库
-		print_window.CreateDB(CreateDatabase(CreateDbInfo(sen_str), cp));
-		break;
-
-	case CmdType::DB_DROP:           // 删除数据库
-		print_window.DropDB(DropDatabase(DeleteDbInfo(sen_str), cp));
-		break;
-
-	case CmdType::DB_SHOW:           // 列出所有数据库
-		print_window.ShowDB(ShowDatabase(cp));
-		break;
-
-	case CmdType::DB_USE:            // 使用数据库
-		print_window.UseDB(UseDatabase(UseDbInfo(sen_str), cp));
-		break;
-
-	default:
-		throw SQLError::CMD_FORMAT_ERROR();
-		break;
-	}
-}
 
 bool CompareCell::operator()(const Column_Cell &cc)
 {
@@ -616,7 +556,10 @@ void PrintWindow::DropTable(bool is_dropped)
 void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 {
 	RecordHead record_head;
-	auto fds = select_table_print_info.fds;
+	std::vector<FileAddr> fds;
+	for (int i = 0; i < select_table_print_info.key_fd.size(); i++)
+		fds.push_back(select_table_print_info.key_fd[i].second);
+	
 	auto table_name = select_table_print_info.table_name;
 	auto pcolumn = record_head.GetFirstColumn();
 	
@@ -697,5 +640,62 @@ void PrintWindow::UseDB(bool isUsed)
 	else
 	{
 		std::cout << "选择数据库失败" << std::endl;
+	}
+}
+
+
+void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window)
+{
+	auto &cp = GetCp();
+	TB_Select_Info tb_select_info;
+	std::vector<FileAddr> fds;
+
+
+	switch (cmd_type)
+	{
+	case CmdType::TABLE_CREATE:      // 创建表
+		print_window.CreateTable(CreateTable(CreateTableInfo(sen_str), cp.GetCurrentPath()));
+		break;
+
+	case CmdType::TABLE_DROP:        // 删除表
+		print_window.DropTable(DropTable(DropTableInfo(sen_str), cp.GetCurrentPath()));
+		break;
+
+	case CmdType::TABLE_SHOW:        // 列出当前数据库下所有表
+		print_window.ShowAllTable(sen_str, cp.GetCurrentPath());
+		break;
+
+	case CmdType::TABLE_SELECT:      // 选择表的特定记录
+		print_window.SelectTable(SelectTable(TableSelectInfo(sen_str), cp.GetCurrentPath()));
+		break;
+
+	case CmdType::TABLE_INSERT:      // 插入新的记录
+		print_window.InsertRecord(InsertRecord(CreateInsertInfo(sen_str), cp.GetCurrentPath()));
+		break;
+
+	case CmdType::TABLE_UPDATE:      // 更新表的记录
+		break;
+	case CmdType::TABLE_DELETE:      // 删除表的记录
+		break;
+
+	case CmdType::DB_CREATE:         // 创建数据库
+		print_window.CreateDB(CreateDatabase(CreateDbInfo(sen_str), cp));
+		break;
+
+	case CmdType::DB_DROP:           // 删除数据库
+		print_window.DropDB(DropDatabase(DeleteDbInfo(sen_str), cp));
+		break;
+
+	case CmdType::DB_SHOW:           // 列出所有数据库
+		print_window.ShowDB(ShowDatabase(cp));
+		break;
+
+	case CmdType::DB_USE:            // 使用数据库
+		print_window.UseDB(UseDatabase(UseDbInfo(sen_str), cp));
+		break;
+
+	default:
+		throw SQLError::CMD_FORMAT_ERROR();
+		break;
 	}
 }

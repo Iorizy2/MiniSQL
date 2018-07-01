@@ -11,14 +11,12 @@
 #include "APILIB/APILIB.h"
 #include <time.h>
 #include<direct.h>
-//#define NDEBUG 
+
 using namespace std;
 const std::string PROMPT = "MiniSQL:";
 // 判断POD数据
 void IsPod();
 void MySleep(unsigned int n); // 程序睡眠
-
-
 
 #ifndef NDEBUG
 void TestModule();
@@ -53,8 +51,8 @@ int main()
 		
 	}
 	cout << "bye." << endl;
-	//MySleep(1);
-	system("pause");
+	MySleep(1);
+	//system("pause");
 }
 
 std::string GetCommand()

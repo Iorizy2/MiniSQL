@@ -21,7 +21,9 @@ struct SelectPrintInfo
 {
 	std::string table_name;
 	std::vector<std::string> name_selected_column;
-	std::vector<FileAddr> fds;
+	// keys 和 fds 保存着对应的关键字以及该关键字对应的记录地址
+	std::vector<std::pair<KeyAttr, FileAddr>> key_fd;
+	
 };
 
 // 创建数据库
@@ -64,6 +66,8 @@ std::vector<std::pair<std::string,Column_Type>> GetColumnAndTypeFromTable(std::s
 Column_Type GetType(std::string name, std::vector<std::pair<std::string, Column_Type>> vec);
 
 // 范围查找单个字段 返回查找的值在数据文件中的地址
-std::vector<FileAddr> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));
+std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));
+std::vector<std::pair<KeyAttr, FileAddr>> KeySearch(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));  //主键查找
+std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, std::string table_name, std::string path = std::string("./"));  // 遍历查找
 
 #endif //__MiniSql_H__
