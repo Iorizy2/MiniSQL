@@ -13,7 +13,7 @@ class CompareCell                     //一个字段比较单元
 {
 public:
 	CompareCell(Operator_Type t, Column_Cell cc) :OperType(t), cmp_value(cc) {}
-	bool CompareCell::operator()(const Column_Cell &cc);
+	bool operator()(const Column_Cell &cc);
 	Operator_Type	OperType;	        //比较关系关系运算符
 	Column_Cell		cmp_value;
 };
