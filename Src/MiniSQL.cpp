@@ -4,22 +4,23 @@
 void Help();
 void InitMiniSQL();
 void RunMiniSQL();
-void MySleep(unsigned int n); // 程序睡眠
+void MySleep(unsigned int n = 1); // 程序睡眠
 void IsPod(); // 判断POD数据
 std::string GetCommand(); // 读取用户的输入，以 ";"结束
 const std::string PROMPT = "MiniSQL:";
 
 int main()
 {
-	// 初始化
+	// Initialize DB
 	InitMiniSQL();
 
-	// 运行数据库
+	// Run DB
 	RunMiniSQL();  
 
-	// 退出程序
+	// Exit DB
 	std::cout << "bye." << std::endl;
-	MySleep(1);
+
+	MySleep();
 	return 0;
 }
 
