@@ -422,10 +422,11 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 	return true;
 }
 
-SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= std::string("./")*/)
+SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path)
 {
 	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	std::vector<std::pair<KeyAttr, FileAddr>> fds;
+	GetTimer().Start();
 	if (tb_select_info.vec_cmp_cell.empty())  // 查找所有记录
 	{
 		// 索引文件名
@@ -472,7 +473,7 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path /*= 
 
 		}
 	}
-	
+	GetTimer().Stop();
 	SelectPrintInfo spi;
 	spi.table_name = tb_select_info.table_name;
 	spi.name_selected_column = tb_select_info.name_selected_column;

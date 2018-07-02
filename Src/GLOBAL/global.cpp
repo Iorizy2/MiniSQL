@@ -85,6 +85,12 @@ Column_Type StrConvertToEnumType(std::string str_type)
 	return Column_Type::I;
 }
 
+SQLTimer& GetTimer()
+{
+	static SQLTimer timer;
+	return timer;
+}
+
 std::string IdxToDbf(std::string idx_name)
 {
 	std::string dbf_name(idx_name);

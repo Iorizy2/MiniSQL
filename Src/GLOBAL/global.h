@@ -15,13 +15,14 @@
 ****************************************************************************************************************************************/
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
- 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <direct.h>
 #include <algorithm>
 #include <chrono>
-
+#include <iomanip>
+using namespace std::chrono;
 //#define NDEBUG
 
 #include "../Src/ERROR/error.h"
@@ -246,8 +247,30 @@ CatalogPosition& GetCp();
 class SQLTimer
 {
 public:
+	void Start() { start_t = steady_clock::now(); }
+	void Stop() { stop_t = steady_clock::now(); }
+
+	// 返回经过的时间，单位：second
+	double TimeSpan()
+	{
+		time_span = duration_cast<duration<double>>(stop_t - start_t);
+		return time_span.count();
+	}
+
+	// 打印时间
+	void PrintTimeSpan()
+	{
+		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(precision) << TimeSpan() << " seconds ";
+	}
 private:
+	steady_clock::time_point start_t;
+	steady_clock::time_point stop_t;
+	duration<double> time_span;
+	const static unsigned int precision = 8; // 输出时间的小数位精度
 };
+SQLTimer& GetTimer();  // 全局计时器
+
+
 // file name convert .idx to .dbf 
 std::string IdxToDbf(std::string idx_name);
 // file name convert .dbf to .idx 

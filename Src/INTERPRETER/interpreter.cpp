@@ -592,6 +592,7 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string pat
 	for (auto e : tables)
 		Print(PRINTLENGTH, e);
 	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	std::cout << tables.size() << " row in set." << std::endl;
 }
 
 void PrintWindow::DropTable(bool is_dropped)
@@ -777,6 +778,10 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 	for (int i = 0; i < total_length + n_output_col - 1; i++)
 		std::cout << "-";
 	std::cout << "+" << std::endl;
+
+	std::cout << select_table_print_info.key_fd.size() << " row in set.[";
+	GetTimer().PrintTimeSpan();
+	std::cout << "used.]" << std::endl;
 }
 
 void PrintWindow::InsertRecord(bool is_inserted)
@@ -826,6 +831,7 @@ void PrintWindow::ShowDB(std::vector<std::string> db_names)
 		Print(PRINTLENGTH, e);
 	}
 	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	std::cout << db_names.size() << " row in set." << std::endl;
 }
 
 void PrintWindow::UseDB(bool isUsed)
