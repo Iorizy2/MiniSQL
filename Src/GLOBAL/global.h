@@ -23,7 +23,7 @@
 #include <chrono>
 #include <iomanip>
 using namespace std::chrono;
-//#define NDEBUG
+#define NDEBUG
 
 #include "../Src/ERROR/error.h"
 extern "C"
