@@ -1,28 +1,13 @@
 ﻿#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include "GLOBAL/global.h"
-#include "ERROR/Error.h"
-#include "BUFFER/Buffer.h"
-#include "BPLUSTREE/bptree.h"
-#include "RECORD/Record.h"
-#include "INTERPRETER/interpreter.h"
-#include "APILIB/APILIB.h"
-#include <time.h>
-#include<direct.h>
+#include "./INTERPRETER/interpreter.h"
 
-using namespace std;
-const std::string PROMPT = "MiniSQL:";
-
-void IsPod(); // 判断POD数据
-void MySleep(unsigned int n); // 程序睡眠
-
-// 读取用户的输入，以 ";"结束
-std::string GetCommand();
 void Help();
 void InitMiniSQL();
 void RunMiniSQL();
+void MySleep(unsigned int n); // 程序睡眠
+void IsPod(); // 判断POD数据
+std::string GetCommand(); // 读取用户的输入，以 ";"结束
+const std::string PROMPT = "MiniSQL:";
 
 int main()
 {
@@ -33,7 +18,7 @@ int main()
 	RunMiniSQL();  
 
 	// 退出程序
-	cout << "bye." << endl;
+	std::cout << "bye." << std::endl;
 	MySleep(1);
 	return 0;
 }
@@ -45,17 +30,18 @@ std::string GetCommand()
 	int n = 0;
 	do	{
 		if (n == 0) {
-			cout << PROMPT;
+			std::cout << PROMPT;
 		}
 		else {
-			cout << "        ";
+			std::cout << "        ";
 		}
 		n++;
-		getline(cin, tmp);
+		getline(std::cin, tmp);
 		res += tmp;
 	} while (tmp[tmp.size() - 1] != ';');
 	return res;
 }
+
 void MySleep(unsigned int n)
 {
 	auto t1 = time(0);
@@ -65,14 +51,15 @@ void MySleep(unsigned int n)
 		t2 = time(0);
 	}
 }
+
 void IsPod()
 {
-	cout << std::is_pod<PAGEHEAD>::value << endl;
-	cout << std::is_pod<FileAddr>::value << endl;
-	cout << std::is_pod<FILECOND>::value << endl;
-	cout << std::is_pod<BTNode>::value << endl;
-	cout << std::is_pod<Column_Value>::value << endl;
-	cout << std::is_pod<KeyAttr>::value << endl; 
+	std::cout << std::is_pod<PAGEHEAD>::value << std::endl;
+	std::cout << std::is_pod<FileAddr>::value << std::endl;
+	std::cout << std::is_pod<FILECOND>::value << std::endl;
+	std::cout << std::is_pod<BTNode>::value << std::endl;
+	std::cout << std::is_pod<Column_Value>::value << std::endl;
+	std::cout << std::is_pod<KeyAttr>::value << std::endl;
     //cout << std::is_pod<CondtionInfo>::value << endl;
 }
 
@@ -140,7 +127,7 @@ void RunMiniSQL()
 		catch (SQLError::BaseError &e)
 		{
 			SQLError::DispatchError(e);
-			cout << endl;
+			std::cout << std::endl;
 			continue;
 		}
 

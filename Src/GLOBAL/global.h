@@ -20,6 +20,7 @@
 #include <string>
 #include <direct.h>
 #include <algorithm>
+#include <chrono>
 
 //#define NDEBUG
 
@@ -241,7 +242,12 @@ private:
 };
 CatalogPosition& GetCp();
 
-
+// 定义一个计数器类 统计数据库操作的耗时
+class SQLTimer
+{
+public:
+private:
+};
 // file name convert .idx to .dbf 
 std::string IdxToDbf(std::string idx_name);
 // file name convert .dbf to .idx 
