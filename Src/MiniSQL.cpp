@@ -61,7 +61,6 @@ void IsPod()
 	std::cout << std::is_pod<BTNode>::value << std::endl;
 	std::cout << std::is_pod<Column_Value>::value << std::endl;
 	std::cout << std::is_pod<KeyAttr>::value << std::endl;
-    //cout << std::is_pod<CondtionInfo>::value << endl;
 }
 
 
@@ -82,7 +81,7 @@ void Help()
 	std::cout << "|Select Table(2) :select * from student where id > 1 and score < 98;                          |" << std::endl;
 	std::cout << "|Select Table(3) :select id,score from student where id > 1 and score < 98;                   |" << std::endl;
 	std::cout << "|Drop database   :drop database STU;                                                          |" << std::endl;
-	std::cout << "|Quit   :quit;                                                                                |" << std::endl;
+	std::cout << "|Quit            :quit;                                                                       |" << std::endl;
 	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
 }
 
