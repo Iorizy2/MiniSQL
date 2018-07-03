@@ -300,7 +300,7 @@ bool Record::UpdateRecord(const std::string dbf_name, const RecordHead &rd, File
 	// 记录数据的副本
 	auto tp = GetRecordData(rd);
 	auto bUpdate = GetGlobalFileBuffer()[dbf_name.c_str()]->UpdateRecord(&fd, std::get<1>(tp), std::get<0>(tp));
-	delete std::get<1>(tp);  // 释放副本内存
+	free(std::get<1>(tp));  // 释放副本内存
 	return bUpdate;
 }
 
