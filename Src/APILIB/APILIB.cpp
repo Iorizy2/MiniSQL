@@ -1026,3 +1026,77 @@ std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, 
 	return res;
 }
 
+
+CatalogPosition& GetCp()
+{
+	static CatalogPosition cp;
+	return cp;
+}
+
+bool CatalogPosition::isInSpeDb = false;
+
+CatalogPosition::CatalogPosition()
+	:root("./DB/"), current_catalog("./DB/")
+{
+	// 如果当前目录下没有 DB 文件见则创建
+	std::string tmp_path = "./DB";
+
+	if (_access(tmp_path.c_str(), 0) == -1)
+	{
+		_mkdir(tmp_path.c_str());
+	}
+}
+
+bool CatalogPosition::ResetRootCatalog(std::string root_new)
+{
+	if (root_new[root_new.size() - 1] == '/')
+	{
+		root = root_new;
+		current_catalog = root;
+		isInSpeDb = false;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void CatalogPosition::SwitchToDatabase()
+{
+	current_catalog = root;
+	isInSpeDb = false;
+}
+
+bool CatalogPosition::SwitchToDatabase(std::string db_name)
+{
+	std::string tmp_path = root + db_name;
+
+	if (_access(tmp_path.c_str(), 0) == -1)  //判断数据库是否存在
+	{
+		return false;
+	}
+	else
+	{
+		current_catalog = root + db_name + "/";
+		isInSpeDb = true;
+		return true;
+	}
+
+}
+
+std::string CatalogPosition::GetCurrentPath() const
+{
+	return current_catalog;
+}
+
+std::string CatalogPosition::GetRootPath() const
+{
+	return root;
+}
+
+std::string CatalogPosition::SetCurrentPath(std::string cur)
+{
+	current_catalog = cur;
+	return current_catalog;
+}

@@ -18,11 +18,22 @@
 
 #ifndef __RECORD_H__
 #define __RECORD_H__
-#include <string>
-#include <vector>
 #include <tuple>
-#include "../Src/BUFFER/Buffer.h"
 #include "../Src/ERROR/Error.h"
+#include "../Src/BUFFER/Buffer.h"
+
+/***********************************************************************************
+*
+*    定义记录各个字段的类型
+*    字段类型 I---int  C---字符串  D---Doouble
+*
+***********************************************************************************/
+enum class Column_Type { I, C, D };
+
+// 数据类型的字符串形式转换为枚举类型
+Column_Type StrConvertToEnumType(std::string str_type);
+
+
 
 
 /***********************************************************************************
@@ -37,6 +48,33 @@ union Column_Value
 	char*               StrValue;	     //字符串指针 
 };
 
+
+/***********************************************************************************
+*
+*    定义索引文件关键字属性
+*
+***********************************************************************************/
+class KeyAttr
+{
+public:
+	using Key_Value = union {
+		char                StrValue[ColumnNameLength];	     //字符串指针 
+		int   		        IntValue;		 //整形值
+		double 		        DoubleValue;     //浮点型值	
+	};
+	Column_Type type;
+	Key_Value value;
+
+	bool operator<(const KeyAttr &rhs)const;
+	bool operator>(const KeyAttr &rhs)const;
+	bool operator==(const KeyAttr &rhs)const;
+	bool operator<=(const KeyAttr &rhs)const;
+	bool operator>=(const KeyAttr &rhs)const;
+	bool operator!=(const KeyAttr &rhs)const;
+
+};
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
+
 /***********************************************************************************
 *
 *    定义每个字段的单元数据
@@ -49,29 +87,7 @@ class Column_Cell
 {
 public:
 	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
-	Column_Cell(KeyAttr key)
-	{
-		int len = 0;
-		column_type = key.type;
-		switch (key.type)
-		{
-		case Column_Type::I:
-			column_value.IntValue = key.value.IntValue;
-			break;
-
-		case Column_Type::C:
-			len = strlen(key.value.StrValue) + 1;
-			column_value.StrValue = (char*)malloc(len);
-		    strcpy(column_value.StrValue, key.value.StrValue);
-			break;
-
-		case Column_Type::D:
-			column_value.DoubleValue = key.value.DoubleValue;
-			break;
-		default:
-			break;
-		}
-	}
+	Column_Cell(KeyAttr key);
 	Column_Cell(const Column_Cell& rhs); // 拷贝构造
 	Column_Cell& operator=(const Column_Cell&rhs); // 拷贝赋值
 
@@ -86,43 +102,10 @@ public:
 	std::string columu_name;
 	Column_Value column_value;
 	Column_Cell *next;
-
-
 	// 类型转换
-	operator KeyAttr()const
-	{
-		KeyAttr key_attr;
-		memset(&key_attr, 0, sizeof(KeyAttr));
-		switch (column_type)
-		{
-		case Column_Type::I:
-			key_attr.type = column_type;
-			key_attr.value.IntValue = column_value.IntValue;
-			break;
-
-		case Column_Type::C:
-			key_attr.type = column_type;
-			if (strlen(column_value.StrValue) > ColumnNameLength)
-			{
-				throw SQLError::KeyAttr_NameLength_ERROR();
-			}
-			else
-			{
-				strcpy(key_attr.value.StrValue, column_value.StrValue);
-			}
-			break;
-
-		case Column_Type::D:
-			key_attr.type = column_type;
-			key_attr.value.DoubleValue = column_value.DoubleValue;
-			break;
-		default:
-			break;
-		}
-
-		return key_attr;
-	}
+	operator KeyAttr()const;
 };
+
 
 /***********************************************************************************
 *

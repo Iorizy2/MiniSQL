@@ -16,17 +16,13 @@
 
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
-#include <iostream>
 #include <vector>
 #include <cassert>
 #include "../Src/GLOBAL/global.h"
 #include "../Src/ERROR/Error.h"
-
-extern "C"
-{
+extern "C"{
 #include <io.h>
 #include <fcntl.h>
-#include <stdlib.h>
 }
 
 #define FileAddrSize (sizeof(FileAddr))
@@ -35,10 +31,8 @@ class Clock;
 class BUFFER;
 Clock* GetGlobalClock();
 BUFFER& GetGlobalFileBuffer();
+
 const unsigned int FILECOND_RESERVE_SPACE = 512;  // 文件头预留空间
-
-
-
 
 /*********************************************************
 *             页头信息，用以标识文件页
@@ -51,6 +45,32 @@ public:
 	bool isFixed;				// 页是否常驻内存
 };
 
+/*********************************************************
+*             文件地址,定位文件中的位置
+**********************************************************/
+class FileAddr
+{
+	friend class FILECOND;
+public:
+	void SetFileAddr(const unsigned long _filePageID, const unsigned int  _offSet);
+	void ShiftOffset(const int OFFSET);
+
+	unsigned long filePageID;     // 文件页编号
+	unsigned int  offSet;         // 页内偏移量
+
+	bool operator==(const FileAddr &rhs) const
+	{
+		return (this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
+	bool operator!=(const FileAddr &rhs) const
+	{
+		return !(this->filePageID == rhs.filePageID && this->offSet == rhs.offSet);
+	}
+	bool operator<(const FileAddr &rhs)const
+	{
+		return (this->filePageID < rhs.filePageID) || ((this->filePageID == rhs.filePageID) && (this->offSet < rhs.offSet));
+	}
+};
 
 /*********************************************************
 *               文件头信息
@@ -114,9 +134,6 @@ class Clock
 	friend class BUFFER;
 	friend class BTree;
 	friend bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/);
-#ifndef NDEBUG
-	friend void TestModule();
-#endif
 public:
 	Clock();
 	~Clock();
@@ -157,9 +174,6 @@ class MemFile
 {
 	friend class BUFFER;
 	friend class BTree;
-#ifndef NDEBUG
-	friend void TestModule();
-#endif
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	FileAddr AddRecord(const void* const source_record, size_t sz_record);                        // 返回记录所添加的位置
@@ -188,9 +202,6 @@ private:
 
 class BUFFER
 {
-#ifndef NDEBUG
-	friend void TestModule();
-#endif
 public:
 	BUFFER() = default;
 	~BUFFER();
@@ -205,11 +216,5 @@ private:
 private:
 	std::vector<MemFile*> memFiles;  // 保存已经打开的文件列表
 };
-
-// BUFFER 模块测试函数
-#ifndef NDEBUG
-std::string IntToStr(int i);
-void BufferModuleTest();
-#endif
 
 #endif //define _BUFFER_H_

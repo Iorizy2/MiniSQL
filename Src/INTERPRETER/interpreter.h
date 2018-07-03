@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 #include <iomanip>
-#include "../RECORD/Record.h"
 #include "../APILIB/APILIB.h"
+
 // 打印命令行窗口，使底层实现和GUI分离，便于扩展
 #define PRINTLENGTH 63
 class PrintWindow
@@ -46,7 +46,92 @@ private:
 	
 };
 
+// 主程序的交互接口 输入：命令参数和GUI类 调用APILIB
+void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window); 
 
+
+/************************************************************************
+*    类名：有意字串类
+*    功能：将命令字符串解析为有意字串
+*	 有意字串定义：有意字串即指一个以回车或空格或标志符来分割的有独立含义的字符
+*                 串,标识符主要有逗号、括号、比较运算符、分号等。标识符也算作
+*                 有意字串
+************************************************************************/
+class SensefulStr
+{
+public:
+	SensefulStr(std::string srcstr = "")
+		:src_str(srcstr)
+	{
+		Parse();
+	}
+	void SetSrcStr(std::string _srcstr)
+	{
+		src_str = _srcstr;
+		sen_str.clear();
+		Parse();
+	}
+
+	std::vector<std::string> GetSensefulStr()const
+	{
+		return sen_str;
+	}
+private:
+	// 解析命令为有意字串
+	void Parse()
+	{
+		int i = 0;
+		std::string token;
+		while (i < src_str.size())
+		{
+			// 先判断标识符
+			if (src_str[i] == ' ')
+			{
+				if (!token.empty())
+					sen_str.push_back(token);
+				token.clear();
+				i++;
+				continue;
+			}
+			if (src_str[i] == '\n')
+			{
+				i++;
+				continue;
+			}
+
+			else if (src_str[i] == ',' || src_str[i] == '(' || src_str[i] == ')')// || src_str[i] == '=')
+			{
+				if (!token.empty())
+					sen_str.push_back(token);
+				token.clear();
+
+				sen_str.push_back(std::string() + src_str[i]);
+				i++;
+				continue;
+			}
+			else if (src_str[i] == ';')
+			{
+				if (!token.empty())
+					sen_str.push_back(token);
+				token.clear();
+
+				sen_str.push_back(";");
+				break;
+			}
+
+			token += src_str[i++];
+		}
+	}
+
+	std::string src_str;  // 原始命令字符串
+	std::vector<std::string> sen_str; // 解析后的又一字串
+};
+
+// 返回有意字串的操作类型,同时做类型检查
+CmdType GetOpType(std::vector<std::string> sen_str);
+
+// 显示数据库
+std::string ShowDbInfo(std::vector<std::string> sen_str);
 
 // 创建数据库,返回要创建的名称
 std::string CreateDbInfo(std::vector<std::string> sen_str);
@@ -57,9 +142,8 @@ std::string DeleteDbInfo(std::vector<std::string> sen_str);
 // 使用数据库
 std::string UseDbInfo(std::vector<std::string> sen_str);
 
-// 显示数据库
-std::string ShowDbInfo(std::vector<std::string> sen_str);
-// 生成表相关信息
+
+// 表操作相关信息
 bool CreateShowTableInfo(std::vector<std::string> sen_str);
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str);
 TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
@@ -67,9 +151,8 @@ std::string DropTableInfo(std::vector<std::string> sen_str);
 TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str);  //生成select操作所需的信息
 TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str);
 TB_Delete_Info TableDeleteInfo(std::vector<std::string> sen_str);
-//TB_Update_Info
-// 返回有意字串的操作类型,同时做类型检查
-CmdType GetOpType(std::vector<std::string> sen_str);
 
-void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow print_window);
+
+
+
 #endif //__INTERPRETER_H__

@@ -1,14 +1,14 @@
 #ifndef __MiniSql_H__
 #define __MiniSql_H__
-
 #include "../GLOBAL/global.h"
 #include "../BPLUSTREE/bptree.h"
 #include "../RECORD/Record.h"
-//#include "../INTERPRETER/interpreter.h"
 
-// 条件查找类
+// 记录查找关系符
 enum Operator_Type { B, BE, L, LE, E, NE };
-Operator_Type GetOperatorType(std::string s);
+Operator_Type GetOperatorType(std::string s); 
+
+
 class CompareCell                     //一个字段比较单元
 {
 public:
@@ -21,10 +21,112 @@ struct SelectPrintInfo
 {
 	std::string table_name;
 	std::vector<std::string> name_selected_column;
-	// keys 和 fds 保存着对应的关键字以及该关键字对应的记录地址
-	std::vector<std::pair<KeyAttr, FileAddr>> key_fd;
+	
+	std::vector<std::pair<KeyAttr, FileAddr>> key_fd;  // keys 和 fds 保存着对应的关键字以及该关键字对应的记录地址
 	
 };
+
+// 目录定位和切换 用于数据库和表的使用
+class CatalogPosition
+{
+	friend bool UseDatabase(std::string db_name, CatalogPosition &cp);
+public:
+	CatalogPosition();
+	bool ResetRootCatalog(std::string root_new);  // 重置根目录
+
+	void SwitchToDatabase();// 转到数据库列表目录下
+
+
+	bool SwitchToDatabase(std::string db_name);// 转到具体的数据库下
+
+	std::string GetCurrentPath()const;
+	std::string GetRootPath()const;
+	std::string SetCurrentPath(std::string cur);
+	bool GetIsInSpeDb() { return isInSpeDb; }
+private:
+	static bool isInSpeDb;          //是否在某个具体的数据库目录下
+	std::string root; // 根目录，数据库文件的保存位置
+	std::string current_catalog;
+};
+CatalogPosition& GetCp();
+
+/************************************************************************
+*    表创建信息
+************************************************************************/
+struct TB_Create_Info
+{
+	using ColumnInfo = struct ColumnInfo
+	{
+		std::string name;
+		Column_Type type;
+		bool isPrimary;       // 是否主键
+		int length;           // 数据大小，只用于字符串字段
+	};
+
+	std::string table_name;
+	std::vector<ColumnInfo> columns_info;  //字段信息向量
+
+};
+
+/************************************************************************
+*    表插入信息
+************************************************************************/
+struct TB_Insert_Info
+{
+	using InsertInfo = struct {
+		std::string column_name;
+		std::string column_value;
+	};
+
+	std::string table_name;
+	std::vector<InsertInfo> insert_info;
+};
+
+/************************************************************************
+*    表选择信息
+************************************************************************/
+struct TB_Select_Info
+{
+	std::string table_name;                        // 选择的表名
+	std::vector<std::string> name_selected_column; // 选择的字段名字
+	std::vector<CompareCell> vec_cmp_cell;         // 选择条件
+};
+
+/************************************************************************
+*    表更新信息
+************************************************************************/
+struct TB_Update_Info
+{
+	using NewValue = struct {
+		std::string field;
+		std::string value;
+	};
+	using Expr = struct {
+		std::string field;
+		std::string op;
+		std::string value;
+	};
+
+	std::string table_name;
+	std::vector<NewValue> field_value;  // 字段——值 向量
+	std::vector<Expr> expr;             // 跟新的字段条件
+};
+
+/************************************************************************
+*    表删除信息
+************************************************************************/
+struct TB_Delete_Info
+{
+	using Expr = struct {
+		std::string field;
+		std::string op;
+		std::string value;
+	};
+	std::string table_name;
+	std::vector<Expr> expr;             // 删除的字段条件
+};
+
+
 
 
 // 创建数据库
@@ -79,4 +181,7 @@ std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, 
 
 // 比较的字段名称，比较的字段类型，比较关系，比较的值
 CompareCell CreateCmpCell(std::string column_name, Column_Type column_type, Operator_Type Optype, std::string value);
+
+
+
 #endif //__MiniSql_H__

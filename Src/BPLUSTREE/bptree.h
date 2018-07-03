@@ -16,15 +16,9 @@
 #ifndef __BPTREE_H__
 #define __BPTREE_H__
 #include "../Src/BUFFER/Buffer.h"
-#include "../Src/GLOBAL/global.h"
 #include "../Src/RECORD/Record.h"
-#include <iostream>
 #include <queue>
-#include <string>
-#include <vector>
-#include <ctime>
-#include <fstream>
-#include <chrono>
+
 
 // 索引文件头信息结点,保存在文件头预留空间
 class IndexHeadNode
@@ -47,7 +41,7 @@ public:
 
 	KeyAttr key[MaxKeyCount];                        // array of keys
 	FileAddr children[MaxChildCount];                // if the node is not a leaf node, children store the children pointer
-                                                     // otherwise it store record address;
+													 // otherwise it store record address;
 
 	FileAddr next;                                   // if leaf node
 	void PrintSelf();

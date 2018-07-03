@@ -114,6 +114,30 @@ Column_Cell::Column_Cell(Column_Cell&& rhs)
 }
 
 
+Column_Cell::Column_Cell(KeyAttr key)
+{
+	int len = 0;
+	column_type = key.type;
+	switch (key.type)
+	{
+	case Column_Type::I:
+		column_value.IntValue = key.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		len = strlen(key.value.StrValue) + 1;
+		column_value.StrValue = (char*)malloc(len);
+		strcpy(column_value.StrValue, key.value.StrValue);
+		break;
+
+	case Column_Type::D:
+		column_value.DoubleValue = key.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+}
+
 Column_Cell& Column_Cell::operator=(Column_Cell&&rhs)
 {
 	//std::cout << "Column_Cell ÒÆ¶¯¸³Öµ" << std::endl;
@@ -189,6 +213,40 @@ Column_Cell::~Column_Cell()
 	}
 }
 
+Column_Cell::operator KeyAttr() const
+{
+	KeyAttr key_attr;
+	memset(&key_attr, 0, sizeof(KeyAttr));
+	switch (column_type)
+	{
+	case Column_Type::I:
+		key_attr.type = column_type;
+		key_attr.value.IntValue = column_value.IntValue;
+		break;
+
+	case Column_Type::C:
+		key_attr.type = column_type;
+		if (strlen(column_value.StrValue) > ColumnNameLength)
+		{
+			throw SQLError::KeyAttr_NameLength_ERROR();
+		}
+		else
+		{
+			strcpy(key_attr.value.StrValue, column_value.StrValue);
+		}
+		break;
+
+	case Column_Type::D:
+		key_attr.type = column_type;
+		key_attr.value.DoubleValue = column_value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+
+	return key_attr;
+}
+
 Column_Cell& Column_Cell::operator=(const Column_Cell&rhs)
 {
 	//std::cout << "Column_Cell ¿½±´¸³Öµ" << std::endl;
@@ -260,3 +318,164 @@ std::tuple<unsigned long, char*> Record::GetRecordData(const RecordHead &rd)
 	auto tp = std::make_tuple(data_size, rd_data);
 	return tp;
 }
+
+Column_Type StrConvertToEnumType(std::string str_type)
+{
+	for (auto &c : str_type)
+		tolower(c);
+
+	if (str_type == "int")
+	{
+		return Column_Type::I;
+	}
+	if (str_type == "char")
+	{
+		return Column_Type::C;
+	}
+	if (str_type == "double")
+	{
+		return Column_Type::D;
+	}
+
+	return Column_Type::I;
+}
+
+
+
+bool KeyAttr::operator<(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue < rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 < s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue < rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = this->value.IntValue > rhs.value.IntValue;
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = s1 > s2;
+		break;
+
+	case Column_Type::D:
+		res = this->value.DoubleValue > rhs.value.DoubleValue;
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+bool KeyAttr::operator>=(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this < rhs);
+}
+
+bool KeyAttr::operator!=(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this == rhs);
+}
+
+bool KeyAttr::operator<=(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	return !(*this > rhs);
+}
+
+bool KeyAttr::operator==(const KeyAttr &rhs)const
+{
+	if (this->type != rhs.type)
+		return false;
+
+	bool res = true;
+	std::string s1;
+	std::string s2;
+
+	switch (this->type)
+	{
+	case Column_Type::I:
+		res = (this->value.IntValue == rhs.value.IntValue);
+		break;
+
+	case Column_Type::C:
+		s1 = std::string(this->value.StrValue);
+		s2 = std::string(rhs.value.StrValue);
+		res = (s1 == s2);
+		break;
+
+	case Column_Type::D:
+		res = (this->value.DoubleValue == rhs.value.DoubleValue);
+		break;
+	default:
+		break;
+	}
+	return res;
+}
+
+std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
+{
+	switch (key.type)
+	{
+	case Column_Type::I:
+		os << key.value.IntValue << " ";
+		break;
+
+	case Column_Type::C:
+		os << key.value.StrValue << " ";
+		break;
+
+	case Column_Type::D:
+		os << key.value.DoubleValue << " ";
+		break;
+	default:
+		break;
+	}
+
+	return os;
+}
+
+
