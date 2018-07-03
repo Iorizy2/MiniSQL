@@ -86,7 +86,7 @@ std::ostream& operator<<(std::ostream &os, const KeyAttr &key);
 class Column_Cell
 {
 public:
-	Column_Cell() { memset(&column_value, 0, sizeof(column_value)); }
+	Column_Cell();
 	Column_Cell(KeyAttr key);
 	Column_Cell(const Column_Cell& rhs); // ¿½±´¹¹Ôì
 	Column_Cell& operator=(const Column_Cell&rhs); // ¿½±´¸³Öµ

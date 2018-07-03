@@ -708,8 +708,6 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 			
 			pcolumn = pcolumn->next;
 		}
-		//std::cout << "|";
-		//std::cout << std::endl;
 	}
 	// Êä³öÍ·²¿
 	std::cout << "+";

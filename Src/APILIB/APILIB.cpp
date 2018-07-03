@@ -398,7 +398,9 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			{
 				// 默认值填充
 				cc.column_type = Column_Type::C;
-				cc.column_value.StrValue = nullptr;
+				cc.column_value.StrValue = (char*)malloc(4);
+				cc.column_value.StrValue[0] = cc.column_value.StrValue[1] = cc.column_value.StrValue[2] = '0';
+				cc.column_value.StrValue[3] = '\0';
 			}
 			column_id++;
 			record_head.AddColumnCell(cc);
@@ -418,6 +420,7 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 		key_index++;
 	}
 	key = *p;
+
 	tree.Insert(key, fd);
 	return true;
 }
@@ -515,11 +518,10 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 		}
 		
 	}
-	std::cout << "各个字段名称：" << std::endl;
+	// 各个字段名称
 	char *pColumnName = phead->RecordColumnName;
 	for (int j = 0; j < sz_col; j++)
 	{
-		//std::cout << pColumnName << std::endl;
 		col_name.push_back(pColumnName);
 		pColumnName += ColumnNameLength;
 	}
@@ -532,6 +534,7 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 	{
 		CompareCell cmp_cell = CreateCmpCell(tb_update_info.expr[i].field, GetType(tb_update_info.expr[i].field, fields_name)
 			, GetOperatorType(tb_update_info.expr[i].op), tb_update_info.expr[i].value);
+		
 		cmp_cells.push_back(cmp_cell);
 	}
 	
@@ -586,7 +589,6 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 						break;
 					case Column_Type::C:
 						// 获取长度
-						
 						for (int kkk = 0; kkk < col_name.size(); kkk++)
 						{
 							if (col_name[kkk] == head->columu_name)
@@ -598,6 +600,7 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 						new_str += IntToStr3(col_len[n]);
 						new_str += tb_update_info.field_value[i].value;
 						memcpy(head->column_value.StrValue, new_str.c_str(), new_str.size()+1);
+						//strcpy(head->column_value.StrValue, new_str.c_str());
 						break;
 					default:
 						break;
@@ -902,7 +905,11 @@ std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::
 	bool bKeyComumn = false;
 	int sz_col = 0;// 字段个数
 	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
-		if (phead->RecordTypeInfo[i] == 'I' || phead->RecordTypeInfo[i] == 'C' || phead->RecordTypeInfo[i] == 'D')sz_col++;
+	{
+		if (phead->RecordTypeInfo[i] == 'I' || phead->RecordTypeInfo[i] == 'C' || phead->RecordTypeInfo[i] == 'D')
+			sz_col++;
+	}
+
 	int key_index = phead->KeyTypeIndex;
 	char *pColumnName = phead->RecordColumnName;
 	for(int i=0; i<key_index;i++)
@@ -912,7 +919,6 @@ std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::
 	if (compare_cell.cmp_value.columu_name == pColumnName)
 	{
 		bKeyComumn = true;
-
 	}
 		
 	// 查找

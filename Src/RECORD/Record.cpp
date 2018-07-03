@@ -138,6 +138,12 @@ Column_Cell::Column_Cell(KeyAttr key)
 	}
 }
 
+Column_Cell::Column_Cell()
+{
+	memset(&column_value, 0, sizeof(column_value));
+	column_type = Column_Type::I;
+}
+
 Column_Cell& Column_Cell::operator=(Column_Cell&&rhs)
 {
 	//std::cout << "Column_Cell 移动赋值" << std::endl;
@@ -166,7 +172,7 @@ size_t Column_Cell::size() const
 
 	case Column_Type::C:
 		// 字符串字段的前三个字符表示字符串的长度 0-999
-		assert(strlen(column_value.StrValue) > 3);
+		assert(strlen(column_value.StrValue) >= 3);
 		for (int i = 0; i < 3; i++)
 			sz = sz * 10 + (column_value.StrValue[i] - '0');
 		return sz;

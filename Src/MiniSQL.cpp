@@ -24,82 +24,21 @@ int main()
 	return 0;
 }
 
-std::string GetCommand()
-{
-	std::string res;
-	std::string tmp;
-	int n = 0;
-	do	{
-		if (n == 0) {
-			std::cout << PROMPT;
-		}
-		else {
-			std::cout << "        ";
-		}
-		n++;
-		getline(std::cin, tmp);
-		res += tmp;
-	} while (tmp[tmp.size() - 1] != ';');
-	return res;
-}
-
-void MySleep(unsigned int n)
-{
-	auto t1 = time(0);
-	time_t t2 = t1;
-	while ((t2 - t1) < n)
-	{
-		t2 = time(0);
-	}
-}
-
-void IsPod()
-{
-	std::cout << std::is_pod<PAGEHEAD>::value << std::endl;
-	std::cout << std::is_pod<FileAddr>::value << std::endl;
-	std::cout << std::is_pod<FILECOND>::value << std::endl;
-	std::cout << std::is_pod<BTNode>::value << std::endl;
-	std::cout << std::is_pod<Column_Value>::value << std::endl;
-	std::cout << std::is_pod<KeyAttr>::value << std::endl;
-}
-
-
-void Help()
-{
-	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
-	std::cout << "|A simple example to create a student databae named STU                                       |" << std::endl;
-	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
-	std::cout << "|Create database :create database STU;                                                        |" << std::endl;
-	std::cout << "|Use database    :use database STU;                                                           |" << std::endl;
-	std::cout << "|Show database   :show databases;                                                             |" << std::endl;
-	std::cout << "|Create Table    :create table student(id int primary, socre double, name char(20));          |" << std::endl;
-	std::cout << "|Insert Record(1):insert into student(id,score,name)values(1,95.5,ZhangSan);                  |" << std::endl;
-	std::cout << "|Insert Record(2):insert into student(id,name)values(2,LiSi); Note:LiSi has no score          |" << std::endl; 
-	std::cout << "|UPDATE Table    :update student set score = 96.5 where name = LiSi;                          |" << std::endl;
-	std::cout << "|Delete Table    :delete from student where id = 1; Note: ZhangSan is deleted                 |" << std::endl;
-	std::cout << "|Select Table(1) :select * from student where id = 2;                                         |" << std::endl;
-	std::cout << "|Select Table(2) :select * from student where id > 1 and score < 98;                          |" << std::endl;
-	std::cout << "|Select Table(3) :select id,score from student where id > 1 and score < 98;                   |" << std::endl;
-	std::cout << "|Drop database   :drop database STU;                                                          |" << std::endl;
-	std::cout << "|Quit            :quit;                                                                       |" << std::endl;
-	std::cout << "+---------------------------------------------------------------------------------------------+" << std::endl;
-}
-
-
 void InitMiniSQL()
 {
-	std::cout << "                  WELCOME TO USE MY MINISQL!" << std::endl;
-	std::cout << "+---------------------------------------------------------------+" << std::endl;
-	std::cout << "|Declare: It is just a test version without any error process.  |" << std::endl;
-	std::cout << "|         So you should use it take care.                       |" << std::endl;
-	std::cout << "|                                                               |" << std::endl;
-	std::cout << "|Usage  : You can typing the help cammand to get a help.        |" << std::endl;
-	std::cout << "|         More details @ https://github.com/ReFantasy/MiniSQL   |" << std::endl;
-	std::cout << "|                                                               |" << std::endl;
-	std::cout << "|Contact: ReFantasy.cn                                          |" << std::endl;
-	std::cout << "|                                                               |" << std::endl;
-	std::cout << "|Copyright(c) by TDL/ReFantasy.All rights reserved.             |" << std::endl;
-	std::cout << "+---------------------------------------------------------------+" << std::endl;
+	std::cout << R"(                   WELCOME TO USE MY MINISQL!"                      )" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------+)" << std::endl;
+	std::cout << R"(|Declare: It is just a test version without any error process.     |)" << std::endl;
+	std::cout << R"(|         So you should use it take care.                          |)" << std::endl;
+	std::cout << R"(|                                                                  |)" << std::endl;
+	std::cout << R"(|Usage  : You can typing the "help;" cammand to get a help.        |)" << std::endl;
+	std::cout << R"(|         More details @ https://github.com/ReFantasy/MiniSQL      |)" << std::endl;
+	std::cout << R"(|                                                                  |)" << std::endl;
+	std::cout << R"(|Contact: ReFantasy.cn                                             |)" << std::endl;
+	std::cout << R"(|                                                                  |)" << std::endl;
+	std::cout << R"(|Copyright(c) by TDL/ReFantasy.All rights reserved.                |)" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------+)" << std::endl;
+
 }
 
 
@@ -131,5 +70,66 @@ void RunMiniSQL()
 			continue;
 		}
 
+	}
+}
+
+void IsPod()
+{
+	std::cout << std::is_pod<PAGEHEAD>::value << std::endl;
+	std::cout << std::is_pod<FileAddr>::value << std::endl;
+	std::cout << std::is_pod<FILECOND>::value << std::endl;
+	std::cout << std::is_pod<BTNode>::value << std::endl;
+	std::cout << std::is_pod<Column_Value>::value << std::endl;
+	std::cout << std::is_pod<KeyAttr>::value << std::endl;
+}
+
+
+void Help()
+{
+	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
+	std::cout << "|A simple example to create a student databae named STU                                         |" << std::endl;
+	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
+	std::cout << "|Create database  : create database STU;                                                        |" << std::endl;
+	std::cout << "|Use database     : use database STU;                                                           |" << std::endl;
+	std::cout << "|Show database    : show databases;                                                             |" << std::endl;
+	std::cout << "|Create Table     : create table student(id int primary, socre double, name char(20));          |" << std::endl;
+	std::cout << "|Insert Record(1) : insert into student(id,score,name)values(1,95.5,ZhangSan);                  |" << std::endl;
+	std::cout << "|Insert Record(2) : insert into student(id,name)values(2,LiSi); Note:LiSi has no score          |" << std::endl;
+	std::cout << "|UPDATE Table     : update student set score = 96.5 where name = LiSi;                          |" << std::endl;
+	std::cout << "|Delete Table     : delete from student where id = 1; Note: ZhangSan is deleted                 |" << std::endl;
+	std::cout << "|Select Table(1)  : select * from student where id = 2;                                         |" << std::endl;
+	std::cout << "|Select Table(2)  : select * from student where id > 1 and score < 98;                          |" << std::endl;
+	std::cout << "|Select Table(3)  : select id,score from student where id > 1 and score < 98;                   |" << std::endl;
+	std::cout << "|Drop database    : drop database STU;                                                          |" << std::endl;
+	std::cout << "|Quit             : quit;                                                                       |" << std::endl;
+	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
+}
+
+std::string GetCommand()
+{
+	std::string res;
+	std::string tmp;
+	int n = 0;
+	do {
+		if (n == 0) {
+			std::cout << PROMPT;
+		}
+		else {
+			std::cout << "        ";
+		}
+		n++;
+		getline(std::cin, tmp);
+		res += tmp;
+	} while (tmp[tmp.size() - 1] != ';');
+	return res;
+}
+
+void MySleep(unsigned int n)
+{
+	auto t1 = time(0);
+	time_t t2 = t1;
+	while ((t2 - t1) < n)
+	{
+		t2 = time(0);
 	}
 }
