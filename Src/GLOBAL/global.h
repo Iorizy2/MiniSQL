@@ -18,6 +18,7 @@
 #include <chrono>
 #include <iomanip>
 #include <direct.h>
+#include <cstdlib>
 #include "../ERROR/Error.h"
 
 #define NDEBUG
