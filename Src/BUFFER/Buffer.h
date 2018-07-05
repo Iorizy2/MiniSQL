@@ -98,9 +98,6 @@ class MemPage
 	friend class MemFile;
 	friend class Clock;
 	friend class BUFFER;
-#ifndef NDEBUG
-	friend void TestModule();
-#endif
 public:
 	MemPage();
 	~MemPage();
@@ -134,12 +131,10 @@ class Clock
 	friend class BUFFER;
 	friend class BTree;
 	friend bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/);
+	friend bool DropTable(std::string table_name, std::string path);
 public:
 	Clock();
 	~Clock();
-#ifndef NDEBUG
-	void PrintFileNameInMemory();   // 打印所有在内存中有缓存的文件页
-#endif
 private:
 	// 返回磁盘文件内存地址
 	MemPage* GetMemAddr(unsigned long fileId, unsigned long filePageID);
@@ -174,6 +169,7 @@ class MemFile
 {
 	friend class BUFFER;
 	friend class BTree;
+	friend bool DropTable(std::string table_name, std::string path);
 public:
 	const void* ReadRecord(FileAddr *address_delete)const;         // 读取某条记录,返回记录指针(包括记录地址数据)
 	void* ReadWriteRecord(FileAddr *address_delete);         // 读取某条记录,返回记录指针(包括记录地址数据)
@@ -203,6 +199,7 @@ private:
 
 class BUFFER
 {
+	friend bool DropTable(std::string table_name, std::string path);
 public:
 	BUFFER() = default;
 	~BUFFER();

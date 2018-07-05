@@ -103,11 +103,16 @@ void DelFilesInFolder(std::string folderPath)
 		}
 		else
 		{
-			//fout << folderPath << FileInfo.name << " ";
 			// 删除文件
-			auto file = folderPath + FileInfo.name;
-			remove(file.c_str());
-			std::cout << std::endl;
+			auto old = GetCp().GetIsInSpeDb();
+			GetCp().SetInInSpeDb(true);
+
+			std::string s(FileInfo.name);
+			s = s.substr(0, s.size() - 4);
+			DropTable(s.c_str(), folderPath);
+
+			GetCp().SetInInSpeDb(old);
+			
 		}
 	} while (_findnext(Handle, &FileInfo) == 0);
 
@@ -218,12 +223,13 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 	return true;
 }
 
-bool DropTable(std::string table_name, std::string path /*= std::string("./")*/)
+bool DropTable(std::string table_name, std::string path)
 {
 	std::string tmp_path = path + table_name;
 	std::string idx = tmp_path + ".idx";
 	std::string dbf = tmp_path + ".dbf";
-
+	auto &buffer = GetGlobalFileBuffer();
+	auto pClock = GetGlobalClock();
 	if (!GetCp().GetIsInSpeDb())
 		return false;
 
@@ -233,7 +239,37 @@ bool DropTable(std::string table_name, std::string path /*= std::string("./")*/)
 	}
 	else
 	{
+		// 如果文件已经被打开使用 需要先丢弃在内存中的文件页 避免程序结束再次写回
+		MemFile *pIdxMF = buffer.GetMemFile(idx.c_str());
+		if (pIdxMF)
+		{
+			for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
+			{
+				if (pClock->MemPages[i]&&pClock->MemPages[i]->fileId == pIdxMF->fileId)
+				{
+					pClock->MemPages[i]->fileId = 0;  // 丢弃该页
+					pClock->MemPages[i]->isModified = false;
+				}
+				 
+			}
+		}
+
+		MemFile *pDbfMF = buffer.GetMemFile(dbf.c_str());
+		if (pDbfMF)
+		{
+			for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
+			{
+				if (pClock->MemPages[i]&&pClock->MemPages[i]->fileId == pDbfMF->fileId)
+				{
+					pClock->MemPages[i]->fileId = 0;  // 丢弃该页
+					pClock->MemPages[i]->isModified = false;
+				}
+
+			}
+		}
 		// 删除表文件
+		close(pIdxMF->fileId);
+		close(pDbfMF->fileId);
 		remove(idx.c_str());
 		remove(dbf.c_str());
 		return true;

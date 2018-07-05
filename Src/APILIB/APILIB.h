@@ -44,6 +44,7 @@ public:
 	std::string GetRootPath()const;
 	std::string SetCurrentPath(std::string cur);
 	bool GetIsInSpeDb() { return isInSpeDb; }
+	bool SetInInSpeDb(bool new_b) { isInSpeDb = new_b; return new_b; }
 private:
 	static bool isInSpeDb;          //是否在某个具体的数据库目录下
 	std::string root; // 根目录，数据库文件的保存位置

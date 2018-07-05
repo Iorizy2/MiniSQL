@@ -254,11 +254,8 @@ MemPage::~MemPage()
 
 void MemPage::Back2File() const
 {
-#ifndef NDEBUG
-	//std::cout << this->fileId << " : write back to file " << std::endl;
-#endif
 	// 脏页需要写回
-	if (isModified)
+	if (this->isModified && this->fileId>0)
 	{
 		int temp = 0;
 		temp = lseek(this->fileId, this->filePageID*FILE_PAGESIZE, SEEK_SET);
@@ -299,18 +296,6 @@ Clock::~Clock()
 	}
 }
 
-#ifndef NDEBUG
-void Clock::PrintFileNameInMemory()
-{
-	for (int i = 1; i <= MEM_PAGEAMOUNT; i++)
-	{
-		if (MemPages[i] && MemPages[i]->fileId)
-		{
-			std::cout << MemPages[i]->fileId << "\t\t" << MemPages[i]->filePageID << std::endl;
-		}
-	}
-}
-#endif
 MemPage* Clock::GetMemAddr(unsigned long fileId, unsigned long filePageID)
 {
 	// 先查找是否存在内存中
@@ -433,7 +418,9 @@ unsigned int Clock::GetReplaceablePage()
 
 BUFFER::~BUFFER()
 {
-	CloseAllFile();
+	//CloseAllFile();
+	for (auto e : memFiles)
+		delete e;
 }
 
 MemFile* BUFFER::GetMemFile(const char *fileName)
