@@ -64,6 +64,7 @@ public:
 	void PrintAllLeafNode();
 	IndexHeadNode *GetPtrIndexHeadNode();
 	BTNode *FileAddrToMemPtr(FileAddr node_fd);                                 // 文件地址转换为内存指针
+
 private:
 	FileAddr DeleteKeyAtInnerNode(FileAddr x, int i, KeyAttr key);              // x的下标为i的结点为叶子结点
 	FileAddr DeleteKeyAtLeafNode(FileAddr x, int i, KeyAttr key);               // x的下标为i的结点为叶子结点

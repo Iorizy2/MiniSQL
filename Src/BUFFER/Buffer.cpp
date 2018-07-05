@@ -56,6 +56,13 @@ const void* MemFile::ReadRecord(FileAddr *address_delete)const
 	return (char*)(pMemPage->Ptr2PageBegin) + address_delete->offSet;
 }
 
+void* MemFile::ReadWriteRecord(FileAddr *address_delete)
+{
+	auto pMemPage = GetGlobalClock()->GetMemAddr(this->fileId, address_delete->filePageID);
+	pMemPage->isModified = true;
+	return (char*)(pMemPage->Ptr2PageBegin) + address_delete->offSet;
+}
+
 // 返回新添加记录的地址
 FileAddr MemFile::AddRecord(const void* const source, size_t sz_record)
 {

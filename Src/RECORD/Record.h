@@ -91,8 +91,8 @@ public:
 	Column_Cell(const Column_Cell& rhs); // 拷贝构造
 	Column_Cell& operator=(const Column_Cell&rhs); // 拷贝赋值
 
-	Column_Cell(Column_Cell&& rhs); // 移动构造
-	Column_Cell& operator=(Column_Cell&&rhs); // 移动赋值
+	Column_Cell(Column_Cell&& rhs) = delete; // 移动构造
+	Column_Cell& operator=(Column_Cell&&rhs) = delete; // 移动赋值
 
 	size_t size()const;
 	void* data()const;
@@ -102,6 +102,8 @@ public:
 	std::string columu_name;
 	Column_Value column_value;
 	Column_Cell *next;
+
+	size_t sz = 0;   // 保存字符串字段的长度
 	// 类型转换
 	operator KeyAttr()const;
 };
@@ -112,6 +114,7 @@ public:
 *    定义一条记录的头结构，唯一标志一条记录
 *    记录的头记录了该记录的第一个字段的地址
 *    记录各个字段以链表的形式形成整条记录
+*    若是字符串类型字段，字符串前三个字符是表示该字段字符串的长度
 *
 ***********************************************************************************/
 class RecordHead
@@ -120,18 +123,20 @@ public:
 	RecordHead();
 	RecordHead(const RecordHead &rhs); // 拷贝构造
 	RecordHead& operator=(const RecordHead&rhs);  // 拷贝赋值
+	RecordHead(RecordHead &&rhs); // 移动构造
+	RecordHead& operator=(RecordHead&&rhs);  // 移动赋值
 	~RecordHead();
-	void AddColumnCell(const Column_Cell &cc);
 
-	size_t size()const;  // 返回整条记录的大小
+	void AddColumnCell(const Column_Cell &cc);
+	size_t size()const;                         // 返回整条记录的大小
     Column_Cell* GetFirstColumn()const;
 	
 private:
 	Column_Cell *phead;  // 指向记录的第一个字段
 	Column_Cell *pLast;
-	void *data;
-};
 
+};
+std::ostream& operator<<(std::ostream &os, const RecordHead &rd);
 
 
 
@@ -155,7 +160,8 @@ public:
 	// 删除记录，返回删除的记录所在数据文件的地址
 	FileAddr DeleteRecord(const std::string dbf_name, FileAddr fd, size_t);
 
-	// 更新整条记录
+	// 更新整条记录,若是字符串类型字段，字符串前三个字符是表示该字段字符串的长度
+	// 实际写入时并不将字符串的长度写进文件
 	bool UpdateRecord(const std::string dbf_name, const RecordHead &rd, FileAddr fd);   
 
 private:

@@ -610,172 +610,101 @@ void PrintWindow::DropTable(bool is_dropped)
 
 void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 {
+	if (select_table_print_info.key_fd.size() < 1)
+		return;
 	std::string idx_file = GetCp().GetCurrentPath() + select_table_print_info.table_name + ".idx";
 	std::string dbf_file = GetCp().GetCurrentPath() + select_table_print_info.table_name + ".dbf";
 	BTree tree(idx_file);
-	auto phead = tree.GetPtrIndexHeadNode();
-	std::vector<std::string> col_name;
-	std::vector<std::string> out_col_name;
-	std::vector<int> col_len;
-	int n_output_col = 0;  // 输出的字段个数
-	int total_length = 0;  // 记录的总长度
+	TableIndexHeadInfo table_index_head_info(tree);
+	int total_length = 0;
+	auto key_fd = select_table_print_info.key_fd;
+	
+	
 
-	int sz_col = 0;// 字段个数
-	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
+	auto all_column_name = table_index_head_info.GetColumnNames();
+	auto all_column_len = table_index_head_info.GetColumnSize();
+	std::vector<std::string> out_name = select_table_print_info.name_selected_column;
+	if (out_name.size() == 1 && out_name[0] == "*")
+		out_name = all_column_name;
+	int n_output_col = out_name.size();
+
+	int total_record_len = 2;
+	std::vector<int> out_len;
+	for (int i = 0; i < out_name.size(); i++)
 	{
-		if (phead->RecordTypeInfo[i] == 'I')
+		auto it = find(all_column_name.begin(), all_column_name.end(), out_name[i]);
+		Column_Type type = table_index_head_info.GetColumnType()[it - all_column_name.begin()];
+		switch (type)
 		{
-			col_len.push_back(sizeof(int)+10);
-			sz_col++;
-		}
-		if (phead->RecordTypeInfo[i] == 'D')
-		{
-			col_len.push_back(sizeof(double)+16);
-			sz_col++;
-		}
-		if (phead->RecordTypeInfo[i] == 'C')
-		{
-			int len = (phead->RecordTypeInfo[i + 1] - '0') * 100 + (phead->RecordTypeInfo[i + 2] - '0') * 10 + (phead->RecordTypeInfo[i + 3] - '0');
-			col_len.push_back(len);
-			sz_col++;
+		case Column_Type::I:
+			out_len.push_back(8);
+			total_record_len += 8;
+			break;
+		case Column_Type::C:
+			out_len.push_back(all_column_len[it - all_column_name.begin()]);
+			total_record_len += all_column_len[it - all_column_name.begin()];
+			break;
+		case Column_Type::D:
+			out_len.push_back(15);
+			total_record_len += 15;
+			break;
+		default:
+			break;
 		}
 	}
-	char *pColumnName = phead->RecordColumnName;
-	for (int j = 0; j < sz_col; j++)
+	
+	total_record_len += (out_name.size() - 1);
+	//打印头部
+	std::cout << "+";
+	for (int i = 0; i < total_record_len-2; i++)std::cout << "-";
+	std::cout << "+";
+	std::cout << std::endl;
+	// 打印列名
+	for (int i = 0; i < out_name.size(); i++)
 	{
-		col_name.push_back(pColumnName);
-		pColumnName += ColumnNameLength;
+		std::cout << "|" << std::left << std::setw(out_len[i]) << out_name[i];
 	}
+	std::cout << "+" << std::endl;
 
-
-
-	
-
-	RecordHead record_head;
-	std::vector<FileAddr> fds;
-	for (int i = 0; i < select_table_print_info.key_fd.size(); i++)
-		fds.push_back(select_table_print_info.key_fd[i].second);
-	
-	auto table_name = select_table_print_info.table_name;
-	auto pcolumn = record_head.GetFirstColumn();
-
-	if (select_table_print_info.name_selected_column.size() == 1 && select_table_print_info.name_selected_column[0] == "*")
-		select_table_print_info.name_selected_column = col_name;
-	// 第一遍 只计算输出长度
-	
-	for (int i = 0; i < fds.size(); i++)
+	// 打印每一条记录
+	for (int i = 0; i < key_fd.size(); i++)
 	{
-		record_head = GetDbfRecord(table_name, fds[i], GetCp().GetCurrentPath());
-		pcolumn = record_head.GetFirstColumn();
-		if (i != 0)break;
-		while (pcolumn)
+		RecordHead record_head = GetDbfRecord(select_table_print_info.table_name, key_fd[i].second, GetCp().GetCurrentPath());
+		auto pColumn = record_head.GetFirstColumn();
+		while (pColumn)
 		{
-			int isPrint = false;
-			for (int i = 0; i <select_table_print_info.name_selected_column.size(); i++)
+			auto it = find(out_name.begin(), out_name.end(), pColumn->columu_name);
+			if (it != out_name.end())
 			{
-				if (select_table_print_info.name_selected_column[i] == pcolumn->columu_name)
-				{
-					isPrint = true;
-					break;
-				}
-			}
-			if (isPrint)
-			{
-				switch (pcolumn->column_type)
+				switch (pColumn->column_type)
 				{
 				case Column_Type::I:
-					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					if (i == 0)n_output_col++;
-					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
-					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.IntValue;
+					std::cout << "|" << std::left << std::setw(out_len[it-out_name.begin()]) << pColumn->column_value.IntValue;
 					break;
 				case Column_Type::D:
-					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					if (i == 0)n_output_col++;
-					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
-					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.DoubleValue;
+					
+					std::cout << "|" << std::left << std::setw(out_len[it - out_name.begin()]) << pColumn->column_value.DoubleValue;
 					break;
 				case Column_Type::C:
-					if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					if (i == 0)n_output_col++;
-					if (i == 0)out_col_name.push_back(pcolumn->columu_name);
-					//std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.StrValue;
+					
+					std::cout << "|" << std::left << std::setw(out_len[it - out_name.begin()]) << pColumn->column_value.StrValue;
 					break;
 				default:
 					break;
 				}
 			}
-			
-			pcolumn = pcolumn->next;
+			pColumn = pColumn->next;
 		}
+		std::cout <<"|"<< std::endl;
 	}
-	// 输出头部
-	std::cout << "+";
-	for (int i = 0; i < total_length + n_output_col - 1; i++)
-		std::cout << "-";
-	std::cout << "+" << std::endl;
-	// 输出各个字段名称
-	for (auto e : out_col_name)
-	{
-		std::cout << "|" << std::left << std::setw(GetColumnLength(e, col_name, col_len)) << e;
-	}
-	std::cout << "|" << std::endl;
-	std::cout << "+";
-	for (int i = 0; i < total_length + n_output_col - 1; i++)
-		std::cout << "-";
-	std::cout << "+" << std::endl;
 
-	// 第二遍 真正输出
-	for (int i = 0; i < fds.size(); i++)
-	{
-		record_head = GetDbfRecord(table_name, fds[i], GetCp().GetCurrentPath());
-		pcolumn = record_head.GetFirstColumn();
 
-		while (pcolumn)
-		{
-			int isPrint = false;
-			for (int i = 0; i < select_table_print_info.name_selected_column.size(); i++)
-			{
-				if (select_table_print_info.name_selected_column[i] == pcolumn->columu_name)
-				{
-					isPrint = true;
-					break;
-				}
-			}
-			if (isPrint)
-			{
-				switch (pcolumn->column_type)
-				{
-				case Column_Type::I:
-					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					//if (i == 0)n_output_col++;
-					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.IntValue;
-					break;
-				case Column_Type::D:
-					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					//if (i == 0)n_output_col++;
-					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.DoubleValue;
-					break;
-				case Column_Type::C:
-					//if (i == 0) total_length += GetColumnLength(pcolumn->columu_name, col_name, col_len);
-					//if (i == 0)n_output_col++;
-					std::cout << "|" << std::left << std::setw(GetColumnLength(pcolumn->columu_name, col_name, col_len)) << pcolumn->column_value.StrValue;
-					break;
-				default:
-					break;
-				}
-			}
 
-			pcolumn = pcolumn->next;
-		}
-		std::cout << "|";
-		std::cout << std::endl;
-	}
 	// 输出最后一行
 	std::cout << "+";
-	for (int i = 0; i < total_length + n_output_col - 1; i++)
-		std::cout << "-";
-	std::cout << "+" << std::endl;
+	for (int i = 0; i < total_record_len - 2; i++)std::cout << "-";
+	std::cout << "+";
+	std::cout << std::endl;
 
 	std::cout << select_table_print_info.key_fd.size() << " row in set.[";
 	GetTimer().PrintTimeSpan();

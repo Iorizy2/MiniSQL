@@ -25,7 +25,7 @@ CompareCell CreateCmpCell(std::string column_name, Column_Type column_type, Oper
 
 	case Column_Type::D:
 		column_cell.column_type = Column_Type::D;
-		column_cell.column_value.IntValue = stod(value);
+		column_cell.column_value.DoubleValue = stod(value);
 		break;
 	default:
 		break;
@@ -159,11 +159,13 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp)
 bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 {
 	// TODO 检查创建信息以及当前目录是否在数据库中
-
-	// 获取表名
+	
+	// 表名
 	std::string table_name = tb_create_info.table_name;
+	std::string idx_file = path + table_name + ".idx";
+	std::string dbf_file = path + table_name + ".dbf";
 
-	// 获取关键字位置
+	// 关键字位置,没有设置的情况下默认为第一个字段
 	int KeyTypeIndex = 0;
 	for (int j = 0; j < tb_create_info.columns_info.size(); j++)
 	{
@@ -174,13 +176,13 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 		}
 	}
 
-	//获取字段信息
+	// 字段信息
 	char RecordTypeInfo[RecordColumnCount];          // 记录字段类型信息
 	char *ptype = RecordTypeInfo;
 	char RecordColumnName[RecordColumnCount / 4 * ColumnNameLength];
-	char*pname = RecordColumnName;
+	char *pname = RecordColumnName;
 
-	auto &column_info_ref = tb_create_info.columns_info;
+	const auto &column_info_ref = tb_create_info.columns_info;
 	for (int i = 0; i < column_info_ref.size(); i++)
 	{
 		// 类型信息
@@ -209,10 +211,9 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 	*ptype = '\0';
 
 	// 创建索引文件
-	std::string idx_file = path + table_name + ".idx";
 	BTree tree(idx_file, KeyTypeIndex, RecordTypeInfo, RecordColumnName);
+
 	// 创建数据文件
-	std::string dbf_file = path + table_name + ".dbf";
 	GetGlobalFileBuffer().CreateFile(dbf_file.c_str());
 	return true;
 }
@@ -277,41 +278,24 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 	std::string idx_file = path + tb_insert_info.table_name + ".idx";
 	std::string dbf_file = path + tb_insert_info.table_name + ".dbf";
 	BTree tree(idx_file);
+	TableIndexHeadInfo table_index_head_info(tree);
 	auto phead = tree.GetPtrIndexHeadNode();
 
 	KeyAttr key;
 
-#ifndef NDEBUG
-	std::cout << "打印索引头部信息" << std::endl;
-	std::cout << "记录字段类型：" << phead->RecordTypeInfo << std::endl;
-#endif
-
-	int sz_col = 0;// 字段个数
-	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
-	{
-		if (phead->RecordTypeInfo[i] == 'I' || phead->RecordTypeInfo[i] == 'C' || phead->RecordTypeInfo[i] == 'D')sz_col++;
-	}
-
-#ifndef NDEBUG
-	std::cout << "各个字段名称：" << std::endl;
-	char *pColumnName = phead->RecordColumnName;
-	for (int j = 0; j < sz_col; j++)
-	{
-		std::cout << pColumnName << std::endl;
-		pColumnName += ColumnNameLength;
-	}
-#endif
 
 	// 将记录信息封装成记录数据对象
 	RecordHead record_head;
 	int column_id = 0;
 	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
 	{
-		Column_Cell cc;
+		
 		if (phead->RecordTypeInfo[i] == 'I')
 		{
+			Column_Cell cc;
 			//找到对应的字段名称
 			char *pColumnName = phead->RecordColumnName + column_id*ColumnNameLength;
+
 			//在插入记录里寻找该字段的值
 			int k = -1;
 			for (int j = 0; j < tb_insert_info.insert_info.size(); j++)
@@ -325,7 +309,6 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 			if (k != -1)
 			{
-
 				cc.column_type = Column_Type::I;
 				cc.column_value.IntValue = stoi(tb_insert_info.insert_info[k].column_value);
 			}
@@ -333,6 +316,7 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			{
 				// 默认值填充
 				cc.column_type = Column_Type::I;
+				cc.column_value.IntValue = 0;
 			}
 			column_id++;
 			record_head.AddColumnCell(cc);
@@ -340,6 +324,7 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 		if (phead->RecordTypeInfo[i] == 'D')
 		{
+			Column_Cell cc;
 			//找到对应的字段名称
 			char *pColumnName = phead->RecordColumnName + column_id*ColumnNameLength;
 			//在插入记录里寻找该字段的值
@@ -355,7 +340,6 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 			if (k != -1)
 			{
-
 				cc.column_type = Column_Type::D;
 				cc.column_value.DoubleValue = stod(tb_insert_info.insert_info[k].column_value);
 			}
@@ -363,14 +347,15 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			{
 				// 默认值填充
 				cc.column_type = Column_Type::D;
+				cc.column_value.DoubleValue = 0.0;
 			}
-
 			column_id++;
 			record_head.AddColumnCell(cc);
 		}
 
 		if (phead->RecordTypeInfo[i] == 'C')
 		{
+			Column_Cell cc;
 			//找到对应的字段名称
 			char *pColumnName = phead->RecordColumnName + column_id*ColumnNameLength;
 			//在插入记录里寻找该字段的值
@@ -387,20 +372,19 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 			if (k != -1)
 			{
 				cc.column_type = Column_Type::C;
-				int sz = (phead->RecordTypeInfo[i + 1] - '0') * 100 + (phead->RecordTypeInfo[i + 2] - '0') * 10 + (phead->RecordTypeInfo[i + 3] - '0');
-				char*pChar = (char*)malloc(sz + 3); // 多申请三个字节用来保存用户定义的字符串长度值
-				memcpy(pChar, &(phead->RecordTypeInfo[i + 1]), 3);
-				pChar += 3;
+				cc.sz = table_index_head_info.GetColumnSizeByIndex(column_id);
+				char*pChar = (char*)malloc(cc.sz); 
 				strcpy(pChar, tb_insert_info.insert_info[k].column_value.c_str());
-				cc.column_value.StrValue = pChar - 3;
+				cc.column_value.StrValue = pChar;
 			}
 			else
 			{
 				// 默认值填充
 				cc.column_type = Column_Type::C;
-				cc.column_value.StrValue = (char*)malloc(4);
-				cc.column_value.StrValue[0] = cc.column_value.StrValue[1] = cc.column_value.StrValue[2] = '0';
-				cc.column_value.StrValue[3] = '\0';
+				cc.sz = table_index_head_info.GetColumnSizeByIndex(column_id);
+				char*pChar = (char*)malloc(cc.sz);
+				memset(pChar, 0, cc.sz);
+				cc.column_value.StrValue = pChar;
 			}
 			column_id++;
 			record_head.AddColumnCell(cc);
@@ -486,45 +470,185 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path)
 
 bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string("./")*/)
 {
+	//std::string file_idx = path + tb_update_info.table_name + ".idx";
+	//std::string file_dbf = path + tb_update_info.table_name + ".dbf";
+	//BTree tree(file_idx);
+
+	//// 读取对应字段的长度
+	//std::vector<std::string> col_name;
+	//std::vector<int> col_len;
+	//auto phead = tree.GetPtrIndexHeadNode();
+	//int sz_col = 0; // 字段个数
+	//for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
+	//{
+	//	if (phead->RecordTypeInfo[i] == 'I')
+	//	{
+	//		col_len.push_back(sizeof(int));
+	//		sz_col++;
+	//	}
+	//	if (phead->RecordTypeInfo[i] == 'D')
+	//	{
+	//		col_len.push_back(sizeof(double));
+	//		sz_col++;
+	//	}
+	//	if (phead->RecordTypeInfo[i] == 'C')
+	//	{
+	//		int len = 0;
+	//		for (int j = 1; j <= 3; j++)
+	//		{
+	//			len += ((phead->RecordTypeInfo[i + j] - '0') * 10);
+	//		}
+	//		col_len.push_back(len);
+	//		sz_col++;
+	//	}
+	//	
+	//}
+	//// 各个字段名称
+	//char *pColumnName = phead->RecordColumnName;
+	//for (int j = 0; j < sz_col; j++)
+	//{
+	//	col_name.push_back(pColumnName);
+	//	pColumnName += ColumnNameLength;
+	//}
+
+	//// 将更新操作的expr条件封装成查找条件
+	//std::vector<CompareCell> cmp_cells;
+	//auto fields_name = GetColumnAndTypeFromTable(tb_update_info.table_name, GetCp().GetCurrentPath());
+
+	//for (int i = 0; i < tb_update_info.expr.size(); i++)
+	//{
+	//	CompareCell cmp_cell = CreateCmpCell(tb_update_info.expr[i].field, GetType(tb_update_info.expr[i].field, fields_name)
+	//		, GetOperatorType(tb_update_info.expr[i].op), tb_update_info.expr[i].value);
+	//	
+	//	cmp_cells.push_back(cmp_cell);
+	//}
+	//
+	//// 查找满足更新条件的字段
+	//std::vector<std::pair<KeyAttr, FileAddr>> res;
+	//std::vector<std::pair<KeyAttr, FileAddr>> fds;
+	//// 否则
+	//for (int i = 0; i < cmp_cells.size(); i++)
+	//{
+	//	// 查找满足单个字段的记录
+	//	fds = Search(cmp_cells[i], tb_update_info.table_name, GetCp().GetCurrentPath());
+	//	// 新的结果和之前的结果求交集
+	//	if (res.empty())
+	//	{
+	//		res = fds;
+	//	}
+	//	else
+	//	{
+	//		std::vector<std::pair<KeyAttr, FileAddr>> v;
+	//		sort(fds.begin(), fds.end());
+	//		sort(res.begin(), res.end());
+	//		set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
+	//		res = v;
+	//	}
+
+	//}
+	//
+	// //更新记录
+	//for (int i = 0; i < res.size(); i++)
+	//{
+	//	// 先读出旧的记录
+	//	RecordHead record_head = GetDbfRecord(tb_update_info.table_name, res[i].second, path);
+	//	std::cout << "旧记录  " << record_head << std::endl;
+	//	//更该每个要更新的字段值
+	//	for (int j = 0; j < tb_update_info.field_value.size(); j++)
+	//	{
+	//		auto head = record_head.GetFirstColumn();
+	//		std::string new_str;
+	//		int n = 0;
+	//		while (head)
+	//		{
+	//			if (head->columu_name == tb_update_info.field_value[j].field)
+	//			{
+	//				// 更新
+	//				switch (head->column_type)
+	//				{
+	//				case Column_Type::I:
+	//					head->column_value.IntValue = stoi(tb_update_info.field_value[i].value);
+	//					break;
+	//				case Column_Type::D:
+	//					head->column_value.DoubleValue = stod(tb_update_info.field_value[i].value);
+	//					break;
+	//				case Column_Type::C:
+	//					// 获取长度
+	//					for (int kkk = 0; kkk < col_name.size(); kkk++)
+	//					{
+	//						if (col_name[kkk] == head->columu_name)
+	//						{
+	//							n = kkk;
+	//							break;
+	//						}
+	//					}
+	//					new_str += IntToStr3(col_len[n]);
+	//					new_str += tb_update_info.field_value[i].value;
+	//					printf("old = %s", head->column_value.StrValue);
+	//					printf("new = %s", new_str.c_str());
+	//					memcpy(head->column_value.StrValue, new_str.c_str(), new_str.size()+1);
+	//					//strcpy(head->column_value.StrValue, new_str.c_str());
+	//					break;
+	//				default:
+	//					break;
+	//				}
+	//				
+	//				break;
+	//			}
+	//			head = head->next;
+	//		}
+	//	}
+	//	//写回
+	//	Record record;
+	//	std::cout << "新记录  " << record_head << std::endl;
+	//	record.UpdateRecord(file_dbf, record_head, res[i].second);
+
+	//	// 判断主键的值有没有被更改
+	//	bool isPrimary = false;
+	//	std::string new_value_primary;
+
+	//	auto pKey_name = tree.GetPtrIndexHeadNode()->RecordColumnName;
+	//	pKey_name += ColumnNameLength * tree.GetPtrIndexHeadNode()->KeyTypeIndex;
+	//	for (int j = 0; j < tb_update_info.field_value.size(); j++)
+	//	{
+	//		if (tb_update_info.field_value[j].field == pKey_name)
+	//		{
+	//			isPrimary = true;
+	//			new_value_primary = tb_update_info.field_value[j].value;
+	//			break;
+	//		}
+	//	}
+	//	// 修改主键索引
+	//	if (isPrimary)
+	//	{
+	//		// TODO
+	//		Column_Type old_key_type = res[i].first.type;
+	//		tree.Delete(res[i].first);
+	//		KeyAttr new_key;
+	//		new_key.type = old_key_type;
+	//		switch (new_key.type)
+	//		{
+	//		case Column_Type::I:
+	//			new_key.value.IntValue = stoi(new_value_primary);
+	//			break;
+	//		case Column_Type::D:
+	//			new_key.value.IntValue = stod(new_value_primary);
+	//			break;
+	//		case Column_Type::C:
+	//			strcpy(new_key.value.StrValue, new_value_primary.c_str());
+	//			break;
+	//		default:
+	//			break;
+	//		}
+	//		tree.Insert(new_key, res[i].second);
+	//	}
+	//}
+	//return true;
+
+	//////////////////////////////////////////////////////////////////////////
 	std::string file_idx = path + tb_update_info.table_name + ".idx";
 	std::string file_dbf = path + tb_update_info.table_name + ".dbf";
 	BTree tree(file_idx);
-	// 读取对应字段的长度
-	std::vector<std::string> col_name;
-	std::vector<int> col_len;
-	auto phead = tree.GetPtrIndexHeadNode();
-	int sz_col = 0; // 字段个数
-	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
-	{
-		if (phead->RecordTypeInfo[i] == 'I')
-		{
-			col_len.push_back(sizeof(int));
-			sz_col++;
-		}
-		if (phead->RecordTypeInfo[i] == 'D')
-		{
-			col_len.push_back(sizeof(double));
-			sz_col++;
-		}
-		if (phead->RecordTypeInfo[i] == 'C')
-		{
-			int len = 0;
-			for (int j = 1; j <= 3; j++)
-			{
-				len += ((phead->RecordTypeInfo[i + j] - '0') * 10);
-			}
-			col_len.push_back(len);
-			sz_col++;
-		}
-		
-	}
-	// 各个字段名称
-	char *pColumnName = phead->RecordColumnName;
-	for (int j = 0; j < sz_col; j++)
-	{
-		col_name.push_back(pColumnName);
-		pColumnName += ColumnNameLength;
-	}
 
 	// 将更新操作的expr条件封装成查找条件
 	std::vector<CompareCell> cmp_cells;
@@ -534,10 +658,10 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 	{
 		CompareCell cmp_cell = CreateCmpCell(tb_update_info.expr[i].field, GetType(tb_update_info.expr[i].field, fields_name)
 			, GetOperatorType(tb_update_info.expr[i].op), tb_update_info.expr[i].value);
-		
+
 		cmp_cells.push_back(cmp_cell);
 	}
-	
+
 	// 查找满足更新条件的字段
 	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	std::vector<std::pair<KeyAttr, FileAddr>> fds;
@@ -559,78 +683,59 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
 			res = v;
 		}
-
+		for (auto e : res)
+			PrintRecord(tb_update_info.table_name, e.first, e.second, path);
 	}
 
-	// 更新记录
+	 //更新记录
 	for (int i = 0; i < res.size(); i++)
 	{
-		// 先读出旧的记录
-		auto record_head = GetDbfRecord(tb_update_info.table_name, res[i].second, path);
-		//更该每个要更新的字段值
-		
-		for (int j = 0; j < tb_update_info.field_value.size(); j++)
-		{
-			auto head = record_head.GetFirstColumn();
-			std::string new_str;
-			int n = 0;
-			while (head)
-			{
-				if (head->columu_name == tb_update_info.field_value[j].field)
-				{
-					// 更新
-					switch (head->column_type)
-					{
-					case Column_Type::I:
-						head->column_value.IntValue = stoi(tb_update_info.field_value[i].value);
-						break;
-					case Column_Type::D:
-						head->column_value.DoubleValue = stod(tb_update_info.field_value[i].value);
-						break;
-					case Column_Type::C:
-						// 获取长度
-						for (int kkk = 0; kkk < col_name.size(); kkk++)
-						{
-							if (col_name[kkk] == head->columu_name)
-							{
-								n = kkk;
-								break;
-							}
-						}
-						new_str += IntToStr3(col_len[n]);
-						new_str += tb_update_info.field_value[i].value;
-						memcpy(head->column_value.StrValue, new_str.c_str(), new_str.size()+1);
-						//strcpy(head->column_value.StrValue, new_str.c_str());
-						break;
-					default:
-						break;
-					}
-					
-					break;
-				}
-				head = head->next;
-			}
-		}
+		// 字段记录指针
+		auto pdata = (char*)(GetGlobalFileBuffer()[file_dbf.c_str()]->ReadWriteRecord(&res[i].second));
+		pdata += sizeof(FileAddr);  // 跳过地址数据
+		TableIndexHeadInfo table_index_head_info(tree);
 
-		//写回
-		Record record;
-		record.UpdateRecord(file_dbf, record_head, res[i].second);
-		
-		// 判断主键的值有没有被更改
-		bool isPrimary = false;  
-		std::string new_value_primary;
-		
-		auto pKey_name = tree.GetPtrIndexHeadNode()->RecordColumnName;
-		pKey_name += ColumnNameLength * tree.GetPtrIndexHeadNode()->KeyTypeIndex;
+		//更该每个要更新的字段值
 		for (int j = 0; j < tb_update_info.field_value.size(); j++)
 		{
-			if (tb_update_info.field_value[j].field == pKey_name)
+			char *p = pdata +table_index_head_info.GetColumnOffset(tb_update_info.field_value[j].field);
+			Column_Type column_type = table_index_head_info.GetColumnType(tb_update_info.field_value[j].field);
+
+			switch (column_type)
 			{
-				isPrimary = true;
-				new_value_primary = tb_update_info.field_value[j].value;
+			case Column_Type::I:
+				*(int*)p = stoi(tb_update_info.field_value[j].value);
+				break;
+
+			case Column_Type::D:
+				*(double*)p = stod(tb_update_info.field_value[j].value);
+				break;
+
+			case Column_Type::C:
+				strcpy(p, tb_update_info.field_value[j].value.c_str());
+				break;
+			
+			default:
 				break;
 			}
 		}
+		
+
+		// 判断主键的值有没有被更改
+		bool isPrimary = false;
+		std::string new_primary_key;
+		int index = 0; // 如果主键被修改，主键新值的位置
+		for (int j = 0; j < tb_update_info.field_value.size(); j++)
+		{
+			if (table_index_head_info.IsPrimary(tb_update_info.field_value[j].field))
+			{
+				isPrimary = true;
+				new_primary_key = tb_update_info.field_value[j].value;
+				index = j;
+				break;
+			}
+		}
+
 		// 修改主键索引
 		if (isPrimary)
 		{
@@ -642,13 +747,13 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 			switch (new_key.type)
 			{
 			case Column_Type::I:
-				new_key.value.IntValue = stoi(new_value_primary);
+				new_key.value.IntValue = stoi(new_primary_key);
 				break;
 			case Column_Type::D:
-				new_key.value.IntValue = stod(new_value_primary);
+				new_key.value.IntValue = stod(new_primary_key);
 				break;
 			case Column_Type::C:
-				strcpy(new_key.value.StrValue, new_value_primary.c_str());
+				strcpy(new_key.value.StrValue, new_primary_key.c_str());
 				break;
 			default:
 				break;
@@ -678,7 +783,7 @@ bool DeleteTable(TB_Delete_Info tb_delete_info, std::string path /*= std::string
 	// 查找满足更新条件的字段
 	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	std::vector<std::pair<KeyAttr, FileAddr>> fds;
-	// 否则
+	
 	for (int i = 0; i < cmp_cells.size(); i++)
 	{
 		// 查找满足单个字段的记录
@@ -696,7 +801,6 @@ bool DeleteTable(TB_Delete_Info tb_delete_info, std::string path /*= std::string
 			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
 			res = v;
 		}
-
 	}
 
 	// 删除所有删除的结果
@@ -794,6 +898,19 @@ RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path /*
 	return record_head;
 }
 
+
+void PrintRecord(std::string table_name, KeyAttr key, FileAddr fd, std::string path /*= std::string("./")*/)
+{
+	std::string idx_file = path + table_name + ".idx";
+	std::string dbf_file = path + table_name + ".dbf";
+	BTree tree(idx_file);
+	auto tree_head = tree.GetPtrIndexHeadNode();
+	// 输出关键字
+	std::cout << key ;
+	// 输出记录值
+	RecordHead rd = GetDbfRecord(table_name, fd, path);
+	std::cout << rd << std::endl;
+}
 
 Operator_Type GetOperatorType(std::string s)
 {
@@ -897,44 +1014,22 @@ std::vector<std::pair<KeyAttr, FileAddr>> Search(CompareCell compare_cell, std::
 	// 索引文件名
 	std::string file_idx = path + table_name + ".idx";
 
-	// 读取索引 信息
+	// 索引信息
 	BTree tree(file_idx);
-	auto phead = tree.GetPtrIndexHeadNode();
-
+	TableIndexHeadInfo table_index_head_info(tree);
+	
 	// 判断待查找的字段是否是主键字段
 	bool bKeyComumn = false;
-	int sz_col = 0;// 字段个数
-	for (int i = 0; phead->RecordTypeInfo[i] != '\0'; i++)
-	{
-		if (phead->RecordTypeInfo[i] == 'I' || phead->RecordTypeInfo[i] == 'C' || phead->RecordTypeInfo[i] == 'D')
-			sz_col++;
-	}
-
-	int key_index = phead->KeyTypeIndex;
-	char *pColumnName = phead->RecordColumnName;
-	for(int i=0; i<key_index;i++)
-		pColumnName += ColumnNameLength;
-
-
-	if (compare_cell.cmp_value.columu_name == pColumnName)
-	{
-		bKeyComumn = true;
-	}
+	bKeyComumn = table_index_head_info.IsPrimary(compare_cell.cmp_value.columu_name);
 		
 	// 查找
 
 	if (bKeyComumn)
 	{
-#ifndef NDEBUG
-		std::cout << "主键查找" << std::endl;
-#endif
 		res = KeySearch(compare_cell, table_name, path);
 	}
 	else
 	{
-#ifndef NDEBUG
-		std::cout << "遍历查找" << std::endl;
-#endif
 		res = RangeSearch(compare_cell, table_name, path);
 	}
 
@@ -955,10 +1050,7 @@ std::vector<std::pair<KeyAttr, FileAddr>> KeySearch(CompareCell compare_cell, st
 	// 如果是查找相等的值
 	if (compare_cell.OperType == Operator_Type::E)
 	{
-#ifndef NDEBUG
-		std::cout << "主键B+树查找" << std::endl;
-#endif
-		auto fd = tree.Search(compare_cell.cmp_value);
+		FileAddr fd = tree.Search(compare_cell.cmp_value);
 		if (fd.offSet!=0)
 		{
 			res.push_back({ compare_cell.cmp_value , fd });
@@ -966,16 +1058,13 @@ std::vector<std::pair<KeyAttr, FileAddr>> KeySearch(CompareCell compare_cell, st
 	}
 	else  // 可优化::关键字二分查找
 	{
-#ifndef NDEBUG
-		std::cout << "主键索引遍历查找" << std::endl;
-#endif
 		// 第一个数据结点地址
 		auto node_fd = phead->MostLeftNode;
 
 		while (node_fd.offSet != 0)
 		{
 			//取出结点内记录
-			auto pNode = tree.FileAddrToMemPtr(node_fd);
+			const BTNode *pNode = tree.FileAddrToMemPtr(node_fd);
 			for (int i = 0; i < pNode->count_valid_key; i++)
 			{
 				// 查找比较的字段
@@ -1003,7 +1092,7 @@ std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, 
 
 	// 读取索引 信息
 	BTree tree(file_idx);
-	auto phead = tree.GetPtrIndexHeadNode();
+	const auto phead = tree.GetPtrIndexHeadNode();
 
 	// 第一个数据结点地址
 	auto node_fd = phead->MostLeftNode;
@@ -1011,21 +1100,24 @@ std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, 
 	while (node_fd.offSet!=0)
 	{
 		//取出结点内记录
-		auto pNode = tree.FileAddrToMemPtr(node_fd);
+		const  BTNode *pNode = tree.FileAddrToMemPtr(node_fd);
+
 		for (int i = 0; i < pNode->count_valid_key; i++)
 		{
 			RecordHead record = GetDbfRecord(table_name, pNode->children[i], path);
 
 			// 查找比较的字段
-			auto pColumn = record.GetFirstColumn();
+			const Column_Cell *pColumn = record.GetFirstColumn();
 			while (pColumn && pColumn->columu_name != compare_cell.cmp_value.columu_name)pColumn = pColumn->next;
 			bool isSearched = compare_cell(*pColumn);
 			if (isSearched)  // 满足条件
 			{
 				res.push_back({ pNode->key[i] ,pNode->children[i] });
 			}
+
 		}
-		// 下一个数据结点
+
+		// 下一个B+tree结点
 		node_fd = tree.FileAddrToMemPtr(node_fd)->next;
 	}
 
@@ -1106,3 +1198,203 @@ std::string CatalogPosition::SetCurrentPath(std::string cur)
 	current_catalog = cur;
 	return current_catalog;
 }
+
+size_t TableIndexHeadInfo::GetColumnCount()const
+{
+	size_t n = 0;
+
+	const IndexHeadNode* pHeadNode = tree.GetPtrIndexHeadNode();
+	const char *pColumnTypeInfo = pHeadNode->RecordTypeInfo;
+
+	while ((*pColumnTypeInfo) != '\0')
+	{
+		char c = *pColumnTypeInfo;
+		if (c == 'I' || c == 'D' || c == 'C')  n++;
+		pColumnTypeInfo++;
+	}
+
+	return n;
+}
+
+std::vector<std::string> TableIndexHeadInfo::GetColumnNames() const
+{
+	std::vector<std::string> column_names;
+	size_t column_count = GetColumnCount();
+
+	const IndexHeadNode* pHeadNode = tree.GetPtrIndexHeadNode();
+	const char *pColumnName = pHeadNode->RecordColumnName;
+	for (size_t i = 0; i < column_count; i++)
+	{
+		column_names.push_back(pColumnName);
+		pColumnName += ColumnNameLength;
+	}
+
+	return column_names;
+}
+
+std::vector<Column_Type> TableIndexHeadInfo::GetColumnType()const
+{
+	std::vector<Column_Type> column_types;
+
+	const IndexHeadNode* pHeadNode = tree.GetPtrIndexHeadNode();
+	const char *pColumnTypeInfo = pHeadNode->RecordTypeInfo;
+
+	while ((*pColumnTypeInfo) != '\0')
+	{
+		char c = *pColumnTypeInfo;
+
+		switch (c)
+		{
+		case 'I':
+			column_types.push_back(Column_Type::I);
+			break;
+		case 'D':
+			column_types.push_back(Column_Type::D);
+			break;
+		case 'C':
+			column_types.push_back(Column_Type::C);
+			break;
+
+		default:
+			break;
+		}
+
+		pColumnTypeInfo++;
+	}
+
+	return column_types;
+}
+
+Column_Type TableIndexHeadInfo::GetColumnType(std::string column_name) const
+{
+	auto column_names = GetColumnNames();
+	int k = 0;
+	for (int i = 0; i < column_names.size(); i++)
+	{
+		if (column_names[i] == column_name)
+		{
+			k = i;
+			break;
+		}
+	}
+
+	auto column_types = GetColumnType();
+	return column_types[k];
+}
+
+std::vector<int> TableIndexHeadInfo::GetColumnSize() const
+{
+	std::vector<int> column_size;
+
+	const IndexHeadNode* pHeadNode = tree.GetPtrIndexHeadNode();
+	const char *pColumnTypeInfo = pHeadNode->RecordTypeInfo;
+
+	while ((*pColumnTypeInfo) != '\0')
+	{
+		char c = *pColumnTypeInfo;
+		size_t sz = 0;
+		switch (c)
+		{
+		case 'I':
+			column_size.push_back(sizeof(int));
+			break;
+		case 'D':
+			column_size.push_back(sizeof(double));
+			break;
+		case 'C':
+			sz = (pColumnTypeInfo[1] - '0') * 100 + (pColumnTypeInfo[2] - '0') * 10 + (pColumnTypeInfo[3] - '0') * 1;
+			column_size.push_back(sz);
+			break;
+
+		default:
+			break;
+		}
+
+		pColumnTypeInfo++;
+	}
+
+	return column_size;
+}
+
+int TableIndexHeadInfo::GetColumnSizeByIndex(int i) const
+{
+	auto SZ = GetColumnSize();
+	return SZ[i];
+}
+
+int TableIndexHeadInfo::GetPrimaryIndex()const
+{
+	const IndexHeadNode* pHeadNode = tree.GetPtrIndexHeadNode();
+	return pHeadNode->KeyTypeIndex;
+}
+
+bool TableIndexHeadInfo::IsColumnName(std::string column_name) const
+{
+	auto table_names = GetColumnNames();
+	auto pos = std::find(table_names.begin(), table_names.end(), column_name);
+
+	return pos != table_names.end();
+}
+
+int TableIndexHeadInfo::GetIndex(std::string column_name) const
+{
+	auto names = GetColumnNames();
+	for (int i = 0; i < names.size(); i++)
+	{
+		if (names[i] == column_name)
+			return i;
+	}
+	return 0;
+}
+
+bool TableIndexHeadInfo::IsPrimary(std::string column_name) const
+{
+	auto column_names = GetColumnNames();
+	auto index = GetPrimaryIndex();
+
+	return column_names[index] == column_name;
+}
+
+int TableIndexHeadInfo::GetColumnOffset(std::string column_name)
+{
+	std::vector<int> column_size = GetColumnSize();
+	int index = GetIndex(column_name);
+
+	size_t offset = 0;
+	for (int i = 0; i < index; i++)
+		offset += column_size[i];
+	return offset;
+}
+
+//
+//RecordHead TableIndexHeadInfo::CreateRecordObject(std::vector<std::pair<std::string, std::string>> ColumnName_ColumnValue)
+//{
+//	size_t column_count = GetColumnCount();
+//	std::vector<std::string> column_names = GetColumnNames();
+//
+//	RecordHead rd;
+//	// 依次封装每个字段
+//	for (size_t i = 0; i < column_count; i++)
+//	{
+//		//该字段有没有提供初始值
+//		int n = -1;
+//		for (int j = 0; j < ColumnName_ColumnValue.size(); j++)
+//		{
+//			if (ColumnName_ColumnValue[j].first == column_names[i])
+//			{
+//				n = j;
+//				break;
+//			}
+//		}
+//
+//		if (n != -1)
+//		{
+//
+//		}
+//		else
+//		{
+//			CompareCell cc;
+//			cc.OperType
+//		}
+//	}
+//}

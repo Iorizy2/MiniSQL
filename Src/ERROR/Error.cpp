@@ -11,7 +11,7 @@ namespace SQLError
 		std::cout << ErrorInfo;
 	}
 
-	void BaseError::WriteToLog()
+	void BaseError::WriteToLog()const
 	{
 		// Ð´ÈëÈÕÖ¾
 		log_file.open("log", std::ios::out | std::ios::app);
@@ -36,6 +36,7 @@ namespace SQLError
 void SQLError::DispatchError(const BaseError &error)
 {
 	error.PrintError();
+	error.WriteToLog();
 }
 
 SQLError::LSEEK_ERROR::LSEEK_ERROR()

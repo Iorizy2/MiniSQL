@@ -1,5 +1,6 @@
 #ifndef __MiniSql_H__
 #define __MiniSql_H__
+#include <algorithm>
 #include "../GLOBAL/global.h"
 #include "../BPLUSTREE/bptree.h"
 #include "../RECORD/Record.h"
@@ -55,16 +56,16 @@ CatalogPosition& GetCp();
 ************************************************************************/
 struct TB_Create_Info
 {
-	using ColumnInfo = struct ColumnInfo
+	using ColumnInfo = struct ColumnInfo               // 新建表的字段信息
 	{
 		std::string name;
 		Column_Type type;
-		bool isPrimary;       // 是否主键
-		int length;           // 数据大小，只用于字符串字段
+		bool isPrimary;                                // 是否主键
+		int length;                                    // 字段数据长度
 	};
 
-	std::string table_name;
-	std::vector<ColumnInfo> columns_info;  //字段信息向量
+	std::string table_name;                            // 新建的表名
+	std::vector<ColumnInfo> columns_info;              // 表的各个字段
 
 };
 
@@ -74,12 +75,12 @@ struct TB_Create_Info
 struct TB_Insert_Info
 {
 	using InsertInfo = struct {
-		std::string column_name;
-		std::string column_value;
+		std::string column_name;                        // 插入的字段
+		std::string column_value;                       // 插入的值
 	};
 
-	std::string table_name;
-	std::vector<InsertInfo> insert_info;
+	std::string table_name;                             // 插入的表名
+	std::vector<InsertInfo> insert_info;                // 需要插入的字段集合
 };
 
 /************************************************************************
@@ -148,6 +149,7 @@ bool CreateTable(TB_Create_Info tb_create_info, std::string path = std::string("
 
 // 删除表
 bool DropTable(std::string table_name, std::string path = std::string("./"));
+
 // 显示数据库下的表项
 std::vector<std::string> ShowAllTable(bool b, std::string path = std::string("./"));
 
@@ -162,12 +164,13 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path = std::string("
 
 // 删除记录
 bool DeleteTable(TB_Delete_Info tb_delete_info, std::string path = std::string("./"));
+
 // 打印整张表
 std::vector<RecordHead> ShowTable(std::string table_name, std::string path = std::string("./"));
 
 // 取出指定地址的数据
 RecordHead GetDbfRecord(std::string table_name, FileAddr fd, std::string path = std::string("./"));
-
+void PrintRecord(std::string table_name, KeyAttr key, FileAddr fd, std::string path = std::string("./"));
 
 // 返回给定名表中各个字段名称以及对应类型
 std::vector<std::pair<std::string,Column_Type>> GetColumnAndTypeFromTable(std::string table_name, std::string table_path);
@@ -182,6 +185,26 @@ std::vector<std::pair<KeyAttr, FileAddr>> RangeSearch(CompareCell compare_cell, 
 // 比较的字段名称，比较的字段类型，比较关系，比较的值
 CompareCell CreateCmpCell(std::string column_name, Column_Type column_type, Operator_Type Optype, std::string value);
 
+// 索引文件头信息管理类
+class TableIndexHeadInfo
+{
+public:
+	TableIndexHeadInfo(BTree &_tree) :tree(_tree) {}
+	size_t GetColumnCount()const;                                     // 表的字段个数
+	std::vector<std::string> GetColumnNames()const;                   // 各个字段名字
+	std::vector<Column_Type> GetColumnType()const;                    // 各个字段类型
+	Column_Type GetColumnType(std::string column_name)const;
+	std::vector<int> GetColumnSize()const;                            // 各个字段的大小
+	int GetColumnSizeByIndex(int i)const;                             // 第i个字段的数据大小
+	int GetPrimaryIndex()const;                                       // 主键字段的索引
+
+	bool IsColumnName(std::string column_name)const;                  // 判断该字段名是不是表的字段
+	int GetIndex(std::string column_name)const;                       // 返回该字段在所有字段中的索引位置
+	bool IsPrimary(std::string column_name)const;                     // 判断字段名是否为主键字段
+	int GetColumnOffset(std::string column_name);                     // 返回给定字段名字段距离数据头地址的偏移
+private:
+	BTree &tree;
+};
 
 
 #endif //__MiniSql_H__

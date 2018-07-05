@@ -4,7 +4,7 @@
 
 
 RecordHead::RecordHead()
-	:phead(nullptr), data(nullptr), pLast(nullptr)
+	:phead(nullptr), pLast(nullptr)
 {
 
 }
@@ -18,10 +18,35 @@ RecordHead::RecordHead(const RecordHead &rhs)
 	tmp.phead = nullptr;
 	pLast = tmp.pLast;
 	tmp.pLast = nullptr;
-	data = tmp.data;
-	tmp.data = nullptr;
+	
 
 }
+
+RecordHead::RecordHead(RecordHead &&rhs)
+{
+	while (phead)
+	{
+		auto next = phead->next;
+		delete phead;
+		phead = next;
+	}
+
+	phead = rhs.phead;
+	pLast = rhs.pLast;
+	rhs.phead = nullptr;
+	rhs.pLast = nullptr;
+}
+
+RecordHead& RecordHead::operator=(RecordHead&&rhs)
+{
+	phead = rhs.phead;
+	pLast = rhs.pLast;
+	rhs.phead = nullptr;
+	rhs.pLast = nullptr;
+
+	return *this;
+}
+
 RecordHead& RecordHead::operator=(const RecordHead&rhs)
 {
 	//std::cout << "RecordHead 拷贝赋值" << std::endl;
@@ -31,8 +56,7 @@ RecordHead& RecordHead::operator=(const RecordHead&rhs)
 	tmp.phead = nullptr;
 	pLast = tmp.pLast;
 	tmp.pLast = nullptr;
-	data = tmp.data;
-	tmp.data = nullptr;
+	
 
 	return *this;
 }
@@ -63,7 +87,7 @@ RecordHead::~RecordHead()
 		phead = next;
 	}
 
-	if (data) delete data;
+	//if (data) delete data;
 }
 
 void RecordHead::AddColumnCell(const Column_Cell &cc)
@@ -89,29 +113,26 @@ Column_Cell::Column_Cell(const Column_Cell& rhs)
 	//std::cout << "Column_Cell 拷贝构造" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
-	column_value = rhs.column_value;
+	sz = rhs.sz;
+	next = nullptr;
 
-	// 如果是指针类型
-
+	// 如果是字符串
 	if (rhs.column_type == Column_Type::C)
 	{
-		Column_Cell& tmp = const_cast<Column_Cell&>(rhs);
-		tmp.column_value.StrValue = nullptr;
+		column_value.StrValue = (char*)malloc(strlen(rhs.column_value.StrValue) + 1);
+		strcpy(column_value.StrValue, rhs.column_value.StrValue);
+	}
+	else if(rhs.column_type == Column_Type::I)
+	{
+		column_value.IntValue = rhs.column_value.IntValue;
+	}
+	else if (rhs.column_type == Column_Type::D)
+	{
+		column_value.DoubleValue = rhs.column_value.DoubleValue;
 	}
 }
 
-Column_Cell::Column_Cell(Column_Cell&& rhs)
-{
-	//std::cout << "Column_Cell 移动构造" << std::endl;
-	column_type = rhs.column_type;
-	columu_name = rhs.columu_name;
-	column_value = rhs.column_value;
 
-	if (rhs.column_type == Column_Type::C)
-	{
-		rhs.column_value.StrValue = nullptr;
-	}
-}
 
 
 Column_Cell::Column_Cell(KeyAttr key)
@@ -142,28 +163,11 @@ Column_Cell::Column_Cell()
 {
 	memset(&column_value, 0, sizeof(column_value));
 	column_type = Column_Type::I;
-}
-
-Column_Cell& Column_Cell::operator=(Column_Cell&&rhs)
-{
-	//std::cout << "Column_Cell 移动赋值" << std::endl;
-	column_type = rhs.column_type;
-	columu_name = rhs.columu_name;
-	column_value = rhs.column_value;
-
-	// 如果是指针类型，则指保留一个指针副本
-
-	if (rhs.column_type == Column_Type::C)
-	{
-		rhs.column_value.StrValue = nullptr;
-	}
-	return *this;
+	next = nullptr;
 }
 
 size_t Column_Cell::size() const
 {
-	size_t sz = 0;
-
 	switch (column_type)
 	{
 	case Column_Type::I:
@@ -171,10 +175,6 @@ size_t Column_Cell::size() const
 		break;
 
 	case Column_Type::C:
-		// 字符串字段的前三个字符表示字符串的长度 0-999
-		assert(strlen(column_value.StrValue) >= 3);
-		for (int i = 0; i < 3; i++)
-			sz = sz * 10 + (column_value.StrValue[i] - '0');
 		return sz;
 		break;
 
@@ -195,7 +195,7 @@ void* Column_Cell::data() const
 		return (void*)&column_value.IntValue;
 		break;
 	case Column_Type::C:
-		return column_value.StrValue+3; // 前三个字节保存的字符串定义的长度，不需要保存
+		return column_value.StrValue; 
 		break;
 	case Column_Type::D:
 		return (void*)&column_value.DoubleValue;
@@ -212,10 +212,9 @@ Column_Cell::~Column_Cell()
 	{
 		if (column_value.StrValue)
 		{
-			delete column_value.StrValue;
+			free(column_value.StrValue);
 			column_value.StrValue = nullptr;
-		}
-			
+		}	
 	}
 }
 
@@ -255,27 +254,30 @@ Column_Cell::operator KeyAttr() const
 
 Column_Cell& Column_Cell::operator=(const Column_Cell&rhs)
 {
-	//std::cout << "Column_Cell 拷贝赋值" << std::endl;
+	//std::cout << "Column_Cell 拷贝构造" << std::endl;
 	column_type = rhs.column_type;
 	columu_name = rhs.columu_name;
-	column_value = rhs.column_value;
+	sz = rhs.sz;
+	next = nullptr;
 
-	// 如果是指针类型，则指保留一个指针副本
-	
+	// 如果是字符串
 	if (rhs.column_type == Column_Type::C)
 	{
-		column_value.StrValue = rhs.column_value.StrValue;
-		Column_Cell& tmp = const_cast<Column_Cell&>(rhs);
-		tmp.column_value.StrValue = nullptr;
+		if (column_value.StrValue)
+			free(column_value.StrValue);
+
+		column_value.StrValue = (char*)malloc(strlen(rhs.column_value.StrValue) + 1);
+		strcpy(column_value.StrValue, rhs.column_value.StrValue);
 	}
-	if (rhs.column_type == Column_Type::I)
+	else if (rhs.column_type == Column_Type::I)
 	{
 		column_value.IntValue = rhs.column_value.IntValue;
 	}
-	if (rhs.column_type == Column_Type::D)
+	else if (rhs.column_type == Column_Type::D)
 	{
 		column_value.DoubleValue = rhs.column_value.DoubleValue;
 	}
+
 	return *this;
 }
 
@@ -484,4 +486,31 @@ std::ostream& operator<<(std::ostream &os, const KeyAttr &key)
 	return os;
 }
 
+std::ostream& operator<<(std::ostream &os, const RecordHead &rd)
+{
+	auto pColumn = rd.GetFirstColumn();
+	while (pColumn)
+	{
+		switch (pColumn->column_type)
+		{
+		case Column_Type::I:
+			os << pColumn->column_value.IntValue << " ";
+			break;
+
+		case Column_Type::D:
+			os << pColumn->column_value.DoubleValue << " ";
+			break;
+
+		case Column_Type::C:
+			os << pColumn->column_value.StrValue << " ";
+			break;
+
+		default:
+			break;
+		}
+		pColumn = pColumn->next;
+	}
+
+	return os;
+}
 

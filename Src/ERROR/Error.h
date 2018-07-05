@@ -36,7 +36,7 @@ namespace SQLError
 	{
 	public:
 		virtual void PrintError()const;
-		virtual void WriteToLog();
+		virtual void WriteToLog()const;
 	protected:
 		std::string ErrorInfo;
 		std::string ErrorPos;
