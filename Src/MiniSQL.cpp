@@ -16,10 +16,6 @@ int main()
 	// Initialize DB
 	InitMiniSQL();
 
-	// generate test data
-	//TestFunc();
-
-
 	// Run DB
 	RunMiniSQL();  
 
@@ -27,6 +23,7 @@ int main()
 	std::cout << "bye." << std::endl;
 
 	MySleep();
+	
 	return 0;
 }
 
