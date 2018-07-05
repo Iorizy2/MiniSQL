@@ -1,4 +1,6 @@
 ﻿#include <iostream>
+#include <random>
+#include <ctime>
 #include "./INTERPRETER/interpreter.h"
 
 void Help();
@@ -8,11 +10,15 @@ void MySleep(unsigned int n = 1); // 程序睡眠
 void IsPod(); // 判断POD数据
 std::string GetCommand(); // 读取用户的输入，以 ";"结束
 const std::string PROMPT = "MiniSQL:";
-
+void TestFunc();
 int main()
 {
 	// Initialize DB
 	InitMiniSQL();
+
+	// generate test data
+	//TestFunc();
+
 
 	// Run DB
 	RunMiniSQL();  
@@ -137,3 +143,69 @@ void MySleep(unsigned int n)
 		t2 = time(0);
 	}
 }
+
+
+void TestFunc()
+{
+	SensefulStr senstr;
+	PrintWindow print_window;
+	std::default_random_engine e(time(NULL));
+	std::uniform_real_distribution<double> d(0, 1000);
+	std::uniform_int_distribution<int> u(1, 29);
+
+	// 创建并使用数据库
+	senstr.SetSrcStr("drop database STU;");
+	auto cmd_type = GetOpType(senstr.GetSensefulStr());
+	Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+
+
+	senstr.SetSrcStr("create database STU;");
+	cmd_type = GetOpType(senstr.GetSensefulStr());
+	Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+
+	senstr.SetSrcStr("use database STU;");
+	cmd_type = GetOpType(senstr.GetSensefulStr());
+	Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+
+	// 创建表
+	senstr.SetSrcStr("create table stu(id int, score double, name char(30);");
+	cmd_type = GetOpType(senstr.GetSensefulStr());
+	Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+
+	//插入数据
+	std::ofstream out;
+	out.open("test_data.txt");
+	static char alphabet[] = "abcdefghijklmnopqistuvwxyzABCDEFGHIJKLMNOPQISTUVWXYZ";
+	int sz = 10000;
+	for (int i = 1; i <= sz; i++)
+	{
+		std::string cmd_str = "insert into stu(id, score, name)values(";
+		// id
+		cmd_str += std::to_string(i);
+		cmd_str += ",";
+
+		// score
+		cmd_str += std::to_string(d(e));
+		cmd_str += ",";
+
+		// name
+		std::string name;
+		int name_sz = u(e);
+		if (!name_sz)name_sz++;
+		for (int i = 0; i < name_sz; i++)
+		{
+			unsigned int index = u(e);
+			name += alphabet[index];
+		}
+		cmd_str += name;
+		cmd_str += ");";
+
+		out << std::string(cmd_str.begin() +38 , cmd_str.end()) << std::endl;
+
+		senstr.SetSrcStr(cmd_str);
+		cmd_type = GetOpType(senstr.GetSensefulStr());
+		Interpreter(senstr.GetSensefulStr(), cmd_type, print_window);
+	}
+	out.close();
+}
+

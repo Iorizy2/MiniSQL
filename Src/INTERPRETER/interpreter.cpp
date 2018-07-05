@@ -343,11 +343,7 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str)
 	{
 		tb_insert_info.insert_info.push_back({ sen_str[p], sen_str[q] });
 	}
-#ifndef NDEBUG
-	std::cout << "插入的记录键值对" << std::endl;
-	for (auto e : tb_insert_info.insert_info)
-		std::cout << e.column_name << " " << e.column_value << std::endl;
-#endif
+
 	return tb_insert_info;
 }
 

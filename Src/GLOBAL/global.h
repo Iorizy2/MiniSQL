@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include "../ERROR/Error.h"
 
-#define NDEBUG
+//#define NDEBUG
 using namespace std::chrono;
 
 
@@ -55,7 +55,7 @@ constexpr int MAX_FILENAME_LEN = 256;                   // ÎÄ¼þÃû£¨°üº¬Â·¾¶£©×î´
 
 constexpr int RecordColumnCount = 12 * 4;              // ¼ÇÂ¼×Ö¶ÎÊýÁ¿ÏÞÖÆ,¼ÙÉèËùÓÐ×Ö¶Î¶¼ÊÇ×Ö·ûÊý×é£¬Ò»¸ö×Ö·ûÊý×é×Ö¶ÎÐèÒª4¸ö×Ö·û->CXXX
 constexpr int ColumnNameLength = 16;                   // µ¥¸ö×Ö¶ÎÃû³Æ³¤¶ÈÏÞÖÆ
-constexpr int bptree_t = 3;                            // B+tree's degree, bptree_t >= 2
+constexpr int bptree_t = 40;                            // B+tree's degree, bptree_t >= 2
 constexpr int MaxKeyCount = 2 * bptree_t;              // the max number of keys in a b+tree node
 constexpr int MaxChildCount = 2 * bptree_t;            // the max number of child in a b+tree node
 

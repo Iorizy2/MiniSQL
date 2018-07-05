@@ -436,14 +436,13 @@ MemFile* BUFFER::GetMemFile(const char *fileName)
 	int Ptr2File = open(fileName, _O_BINARY | O_RDWR, 0664);
 	if (Ptr2File != -1)
 	{
-#ifndef NDEBUG
-		//std::cout << "Open File --> pointer:"<<Ptr2File << "\tname:" << fileName << std::endl;
-#endif
+
 		MemFile* newFile = new MemFile(fileName,Ptr2File);
 		memFiles.push_back(newFile);
 		return newFile;
 	}
 
+	
 	// 文件不存在
 	return nullptr;
 

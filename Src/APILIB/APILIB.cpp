@@ -64,10 +64,12 @@ bool DropDatabase(std::string db_name, CatalogPosition &cp)
 	else
 	{
 		tmp_path = cp.GetRootPath() + db_name;
+
 		// 删除目录下文件
 		auto t = tmp_path + "/";
 		DelFilesInFolder(t);
 		// 删除目录
+
 		_rmdir(tmp_path.c_str());
 
 		return true;
@@ -106,11 +108,9 @@ void DelFilesInFolder(std::string folderPath)
 			// 删除文件
 			auto old = GetCp().GetIsInSpeDb();
 			GetCp().SetInInSpeDb(true);
-
-			std::string s(FileInfo.name);
-			s = s.substr(0, s.size() - 4);
-			DropTable(s.c_str(), folderPath);
-
+			std::string name = folderPath + FileInfo.name;
+			GetGlobalFileBuffer().CloseFile(name.c_str());
+			remove(name.c_str());
 			GetCp().SetInInSpeDb(old);
 			
 		}
