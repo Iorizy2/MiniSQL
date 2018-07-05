@@ -18,8 +18,8 @@
 #define _BUFFER_H_
 #include <vector>
 #include <cassert>
-#include "../Src/GLOBAL/global.h"
-#include "../Src/ERROR/Error.h"
+#include "../GLOBAL/global.h"
+#include "../ERROR/Error.h"
 extern "C"{
 #include <io.h>
 #include <fcntl.h>

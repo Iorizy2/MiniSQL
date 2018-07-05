@@ -19,8 +19,8 @@
 #ifndef __RECORD_H__
 #define __RECORD_H__
 #include <tuple>
-#include "../Src/ERROR/Error.h"
-#include "../Src/BUFFER/Buffer.h"
+#include "../ERROR/Error.h"
+#include "../BUFFER/Buffer.h"
 
 /***********************************************************************************
 *

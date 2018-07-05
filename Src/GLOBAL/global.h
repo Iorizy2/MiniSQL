@@ -18,7 +18,7 @@
 #include <chrono>
 #include <iomanip>
 #include <direct.h>
-#include "../Src/ERROR/error.h"
+#include "../ERROR/Error.h"
 
 #define NDEBUG
 using namespace std::chrono;

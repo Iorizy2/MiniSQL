@@ -15,8 +15,8 @@
 ******************************************************************/
 #ifndef __BPTREE_H__
 #define __BPTREE_H__
-#include "../Src/BUFFER/Buffer.h"
-#include "../Src/RECORD/Record.h"
+#include "../BUFFER/Buffer.h"
+#include "../RECORD/Record.h"
 #include <queue>
 
 
