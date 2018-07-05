@@ -82,7 +82,7 @@ void DelFilesInFolder(std::string folderPath)
 {
 	_finddata_t FileInfo;
 	std::string strfind = folderPath + "*";
-	long Handle = _findfirst(strfind.c_str(), &FileInfo);
+	decltype(_findfirst(folderPath.c_str(), &FileInfo)) Handle = _findfirst(strfind.c_str(), &FileInfo);
 
 	if (Handle == -1L)
 	{
@@ -123,8 +123,8 @@ std::vector<std::string> ShowDatabase(CatalogPosition &cp)
 {
 	_finddata_t FileInfo;
 	std::string path = cp.GetRootPath() + "*.*";
-	int k;
-	long HANDLE;
+	decltype(_findfirst(path.c_str(), &FileInfo)) k;
+	decltype(_findfirst(path.c_str(), &FileInfo)) HANDLE;
 	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
 	std::vector<std::string> dbs;
 
@@ -286,8 +286,8 @@ std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("
 
 	_finddata_t FileInfo;
 	path += "*.*";
-	int k;
-	long HANDLE;
+	decltype(_findfirst(path.c_str(), &FileInfo)) k;
+	decltype(_findfirst(path.c_str(), &FileInfo)) HANDLE;
 	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
 	
 

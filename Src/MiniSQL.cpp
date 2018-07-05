@@ -15,7 +15,7 @@ int main()
 {
 	// Initialize DB
 	InitMiniSQL();
-
+	
 	// Run DB
 	RunMiniSQL();  
 
@@ -29,7 +29,7 @@ int main()
 
 void InitMiniSQL()
 {
-	std::cout << R"(                   WELCOME TO USE MY MINISQL!"                      )" << std::endl;
+	std::cout << R"(                   WELCOME TO USE MY MINISQL!                       )" << std::endl;
 	std::cout << R"(+------------------------------------------------------------------+)" << std::endl;
 	std::cout << R"(|Declare: It is just a test version without any error process.     |)" << std::endl;
 	std::cout << R"(|         So you should use it take care.                          |)" << std::endl;
@@ -51,6 +51,7 @@ void RunMiniSQL()
 {
 	SensefulStr senstr;
 	PrintWindow print_window;
+
 	while (true)
 	{
 		try

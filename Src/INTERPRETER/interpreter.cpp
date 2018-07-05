@@ -541,10 +541,6 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string pat
 	Print(PRINTLENGTH, "table");
 	std::cout << "+---------------------------------------------------------------+" << std::endl;
 	
-	
-
-
-
 	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
 	{
 		throw SQLError::CMD_FORMAT_ERROR("Not use database or ");
@@ -554,8 +550,8 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string pat
 
 	_finddata_t FileInfo;
 	path += "*.*";
-	int k;
-	long HANDLE;
+	decltype(_findfirst(path.c_str(), &FileInfo)) k;
+	decltype(_findfirst(path.c_str(), &FileInfo)) HANDLE;
 	k = HANDLE = _findfirst(path.c_str(), &FileInfo);
 
 
