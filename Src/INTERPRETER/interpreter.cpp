@@ -610,6 +610,17 @@ void PrintWindow::DropTable(bool is_dropped)
 
 void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 {
+	for (auto it = select_table_print_info.name_selected_column.begin(); it != select_table_print_info.name_selected_column.end();)
+	{
+		if (*it == ",")
+		{
+			select_table_print_info.name_selected_column.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
 	if (select_table_print_info.key_fd.size() < 1)
 		return;
 	std::string idx_file = GetCp().GetCurrentPath() + select_table_print_info.table_name + ".idx";
@@ -656,14 +667,29 @@ void PrintWindow::SelectTable(SelectPrintInfo select_table_print_info)
 	total_record_len += (out_name.size() - 1);
 	//打印头部
 	std::cout << "+";
-	for (int i = 0; i < total_record_len-2; i++)std::cout << "-";
+	for (int i = 0; i < out_name.size(); i++)
+	{
+		int len = out_len[i] + 1;
+		if (i == out_name.size() - 1)len--;
+		for (int j = 0; j < len; j++)
+		{
+			std::cout << "-";
+		}
+			
+	}
 	std::cout << "+";
+
+
 	std::cout << std::endl;
 	// 打印列名
 	for (int i = 0; i < out_name.size(); i++)
 	{
 		std::cout << "|" << std::left << std::setw(out_len[i]) << out_name[i];
 	}
+	std::cout << "|" << std::endl;
+	// 分割线
+	std::cout << "+";
+	for (int i = 0; i < total_record_len - 2; i++)std::cout << "-";
 	std::cout << "+" << std::endl;
 
 	// 打印每一条记录

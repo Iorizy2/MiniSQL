@@ -36,6 +36,8 @@ void InitMiniSQL()
 	std::cout << R"(|                                                                  |)" << std::endl;
 	std::cout << R"(|Contact: ReFantasy.cn                                             |)" << std::endl;
 	std::cout << R"(|                                                                  |)" << std::endl;
+	std::cout << R"(|Version: Beta 1.0                                                 |)" << std::endl;
+	std::cout << R"(|                                                                  |)" << std::endl;
 	std::cout << R"(|Copyright(c) by TDL/ReFantasy.All rights reserved.                |)" << std::endl;
 	std::cout << R"(+------------------------------------------------------------------+)" << std::endl;
 
@@ -86,23 +88,25 @@ void IsPod()
 
 void Help()
 {
-	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
-	std::cout << "|A simple example to create a student databae named STU                                         |" << std::endl;
-	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
-	std::cout << "|Create database  : create database STU;                                                        |" << std::endl;
-	std::cout << "|Use database     : use database STU;                                                           |" << std::endl;
-	std::cout << "|Show database    : show databases;                                                             |" << std::endl;
-	std::cout << "|Create Table     : create table student(id int primary, socre double, name char(20));          |" << std::endl;
-	std::cout << "|Insert Record(1) : insert into student(id,score,name)values(1,95.5,ZhangSan);                  |" << std::endl;
-	std::cout << "|Insert Record(2) : insert into student(id,name)values(2,LiSi); Note:LiSi has no score          |" << std::endl;
-	std::cout << "|UPDATE Table     : update student set score = 96.5 where name = LiSi;                          |" << std::endl;
-	std::cout << "|Delete Table     : delete from student where id = 1; Note: ZhangSan is deleted                 |" << std::endl;
-	std::cout << "|Select Table(1)  : select * from student where id = 2;                                         |" << std::endl;
-	std::cout << "|Select Table(2)  : select * from student where id > 1 and score < 98;                          |" << std::endl;
-	std::cout << "|Select Table(3)  : select id,score from student where id > 1 and score < 98;                   |" << std::endl;
-	std::cout << "|Drop database    : drop database STU;                                                          |" << std::endl;
-	std::cout << "|Quit             : quit;                                                                       |" << std::endl;
-	std::cout << "+-----------------------------------------------------------------------------------------------+" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------------------------------------+)" << std::endl;
+	std::cout << R"(|A simple example to create a student databae named STU                                          |)" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------------------------------------+)" << std::endl;
+	std::cout << R"(|Create database  : create database STU;                                                         |)" << std::endl;
+	std::cout << R"(|Use database     : use database STU;                                                            |)" << std::endl;
+	std::cout << R"(|Show database    : show databases;                                                              |)" << std::endl;
+	std::cout << R"(|Create Table     : create table student(id int primary, socre double, name char(20));           |)" << std::endl;
+	std::cout << R"(|Insert Record(1) : insert into student(id,score,name)values(1,95.5,ZhangSan);                   |)" << std::endl;
+	std::cout << R"(|Insert Record(2) : insert into student(id,name)values(2,LiSi); Note:LiSi has no score           |)" << std::endl;
+	std::cout << R"(|UPDATE Table     : update student set score = 96.5 where name = LiSi;                           |)" << std::endl;
+	std::cout << R"(|Delete Table     : delete from student where id = 1; Note: ZhangSan is deleted                  |)" << std::endl;
+	std::cout << R"(|Select Table(1)  : select * from student where id = 2;                                          |)" << std::endl;
+	std::cout << R"(|Select Table(2)  : select * from student where id > 1 and score < 98;                           |)" << std::endl;
+	std::cout << R"(|Select Table(3)  : select id,score from student where id > 1 and score < 98;                    |)" << std::endl;
+	std::cout << R"(|Drop database    : drop database STU;                                                           |)" << std::endl;
+	std::cout << R"(|Quit             : quit;                                                                        |)" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------------------------------------+)" << std::endl;
+	std::cout << R"(|Note             : Anytime you want to end MiniSQL use "quit;" command please.                  |)" << std::endl;
+	std::cout << R"(+------------------------------------------------------------------------------------------------+)" << std::endl;
 }
 
 std::string GetCommand()
