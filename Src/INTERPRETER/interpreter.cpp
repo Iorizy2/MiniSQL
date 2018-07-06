@@ -4,10 +4,9 @@
 
 std::string CreateDbInfo(std::vector<std::string> sen_str)
 {
-	if ( (sen_str.size()<4) 
+	if ( (sen_str.size()!=3) 
 		|| (StrToLower(sen_str[0]) != "create") 
 		|| (StrToLower(sen_str[1]) != "database") 
-		|| (StrToLower(sen_str[3]) != ";")
 		)
 		throw SQLError::CMD_FORMAT_ERROR();
 	return sen_str[2];
@@ -15,10 +14,9 @@ std::string CreateDbInfo(std::vector<std::string> sen_str)
 
 std::string DeleteDbInfo(std::vector<std::string> sen_str)
 {
-	if ((sen_str.size() < 4)
+	if ((sen_str.size() != 3)
 		|| (StrToLower(sen_str[0]) != "drop")
 		|| (StrToLower(sen_str[1]) != "database")
-		|| (StrToLower(sen_str[3]) != ";")
 		)
 		throw SQLError::CMD_FORMAT_ERROR();
 	return sen_str[2];
@@ -26,10 +24,9 @@ std::string DeleteDbInfo(std::vector<std::string> sen_str)
 
 std::string UseDbInfo(std::vector<std::string> sen_str)
 {
-	if ((sen_str.size() < 4)
+	if ((sen_str.size() != 3)
 		|| (StrToLower(sen_str[0]) != "use")
 		|| (StrToLower(sen_str[1]) != "database")
-		|| (StrToLower(sen_str[3]) != ";")
 		)
 		throw SQLError::CMD_FORMAT_ERROR();
 	return sen_str[2];
@@ -37,10 +34,11 @@ std::string UseDbInfo(std::vector<std::string> sen_str)
 
 std::string ShowDbInfo(std::vector<std::string> sen_str)
 {
-	if ((sen_str.size() < 3)
+
+	// show databases
+	if (   (sen_str.size() != 2)
 		|| (StrToLower(sen_str[0]) != "show")
 		|| (StrToLower(sen_str[1]) != "databases")
-		|| (StrToLower(sen_str[2]) != ";")
 		)
 		throw SQLError::CMD_FORMAT_ERROR();
 	return std::string();
@@ -48,10 +46,9 @@ std::string ShowDbInfo(std::vector<std::string> sen_str)
 
 std::string DropTableInfo(std::vector<std::string> sen_str)
 {
-	if ((sen_str.size() < 4)
+	if ((sen_str.size() < 3)
 		|| (StrToLower(sen_str[0]) != "drop")
 		|| (StrToLower(sen_str[1]) != "table")
-		|| (StrToLower(sen_str[3]) != ";")
 		)
 		throw SQLError::CMD_FORMAT_ERROR();
 	return sen_str[2];
@@ -79,6 +76,7 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 	{
 		tb_select_info.name_selected_column.push_back(sen_str[i]);
 	}
+
 	if(sen_str.size()-1 < (name_R_index+2))
 		throw SQLError::CMD_FORMAT_ERROR();
 	tb_select_info.table_name = sen_str[name_R_index + 2];
@@ -97,18 +95,15 @@ TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str)
 		tb_select_info.vec_cmp_cell.push_back(cmp_cell);
 
 		// 下一个查找条件
-		if (StrToLower(sen_str[i + 3]) == "and")
+		if ((i+3)<sen_str.size()&&StrToLower(sen_str[i + 3]) == "and")
 		{
 			i += 4;
 		}
-		else if (StrToLower(sen_str[i + 3]) == ";")
+		else
 		{
 			break;
 		}
-		else
-		{
-			throw SQLError::CMD_FORMAT_ERROR();
-		}
+		
 	}
 	return tb_select_info;
 }
@@ -131,12 +126,14 @@ TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str)
 	}
 
 	// 新的字段值
-	for (int j = SET + 1; j != WHERE;)
+	for (int j = SET + 1; j < WHERE;)
 	{
 		TB_Update_Info::NewValue new_value;
+
 		new_value.field = sen_str[j];
 		new_value.value = sen_str[j + 2];
 		tb_update_info.field_value.push_back(new_value);
+
 		if (sen_str[j + 3] == ",")
 			j += 4;
 		else
@@ -179,7 +176,7 @@ TB_Delete_Info TableDeleteInfo(std::vector<std::string> sen_str)
 bool CreateShowTableInfo(std::vector<std::string> sen_str)
 {
 	
-	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
+	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 2 || StrToLower(sen_str[0])!="show"|| StrToLower(sen_str[1]) != "tables")
 	{
 		return false;
 	}	
@@ -193,7 +190,7 @@ TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str)
 {
 	TB_Create_Info tb_create_info;
 
-	assert(sen_str.size()>=3);
+	/*assert(sen_str.size()>=3);
 	tb_create_info.table_name = sen_str[2];
 
 	if (sen_str[3] != "(")
@@ -249,7 +246,65 @@ TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str)
 			i += 3;
 			continue;
 		}
+	}*/
+
+	if (sen_str.size() < 3||StrToLower(sen_str[0])!="create"|| StrToLower(sen_str[1]) != "table")
+		throw SQLError::CMD_FORMAT_ERROR();
+	// 表名
+	tb_create_info.table_name = sen_str[2];
+
+	bool HasPrimary = false;
+	// 添加各个字段
+	for (int j = 3; j < sen_str.size();)
+	{	
+		TB_Create_Info::ColumnInfo column_info;
+		column_info.isPrimary = false;
+		// 列名
+		column_info.name = sen_str[j];
+
+		// 列类型
+		if (j + 1 >= sen_str.size()) throw SQLError::CMD_FORMAT_ERROR();
+
+		if (StrToLower(sen_str[j + 1]) == "int")
+		{
+			column_info.type = Column_Type::I;
+			column_info.length = sizeof(int);
+			j += 2;
+		}
+		else if (StrToLower(sen_str[j + 1]) == "double")
+		{
+			column_info.type = Column_Type::D;
+			column_info.length = sizeof(double);
+			j += 2;
+		}
+		else if (StrToLower(sen_str[j + 1]) == "char")
+		{
+			column_info.type = Column_Type::C;
+			if (j + 2 >= sen_str.size())throw SQLError::CMD_FORMAT_ERROR();
+			column_info.length = stoi(sen_str[j+2]);
+
+			j += 3;
+		}
+		else
+		{
+			throw SQLError::CMD_FORMAT_ERROR("Unsupported data types!");
+		}
+
+		// 是否主键
+		if (j<sen_str.size() && (sen_str[j] == "primary"))
+		{
+			if (HasPrimary)
+				throw SQLError::CMD_FORMAT_ERROR("Error!More than one primary key!");
+			HasPrimary = true;
+			column_info.isPrimary = true;
+			j++;
+		}
+
+		
+		tb_create_info.columns_info.push_back(column_info);
 	}
+	if (!HasPrimary)
+		tb_create_info.columns_info[0].isPrimary = true;
 
 	return tb_create_info;
 }
@@ -259,91 +314,29 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str)
 	TB_Insert_Info tb_insert_info;
 
 
-	if (StrToLower(sen_str[0]) != "insert" || StrToLower(sen_str[1]) != "into")
+	if (sen_str.size()<3 ||StrToLower(sen_str[0]) != "insert" || StrToLower(sen_str[1]) != "into")
+		throw SQLError::CMD_FORMAT_ERROR();
+
+	int values_index = -1;
+	for (int i = 0; i < sen_str.size(); i++)
+	{
+		if (StrToLower(sen_str[i]) == "values")
+		{
+			values_index = i;
+			break;
+		}
+	}
+	if (values_index <= 0)
 		throw SQLError::CMD_FORMAT_ERROR();
 
 	// 读取表名
 	tb_insert_info.table_name = sen_str[2];
 	
-	// 命令语法检查
-	int col_name_left_bracket = 3;  // 字段名称列表左括号
-	int col_name_right_bracket = 0;  // 字段名称列表右括号
-	int col_value_left_bracket = 0;  // 字段值列表左括号
-	int col_value_right_bracket = sen_str.size() - 2;  // 字段值列表右括号
-
-	if (sen_str[sen_str.size() - 1] != ";")
-		throw SQLError::CMD_FORMAT_ERROR("Lack ';' at the end of command");
-
-	for (int j = 3; j <sen_str.size()-1; j++)
+	// 读取字段
+	for (int p = 3, q = values_index + 1; p < values_index && q < sen_str.size(); p++, q++)
 	{
-		if (sen_str[j] == ")")
-		{
-			col_name_right_bracket = j;
-			col_value_left_bracket = j + 2;
-			break;
-		}
+		tb_insert_info.insert_info.push_back({ sen_str[p],sen_str[q] });
 	}
-	if(sen_str[col_value_left_bracket]!="("|| StrToLower(sen_str[col_name_right_bracket+1])!="values")
-		throw SQLError::CMD_FORMAT_ERROR("key's count is not match value's count or values that not value");
-
-	// 检查是否有字符串因包含空格字符而被误判为两个有意字串
-	for (auto iter = sen_str.begin() + col_name_left_bracket+1; *iter != ")";)
-	{
-		//std::cout << *iter << std::endl;
-		//std::cout << *(iter+1) << std::endl;
-		if (*(iter + 1) == ",")
-		{
-			iter+=2;
-		}
-		else if (*(iter + 1) == ")")
-		{
-			iter++;
-		}
-		else
-		{
-			*iter += (" "+*(iter + 1));
-			sen_str.erase(iter + 1);
-		}
-	}
-	col_value_left_bracket = 0;
-	auto iter = sen_str.begin() + 4;
-	while (*iter != "(")iter++;
-	if(iter==sen_str.end())
-		throw SQLError::CMD_FORMAT_ERROR("");
-	for (iter++; *iter != ")";)
-	{
-		//std::cout << *iter << std::endl;
-		//std::cout << *(iter + 1) << std::endl;
-		if (*(iter + 1) == ",")
-		{
-			iter += 2;
-		}
-		else if (*(iter + 1) == ")")
-		{
-			iter++;
-		}
-		else
-		{
-			*iter += (" " + *(iter + 1));
-			sen_str.erase(iter + 1);
-		}
-	}
-
-	for (int j = 3; j < sen_str.size() - 1; j++)
-	{
-		if (sen_str[j] == ")")
-		{
-			col_name_right_bracket = j;
-			col_value_left_bracket = j + 2;
-			break;
-		}
-	}
-	col_value_right_bracket = sen_str.size() - 2;
-	for (int p = col_name_left_bracket + 1, q = col_value_left_bracket + 1; q <= col_value_right_bracket - 1; p+=2, q+=2)
-	{
-		tb_insert_info.insert_info.push_back({ sen_str[p], sen_str[q] });
-	}
-
 	return tb_insert_info;
 }
 
@@ -541,7 +534,7 @@ void PrintWindow::ShowAllTable(std::vector<std::string> sen_str, std::string pat
 	Print(PRINTLENGTH, "table");
 	std::cout << "+---------------------------------------------------------------+" << std::endl;
 	
-	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 3 || sen_str[2] != ";")
+	if (!GetCp().GetIsInSpeDb() || sen_str.size() < 2)
 	{
 		throw SQLError::CMD_FORMAT_ERROR("Not use database or ");
 	}
@@ -896,4 +889,178 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 		throw SQLError::CMD_FORMAT_ERROR();
 		break;
 	}
+}
+
+SensefulStr::SensefulStr(std::string srcstr /*= ""*/)
+	:src_str(srcstr)
+{
+	Parse();
+}
+
+void SensefulStr::SetSrcStr(std::string _srcstr)
+{
+	src_str = _srcstr;
+	sen_str.clear();
+	Parse();
+}
+
+std::vector<std::string> SensefulStr::GetSensefulStr() const
+{
+	return sen_str;
+}
+
+void SensefulStr::Parse()
+{
+	//int i = 0;
+	//std::string token;
+	//while (i < src_str.size())
+	//{
+	//	// 先判断标识符
+	//	if (src_str[i] == ' ')
+	//	{
+	//		if (!token.empty())
+	//			sen_str.push_back(token);
+	//		token.clear();
+	//		i++;
+	//		continue;
+	//	}
+	//	if (src_str[i] == '\n')
+	//	{
+	//		i++;
+	//		continue;
+	//	}
+
+	//	else if (src_str[i] == ',' || src_str[i] == '(' || src_str[i] == ')')// || src_str[i] == '=')
+	//	{
+	//		if (!token.empty())
+	//			sen_str.push_back(token);
+	//		token.clear();
+
+	//		sen_str.push_back(std::string() + src_str[i]);
+	//		i++;
+	//		continue;
+	//	}
+	//	else if (src_str[i] == ';')
+	//	{
+	//		if (!token.empty())
+	//			sen_str.push_back(token);
+	//		token.clear();
+
+	//		sen_str.push_back(";");
+	//		break;
+	//	}
+
+	//	token += src_str[i++];
+	//}
+
+
+	int i = 0;
+	sen_str.clear();
+	std::string token;
+	while (i < src_str.size())
+	{
+		if (IsKeyChar(src_str[i]))
+		{
+			sen_str.push_back(token);
+			token.clear();
+			// 跳过关键字符，除了>=<比较符
+			while (IsKeyChar(src_str[i]))
+			{
+				std::string tmp_token;
+				if (src_str[i] == '>' || src_str[i] == '=' || src_str[i] == '<')  // 比较符号
+				{
+					tmp_token += src_str[i];
+					if (src_str[i + 1] == '=')
+					{
+						tmp_token += src_str[i + 1];
+						i += 2;
+					}
+					else
+					{
+						i++;
+					}
+					sen_str.push_back(tmp_token);
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+		}
+		else
+		{
+			token += src_str[i];
+			i++;
+		}
+	}
+}
+
+void SensefulStr::Parse2()
+{
+	int i = 0;
+	sen_str.clear();
+	std::string token;
+	while (i < src_str.size())
+	{
+		if (src_str[i] == 34 || src_str[i] == 39)
+		{
+			token.clear();
+			i++;
+			while ((src_str[i] != 34) && (src_str[i] != 39))
+			{
+				token += src_str[i];
+				i++;
+			}
+			i++;
+			sen_str.push_back(token);
+			token.clear();
+			continue;
+		}
+		if (IsKeyChar(src_str[i]))
+		{
+			if(!token.empty())
+				sen_str.push_back(token);
+			token.clear();
+			// 跳过关键字符，除了>=<比较符
+			while (IsKeyChar(src_str[i]))
+			{
+				std::string tmp_token;
+				if (src_str[i]=='>'|| src_str[i] == '='|| src_str[i] == '<')  // 比较符号
+				{
+					tmp_token += src_str[i];
+					if (src_str[i + 1] == '=')
+					{
+						tmp_token += src_str[i+1];
+						i += 2;
+					}
+					else
+					{
+						i++;
+					}
+					sen_str.push_back(tmp_token);
+				}
+				else
+				{
+					i++;
+				}
+			}
+			
+		}
+		else
+		{
+			token += src_str[i];
+			i++;
+		}
+	}
+
+	for (auto e : sen_str)
+		std::cout << e << " "<<std::endl;
+	std::cout<<std::endl;
+}
+
+bool SensefulStr::IsKeyChar(char c)
+{
+	auto it = std::find(key_char.begin(),key_char.end(),c);
+	return (it != key_char.end());
 }

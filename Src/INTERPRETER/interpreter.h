@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <algorithm>
 #include "../APILIB/APILIB.h"
 
 // 打印命令行窗口，使底层实现和GUI分离，便于扩展
@@ -60,71 +61,20 @@ void Interpreter(std::vector<std::string> sen_str, CmdType cmd_type, PrintWindow
 class SensefulStr
 {
 public:
-	SensefulStr(std::string srcstr = "")
-		:src_str(srcstr)
-	{
-		Parse();
-	}
-	void SetSrcStr(std::string _srcstr)
-	{
-		src_str = _srcstr;
-		sen_str.clear();
-		Parse();
-	}
+	SensefulStr(std::string srcstr = "");
+	void SetSrcStr(std::string _srcstr);
 
-	std::vector<std::string> GetSensefulStr()const
-	{
-		return sen_str;
-	}
+	std::vector<std::string> GetSensefulStr()const;
+	void Parse2();
 private:
-	// 解析命令为有意字串
-	void Parse()
-	{
-		int i = 0;
-		std::string token;
-		while (i < src_str.size())
-		{
-			// 先判断标识符
-			if (src_str[i] == ' ')
-			{
-				if (!token.empty())
-					sen_str.push_back(token);
-				token.clear();
-				i++;
-				continue;
-			}
-			if (src_str[i] == '\n')
-			{
-				i++;
-				continue;
-			}
+	
+	void Parse();                                                       // 解析命令为有意字串
+	
 
-			else if (src_str[i] == ',' || src_str[i] == '(' || src_str[i] == ')')// || src_str[i] == '=')
-			{
-				if (!token.empty())
-					sen_str.push_back(token);
-				token.clear();
-
-				sen_str.push_back(std::string() + src_str[i]);
-				i++;
-				continue;
-			}
-			else if (src_str[i] == ';')
-			{
-				if (!token.empty())
-					sen_str.push_back(token);
-				token.clear();
-
-				sen_str.push_back(";");
-				break;
-			}
-
-			token += src_str[i++];
-		}
-	}
-
-	std::string src_str;  // 原始命令字符串
-	std::vector<std::string> sen_str; // 解析后的又一字串
+	std::string src_str;                                                // 原始命令字符串
+	std::vector<std::string> sen_str;                                   // 解析后的又一字串
+	std::string key_char = ";,()=<>\012\015\040";
+	bool IsKeyChar(char c);
 };
 
 // 返回有意字串的操作类型,同时做类型检查
@@ -148,7 +98,7 @@ bool CreateShowTableInfo(std::vector<std::string> sen_str);
 TB_Create_Info CreateTableInfo(std::vector<std::string> sen_str);
 TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str);
 std::string DropTableInfo(std::vector<std::string> sen_str);
-TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str);  //生成select操作所需的信息
+TB_Select_Info TableSelectInfo(std::vector<std::string> sen_str);      //生成select操作所需的信息
 TB_Update_Info TableUpdateInfo(std::vector<std::string> sen_str);
 TB_Delete_Info TableDeleteInfo(std::vector<std::string> sen_str);
 

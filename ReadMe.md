@@ -17,11 +17,11 @@
 - 创建/删除数据库
 
   ```
-  CREATE DATABASE 数据库名;
-  DROP DATABASE  数据库名;
+  CREATE DATABASE db_name;
+  DROP DATABASE  db_name;
   ```
 
-- 显示数据库
+- 显示所有数据库
 
   ```
   SHOW DATABASES;
@@ -62,7 +62,7 @@
 - 更新记录
 
   ```
-  UPDATE table_name SET field1=new-value1, field2=new-value2...where expr;
+  UPDATE table_name SET field1 = new-value1, field2 = new-value2...where expr;
   ```
 
 - 条件查找记录

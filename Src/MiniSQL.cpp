@@ -51,7 +51,6 @@ void RunMiniSQL()
 {
 	SensefulStr senstr;
 	PrintWindow print_window;
-
 	while (true)
 	{
 		try
@@ -128,6 +127,8 @@ std::string GetCommand()
 		n++;
 		getline(std::cin, tmp);
 		res += tmp;
+		if (tmp[tmp.size() - 1] != ';')
+			res += " ";
 	} while (tmp[tmp.size() - 1] != ';');
 	return res;
 }

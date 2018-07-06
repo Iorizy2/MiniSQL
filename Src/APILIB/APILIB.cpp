@@ -544,8 +544,8 @@ bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string
 			set_intersection(fds.begin(), fds.end(), res.begin(), res.end(), std::back_inserter(v));
 			res = v;
 		}
-		for (auto e : res)
-			PrintRecord(tb_update_info.table_name, e.first, e.second, path);
+		//for (auto e : res)
+			//PrintRecord(tb_update_info.table_name, e.first, e.second, path);
 	}
 
 	 //¸üÐÂ¼ÇÂ¼
