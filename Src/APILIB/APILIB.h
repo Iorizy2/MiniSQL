@@ -4,6 +4,7 @@
 #include "../GLOBAL/global.h"
 #include "../BPLUSTREE/bptree.h"
 #include "../RECORD/Record.h"
+#include "../CHECK/check.h"
 
 // 记录查找关系符
 enum Operator_Type { B, BE, L, LE, E, NE };

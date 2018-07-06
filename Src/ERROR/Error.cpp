@@ -30,6 +30,10 @@ namespace SQLError
 		// Êä³öÒì³£
 		std::cout << error_info << ErrorInfo;
 	}
+	void SQLError::TABLE_ERROR::PrintError() const
+	{
+		std::cout << error_info << ErrorInfo;
+	}
 
 }
 
@@ -38,6 +42,7 @@ void SQLError::DispatchError(const BaseError &error)
 	error.PrintError();
 	error.WriteToLog();
 }
+
 
 SQLError::LSEEK_ERROR::LSEEK_ERROR()
 {
@@ -81,3 +86,12 @@ SQLError::KeyAttr_NameLength_ERROR::KeyAttr_NameLength_ERROR()
 {
 	ErrorInfo = "(BPLUSTREE_DEGREE_TOOBIG) KeyAttr name length flowover,it may be happen in where you set the record's key!";
 }
+
+SQLError::TABLE_ERROR::TABLE_ERROR(const std::string s /*= std::string("")*/)
+{
+	ErrorInfo = "Table Operator Error!";
+	error_info = s;
+}
+
+
+

@@ -110,6 +110,15 @@ namespace SQLError
 	protected:
 		std::string error_info;
 	};
+
+	class TABLE_ERROR :public BaseError
+	{
+	public:
+		TABLE_ERROR(const std::string s = std::string(""));
+		virtual void PrintError()const;
+	protected:
+		std::string error_info;
+	};
 }
 
 

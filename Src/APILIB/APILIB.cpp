@@ -47,7 +47,7 @@ bool CreateDatabase(std::string db_name, CatalogPosition &cp)
 	}
 	else
 	{
-		std::cout << "数据库已经存在" << std::endl;
+		std::cout << "Database has been existed!Create Failed!" << std::endl;
 		return false;
 	}
 }
@@ -164,7 +164,11 @@ bool UseDatabase(std::string db_name, CatalogPosition &cp)
 bool CreateTable(TB_Create_Info tb_create_info, std::string path)
 {
 	// TODO 检查创建信息以及当前目录是否在数据库中
-	
+	Check_TB_Create_Info(tb_create_info);
+
+	if (!GetCp().GetIsInSpeDb())
+		return false;
+
 	// 表名
 	std::string table_name = tb_create_info.table_name;
 	std::string idx_file = path + table_name + ".idx";

@@ -23,6 +23,7 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include "../BUFFER/Buffer.h"
 #include "../APILIB/APILIB.h"
 
 // 打印命令行窗口，使底层实现和GUI分离，便于扩展
