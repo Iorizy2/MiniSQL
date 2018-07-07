@@ -32,7 +32,7 @@
 
 [**使用手册**](./doc/UserGuide.md)
 
-[**详细的开发文档**](./doc/DevelopDoc.md)
+[**开发文档**](./doc/DevelopDoc.md)
 
 
 
