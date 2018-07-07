@@ -312,8 +312,8 @@ std::vector<std::string> ShowAllTable(bool b, std::string path /*= std::string("
 
 bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::string("./")*/)
 {
-	if (!GetCp().GetIsInSpeDb())  // 如果不在具体数据库目录下，则不能插入记录
-		return false;
+	
+	Check_TB_Insert_Info(tb_insert_info);  // 错误检查
 
 	std::string idx_file = path + tb_insert_info.table_name + ".idx";
 	std::string dbf_file = path + tb_insert_info.table_name + ".dbf";
@@ -432,9 +432,37 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 	}
 
+
+	// 检查插入的值是否已经存在
+	try
+	{
+		KeyAttr key_tmp;
+		int key_index_tmp = 0;
+		auto p_tmp = record_head.GetFirstColumn();
+		while (key_index_tmp != phead->KeyTypeIndex)
+		{
+			p_tmp = p_tmp->next;
+			key_index_tmp++;
+		}
+		key_tmp = *p_tmp;
+		auto is_fd = tree.Search(key_tmp);
+		if (is_fd != FileAddr{ 0,0 })
+		{
+			SQLError::KEY_INSERT_ERROR e;
+			throw e;
+		}
+			
+	}
+	catch (const SQLError::BaseError e)
+	{
+		SQLError::DispatchError(e);
+		return false;
+	}
+
 	// 插入数据文件
 	Record record;
 	auto fd = record.InsertRecord(dbf_file, record_head);
+
 	// 插入索引
 	int key_index = 0;
 	auto p = record_head.GetFirstColumn();
@@ -451,6 +479,8 @@ bool InsertRecord(TB_Insert_Info tb_insert_info, std::string path /*= std::strin
 
 SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path)
 {
+	Check_TB_Select_Info(tb_select_info);
+
 	std::vector<std::pair<KeyAttr, FileAddr>> res;
 	std::vector<std::pair<KeyAttr, FileAddr>> fds;
 	GetTimer().Start();
@@ -510,6 +540,8 @@ SelectPrintInfo SelectTable(TB_Select_Info tb_select_info, std::string path)
 
 bool UpdateTable(TB_Update_Info tb_update_info, std::string path /*= std::string("./")*/)
 {
+	Check_TB_Update_Info(tb_update_info);
+
 	std::string file_idx = path + tb_update_info.table_name + ".idx";
 	std::string file_dbf = path + tb_update_info.table_name + ".dbf";
 	BTree tree(file_idx);
@@ -1215,8 +1247,11 @@ bool TableIndexHeadInfo::IsPrimary(std::string column_name) const
 {
 	auto column_names = GetColumnNames();
 	auto index = GetPrimaryIndex();
-
-	return column_names[index] == column_name;
+	if (!column_names.empty())
+	{
+		return column_names[index] == column_name;
+	}
+	return false;
 }
 
 int TableIndexHeadInfo::GetColumnOffset(std::string column_name)

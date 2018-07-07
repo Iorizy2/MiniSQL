@@ -192,18 +192,28 @@ class TableIndexHeadInfo
 {
 public:
 	TableIndexHeadInfo(BTree &_tree) :tree(_tree) {}
-	size_t GetColumnCount()const;                                     // 表的字段个数
-	std::vector<std::string> GetColumnNames()const;                   // 各个字段名字
-	std::vector<Column_Type> GetColumnType()const;                    // 各个字段类型
+	// 表的字段个数
+	size_t GetColumnCount()const;     
+	// 各个字段名字
+	std::vector<std::string> GetColumnNames()const; 
+	// 各个字段类型
+	std::vector<Column_Type> GetColumnType()const;                    
 	Column_Type GetColumnType(std::string column_name)const;
-	std::vector<int> GetColumnSize()const;                            // 各个字段的大小
-	int GetColumnSizeByIndex(int i)const;                             // 第i个字段的数据大小
-	int GetPrimaryIndex()const;                                       // 主键字段的索引
+	// 各个字段的大小
+	std::vector<int> GetColumnSize()const;
+	// 第i个字段的数据大小
+	int GetColumnSizeByIndex(int i)const;
+	// 主键字段的索引
+	int GetPrimaryIndex()const;                                       
 
-	bool IsColumnName(std::string column_name)const;                  // 判断该字段名是不是表的字段
-	int GetIndex(std::string column_name)const;                       // 返回该字段在所有字段中的索引位置
-	bool IsPrimary(std::string column_name)const;                     // 判断字段名是否为主键字段
-	int GetColumnOffset(std::string column_name);                     // 返回给定字段名字段距离数据头地址的偏移
+	// 判断该字段名是不是表的字段
+	bool IsColumnName(std::string column_name)const; 
+	// 返回该字段在所有字段中的索引位置
+	int GetIndex(std::string column_name)const;
+	// 判断字段名是否为主键字段
+	bool IsPrimary(std::string column_name)const;  
+	// 返回给定字段名字段距离数据头地址的偏移
+	int GetColumnOffset(std::string column_name);                     
 private:
 	BTree &tree;
 };
