@@ -30,9 +30,9 @@
 
 **编译(Linux)**: 自行修改项目中的文件/文件夹函数接口为Linux接口
 
-**使用手册**
+[**使用手册**](./doc/UserGuide.md)
 
-[详细的开发文档](./doc/document.md)
+[**详细的开发文档**](./doc/DevelopDoc.md)
 
 
 

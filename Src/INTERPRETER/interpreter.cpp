@@ -338,7 +338,7 @@ TB_Insert_Info CreateInsertInfo(std::vector<std::string> sen_str)
 	{
 		tb_insert_info.insert_info.push_back({ sen_str[p],sen_str[q] });
 	}
-	if ((p-3) != (sen_str.size()-values_index))
+	if ((p-3) != (sen_str.size()-1-values_index))
 		throw SQLError::CMD_FORMAT_ERROR("The size of fields is not match the size of values!");
 	return tb_insert_info;
 }
@@ -914,20 +914,76 @@ std::vector<std::string> SensefulStr::GetSensefulStr() const
 
 void SensefulStr::Parse()
 {
+	//int i = 0;
+	//sen_str.clear();
+	//std::string token;
+	//while (i < src_str.size())
+	//{
+
+	//	if (IsKeyChar(src_str[i]))
+	//	{
+	//		sen_str.push_back(token);
+	//		token.clear();
+	//		// 跳过关键字符，除了>=<比较符
+	//		while (IsKeyChar(src_str[i]))
+	//		{
+	//			std::string tmp_token;
+	//			if (src_str[i] == '>' || src_str[i] == '=' || src_str[i] == '<'|| src_str[i] == '!')  // 比较符号
+	//			{
+	//				tmp_token += src_str[i];
+	//				if (src_str[i + 1] == '=')
+	//				{
+	//					tmp_token += src_str[i + 1];
+	//					i += 2;
+	//				}
+	//				else
+	//				{
+	//					i++;
+	//				}
+	//				sen_str.push_back(tmp_token);
+	//			}
+	//			else
+	//			{
+	//				i++;
+	//			}
+	//		}
+
+	//	}
+	//	else
+	//	{
+	//		token += src_str[i];
+	//		i++;
+	//	}
+	//}
 	int i = 0;
 	sen_str.clear();
 	std::string token;
 	while (i < src_str.size())
 	{
+		if (src_str[i] == 34 || src_str[i] == 39)
+		{
+			token.clear();
+			i++;
+			while ((src_str[i] != 34) && (src_str[i] != 39))
+			{
+				token += src_str[i];
+				i++;
+			}
+			i++;
+			sen_str.push_back(token);
+			token.clear();
+			continue;
+		}
 		if (IsKeyChar(src_str[i]))
 		{
-			sen_str.push_back(token);
+			if (!token.empty())
+				sen_str.push_back(token);
 			token.clear();
 			// 跳过关键字符，除了>=<比较符
 			while (IsKeyChar(src_str[i]))
 			{
 				std::string tmp_token;
-				if (src_str[i] == '>' || src_str[i] == '=' || src_str[i] == '<'|| src_str[i] == '!')  // 比较符号
+				if (src_str[i] == '>' || src_str[i] == '=' || src_str[i] == '<')  // 比较符号
 				{
 					tmp_token += src_str[i];
 					if (src_str[i + 1] == '=')
