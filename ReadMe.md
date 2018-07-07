@@ -1,76 +1,38 @@
 # MiniSQL
 
-**一个简单的数据库实现 你喜欢的样子我都有~~** 
+**一个简单的可用数据库实现 你喜欢的样子我都有~~** 
 
-**编程语言 :**  C/C++
+**运行方式**：单用户本地运行
 
-**运行平台 :**  Windows
+**主要功能**
 
-**可移植性 :**  Linux  
+- 查询功能
 
-**开发方式 :**  自底向上模块化开发
+- 插入功能
+- 更新功能
 
-**第三方依赖库 :**  无
+- 删除功能
+- 数据定义功能
 
-**主要功能及命令列表 :**
+**编译(Window)**：
 
-- 创建/删除数据库
+- Visual Studio 新建空的控制台工程
 
-  ```
-  CREATE DATABASE db_name;
-  DROP DATABASE  db_name;
-  ```
+- 包含进Src下所有文件
 
-- 显示所有数据库
+- 项目 -> 属性 -> C/C++ ->预处理器->预处理器定义：
 
-  ```
-  SHOW DATABASES;
-  ```
+  添加：_CRT_SECURE_NO_WARNINGS
+             _CRT_SECURE_NO_DEPRECATE
+             _CRT_NONSTDC_NO_DEPRECATE
 
-  
+- 编译运行
 
-- 选择数据库
+**编译(Linux)**: 自行修改项目中的文件/文件夹函数接口为Linux接口
 
-  ```
-  USE DATABASE;
-  ```
+**使用手册**
 
-  
-
-- 创建/删除表
-
-  ```
-  CREATE TABLE table_name (column_name column_type);
-  DROP TABLE table_name ;
-  ```
-
-- 添加/删除记录
-
-  ```
-  INSERT INTO table_name ( field1, field2,...fieldN )
-                         VALUES
-                         ( value1, value2,...valueN );
-  ```
-
-  ```
-  DELETE from table_name where expr;
-  // eg. delete from student where id=3;
-  ```
-
-  
-
-- 更新记录
-
-  ```
-  UPDATE table_name SET field1 = new-value1, field2 = new-value2...where expr;
-  ```
-
-- 条件查找记录
-
-  ```
-  SELECT * FROM table_name where contion_expr;
-  ```
-  
+[详细的开发文档](./doc/document.md)
 
 
 
