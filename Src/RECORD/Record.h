@@ -51,7 +51,7 @@ union Column_Value
 
 /***********************************************************************************
 *
-*    定义索引文件关键字属性
+*    定义索引文件关键字类型
 *
 ***********************************************************************************/
 class KeyAttr
@@ -59,8 +59,8 @@ class KeyAttr
 public:
 	using Key_Value = union {
 		char                StrValue[ColumnNameLength];	     //字符串指针 
-		int   		        IntValue;		 //整形值
-		double 		        DoubleValue;     //浮点型值	
+		int   		        IntValue;		                 //整形值
+		double 		        DoubleValue;                     //浮点型值	
 	};
 	Column_Type type;
 	Key_Value value;
