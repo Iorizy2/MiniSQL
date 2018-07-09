@@ -22,9 +22,11 @@
 
 - 项目 -> 属性 -> C/C++ ->预处理器->预处理器定义：
 
-  添加：_CRT_SECURE_NO_WARNINGS
-             _CRT_SECURE_NO_DEPRECATE
-             _CRT_NONSTDC_NO_DEPRECATE
+  添加：
+
+  - _CRT_SECURE_NO_WARNINGS 
+  - _CRT_SECURE_NO_DEPRECATE
+  - _CRT_NONSTDC_NO_DEPRECATE
 
 - 编译运行
 
